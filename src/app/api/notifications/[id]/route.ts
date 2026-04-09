@@ -1,5 +1,5 @@
 import { connectDB } from "@/lib/db";
-import { Provider } from "@/lib/schemas/Provider.schema";
+import { Notification } from "@/lib/schemas/Notification.schema";
 import { MESSAGES } from "@/constants/config";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -10,16 +10,18 @@ export async function GET(
   try {
     await connectDB();
 
-    const provider = await Provider.findById(params.id).populate("userId");
+    const notification = await Notification.findById(params.id).populate(
+      "userId"
+    );
 
-    if (!provider) {
+    if (!notification) {
       return NextResponse.json(
         { success: false, message: MESSAGES.ERROR.NOT_FOUND },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ success: true, data: provider });
+    return NextResponse.json({ success: true, data: notification });
   } catch (error: any) {
     return NextResponse.json(
       { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
@@ -36,12 +38,16 @@ export async function PUT(
     await connectDB();
 
     const body = await req.json();
-    const provider = await Provider.findByIdAndUpdate(params.id, body, {
-      new: true,
-      runValidators: true,
-    });
+    const notification = await Notification.findByIdAndUpdate(
+      params.id,
+      body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
-    if (!provider) {
+    if (!notification) {
       return NextResponse.json(
         { success: false, message: MESSAGES.ERROR.NOT_FOUND },
         { status: 404 }
@@ -51,7 +57,7 @@ export async function PUT(
     return NextResponse.json({
       success: true,
       message: MESSAGES.SUCCESS.UPDATE,
-      data: provider,
+      data: notification,
     });
   } catch (error: any) {
     return NextResponse.json(
@@ -68,9 +74,9 @@ export async function DELETE(
   try {
     await connectDB();
 
-    const provider = await Provider.findByIdAndDelete(params.id);
+    const notification = await Notification.findByIdAndDelete(params.id);
 
-    if (!provider) {
+    if (!notification) {
       return NextResponse.json(
         { success: false, message: MESSAGES.ERROR.NOT_FOUND },
         { status: 404 }
@@ -80,7 +86,7 @@ export async function DELETE(
     return NextResponse.json({
       success: true,
       message: MESSAGES.SUCCESS.DELETE,
-      data: provider,
+      data: notification,
     });
   } catch (error: any) {
     return NextResponse.json(
