@@ -3,3 +3,5 @@ export const ROLES = {
   PROVIDER: "provider",
   ADMIN: "admin",
 };
+
+export type Role = typeof ROLES[keyof typeof ROLES];

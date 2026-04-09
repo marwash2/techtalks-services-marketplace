@@ -1,5 +1,6 @@
 // API Configuration
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 export const API_ENDPOINTS = {
   // Users
   USERS: "/api/users",
@@ -12,8 +13,10 @@ export const API_ENDPOINTS = {
   // Services
   SERVICES: "/api/services",
   SERVICE_BY_ID: (id: string) => `/api/services/${id}`,
-  SERVICES_BY_CATEGORY: (categoryId: string) => `/api/services?categoryId=${categoryId}`,
-  SERVICES_BY_PROVIDER: (providerId: string) => `/api/services?providerId=${providerId}`,
+  SERVICES_BY_CATEGORY: (categoryId: string) =>
+    `/api/services?categoryId=${categoryId}`,
+  SERVICES_BY_PROVIDER: (providerId: string) =>
+    `/api/services?providerId=${providerId}`,
 
   // Bookings
   BOOKINGS: "/api/bookings",
@@ -44,7 +47,10 @@ export const API_ENDPOINTS = {
     RECOMMEND: "/api/ai/recommend",
   },
 };
-
+export const APP_CONFIG = {
+  NAME: "Smart Services Marketplace",
+  DESCRIPTION: "AI-powered platform to find the best service providers",
+};
 // Pagination
 export const PAGINATION = {
   DEFAULT_PAGE: 1,
