@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/db";
 import { Provider } from "@/lib/schemas/Provider.schema";
 import { MESSAGES, PAGINATION } from "@/constants/config";
 import { NextRequest, NextResponse } from "next/server";
+import { User } from "@/lib/schemas/User.schema";
 
 export async function GET(req: NextRequest) {
   try {
@@ -9,12 +10,12 @@ export async function GET(req: NextRequest) {
 
     const page = parseInt(req.nextUrl.searchParams.get("page") || "1");
     const limit = parseInt(
-      req.nextUrl.searchParams.get("limit") || String(PAGINATION.DEFAULT_LIMIT)
+      req.nextUrl.searchParams.get("limit") || String(PAGINATION.DEFAULT_LIMIT),
     );
 
     const skip = (page - 1) * limit;
     const providers = await Provider.find()
-      .populate("userId")
+      .populate("userId", "name email")
       .skip(skip)
       .limit(limit)
       .exec();
@@ -32,8 +33,12 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
-      { status: 500 }
+      {
+        success: false,
+        message: MESSAGES.ERROR.SERVER_ERROR,
+        error: error.message,
+      },
+      { status: 500 },
     );
   }
 }
@@ -48,7 +53,26 @@ export async function POST(req: NextRequest) {
     if (!userId || !businessName || !location) {
       return NextResponse.json(
         { success: false, message: MESSAGES.ERROR.INVALID_INPUT },
-        { status: 400 }
+        { status: 400 },
+      );
+    }
+
+    // ✅ Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: "User not found" },
+        { status: 404 },
+      );
+    }
+
+    // ⭐ 3. CHECK IF PROVIDER ALREADY EXISTS (THIS IS WHERE YOU ADD IT)
+    const existingProvider = await Provider.findOne({ userId });
+
+    if (existingProvider) {
+      return NextResponse.json(
+        { success: false, message: "User already has a provider" },
+        { status: 400 },
       );
     }
 
@@ -63,12 +87,16 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       { success: true, message: MESSAGES.SUCCESS.CREATE, data: provider },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
-      { status: 500 }
+      {
+        success: false,
+        message: MESSAGES.ERROR.SERVER_ERROR,
+        error: error.message,
+      },
+      { status: 500 },
     );
   }
 }

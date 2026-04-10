@@ -5,12 +5,13 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const { id } = await params;
 
-    const user = await User.findById(params.id);
+    const user = await User.findById(id);
 
     if (!user) {
       return NextResponse.json(
@@ -30,13 +31,14 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const { id } = await params;
 
     const body = await req.json();
-    const user = await User.findByIdAndUpdate(params.id, body, {
+    const user = await User.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true,
     });
@@ -63,12 +65,13 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const { id } = await params;
 
-    const user = await User.findByIdAndDelete(params.id);
+    const user = await User.findByIdAndDelete(id);
 
     if (!user) {
       return NextResponse.json(
