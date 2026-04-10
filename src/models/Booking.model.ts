@@ -1,7 +1,23 @@
-export interface Booking {
-  id: string;
-  userId: string;
-  providerId: string;
-  serviceId: string;
-  date: string;
-}
+import mongoose, { Schema, Model } from "mongoose";
+import { IBooking } from "@/types/booking";
+
+const BookingSchema = new Schema<IBooking>(
+  {
+    userId:     { type: Schema.Types.ObjectId, ref: "User",     required: true },
+    providerId: { type: Schema.Types.ObjectId, ref: "Provider", required: true },
+    serviceId:  { type: Schema.Types.ObjectId, ref: "Service",  required: true },
+    status:     {
+      type: String,
+      enum: ["pending", "confirmed", "done", "cancelled"],
+      default: "pending",
+    },
+    date:  { type: Date,   required: true },
+    price: { type: Number, required: true },
+  },
+  { timestamps: true }
+);
+
+const Booking: Model<IBooking> =
+  mongoose.models.Booking ?? mongoose.model<IBooking>("Booking", BookingSchema);
+
+export default Booking;
