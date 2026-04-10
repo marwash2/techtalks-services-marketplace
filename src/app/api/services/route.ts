@@ -1,5 +1,7 @@
 import { connectDB } from "@/lib/db";
 import { Service } from "@/lib/schemas/Service.schema";
+import { Provider } from "@/lib/schemas/Provider.schema";
+import { Category } from "@/lib/schemas/Category.schema";
 import { MESSAGES, PAGINATION } from "@/constants/config";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -9,7 +11,7 @@ export async function GET(req: NextRequest) {
 
     const page = parseInt(req.nextUrl.searchParams.get("page") || "1");
     const limit = parseInt(
-      req.nextUrl.searchParams.get("limit") || String(PAGINATION.DEFAULT_LIMIT)
+      req.nextUrl.searchParams.get("limit") || String(PAGINATION.DEFAULT_LIMIT),
     );
     const providerId = req.nextUrl.searchParams.get("providerId");
     const categoryId = req.nextUrl.searchParams.get("categoryId");
@@ -21,7 +23,8 @@ export async function GET(req: NextRequest) {
     if (categoryId) filter.categoryId = categoryId;
 
     const services = await Service.find(filter)
-      .populate("providerId categoryId")
+      .populate("providerId", "businessName location")
+      .populate("categoryId", "name")
       .skip(skip)
       .limit(limit)
       .exec();
@@ -39,8 +42,12 @@ export async function GET(req: NextRequest) {
     });
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
-      { status: 500 }
+      {
+        success: false,
+        message: MESSAGES.ERROR.SERVER_ERROR,
+        error: error.message,
+      },
+      { status: 500 },
     );
   }
 }
@@ -50,12 +57,39 @@ export async function POST(req: NextRequest) {
     await connectDB();
 
     const body = await req.json();
-    const { providerId, categoryId, title, description, price, duration } = body;
+    const { providerId, categoryId, title, description, price, duration } =
+      body;
 
     if (!providerId || !categoryId || !title || !price || !duration) {
       return NextResponse.json(
         { success: false, message: MESSAGES.ERROR.INVALID_INPUT },
-        { status: 400 }
+        { status: 400 },
+      );
+    }
+
+    // ✅ Validate provider
+    const provider = await Provider.findById(providerId);
+    if (!provider) {
+      return NextResponse.json(
+        { success: false, message: "Provider not found" },
+        { status: 404 },
+      );
+    }
+    // const currentUserId = req.headers.get("userId");
+
+    // if (provider.userId.toString() !== currentUserId) {
+    //   return NextResponse.json(
+    //     { success: false, message: "Not your provider account" },
+    //     { status: 403 },
+    //   );
+    // }
+
+    // ✅ Validate category
+    const category = await Category.findById(categoryId);
+    if (!category) {
+      return NextResponse.json(
+        { success: false, message: "Category not found" },
+        { status: 404 },
       );
     }
 
@@ -72,12 +106,16 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       { success: true, message: MESSAGES.SUCCESS.CREATE, data: service },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error: any) {
     return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
-      { status: 500 }
+      {
+        success: false,
+        message: MESSAGES.ERROR.SERVER_ERROR,
+        error: error.message,
+      },
+      { status: 500 },
     );
   }
 }

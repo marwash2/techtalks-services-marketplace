@@ -3,14 +3,19 @@ import { Provider } from "@/lib/schemas/Provider.schema";
 import { MESSAGES } from "@/constants/config";
 import { NextRequest, NextResponse } from "next/server";
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : MESSAGES.ERROR.SERVER_ERROR;
+}
+
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const { id } = await params;
 
-    const provider = await Provider.findById(params.id).populate("userId");
+    const provider = await Provider.findById(id).populate("userId", "name email");
 
     if (!provider) {
       return NextResponse.json(
@@ -20,9 +25,13 @@ export async function GET(
     }
 
     return NextResponse.json({ success: true, data: provider });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
+      {
+        success: false,
+        message: MESSAGES.ERROR.SERVER_ERROR,
+        error: getErrorMessage(error),
+      },
       { status: 500 }
     );
   }
@@ -30,13 +39,14 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const { id } = await params;
 
     const body = await req.json();
-    const provider = await Provider.findByIdAndUpdate(params.id, body, {
+    const provider = await Provider.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true,
     });
@@ -53,9 +63,13 @@ export async function PUT(
       message: MESSAGES.SUCCESS.UPDATE,
       data: provider,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
+      {
+        success: false,
+        message: MESSAGES.ERROR.SERVER_ERROR,
+        error: getErrorMessage(error),
+      },
       { status: 500 }
     );
   }
@@ -63,12 +77,13 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
+    const { id } = await params;
 
-    const provider = await Provider.findByIdAndDelete(params.id);
+    const provider = await Provider.findByIdAndDelete(id);
 
     if (!provider) {
       return NextResponse.json(
@@ -82,9 +97,13 @@ export async function DELETE(
       message: MESSAGES.SUCCESS.DELETE,
       data: provider,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
+      {
+        success: false,
+        message: MESSAGES.ERROR.SERVER_ERROR,
+        error: getErrorMessage(error),
+      },
       { status: 500 }
     );
   }
