@@ -2,6 +2,7 @@ import { withApiHandler } from "@/lib/api-handler";
 import { successResponse } from "@/lib/api-response";
 import { MESSAGES, PAGINATION } from "@/constants/config";
 import * as providerService from "@/services/provider.service";
+import { createProviderSchema } from "@/lib/validations/provider.validation";
 
 export const GET = withApiHandler(async (req) => {
   const { searchParams } = new URL(req.url);
@@ -14,6 +15,7 @@ export const GET = withApiHandler(async (req) => {
 
 export const POST = withApiHandler(async (req) => {
   const body = await req.json();
-  const provider = await providerService.createProvider(body);
+  const validated = createProviderSchema.parse(body);
+  const provider = await providerService.createProvider(validated);
   return Response.json(successResponse(provider, MESSAGES.SUCCESS.CREATE), { status: 201 });
 });

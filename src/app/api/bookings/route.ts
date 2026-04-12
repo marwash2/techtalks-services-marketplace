@@ -2,6 +2,7 @@ import { withApiHandler } from "@/lib/api-handler";
 import { successResponse } from "@/lib/api-response";
 import { MESSAGES, PAGINATION } from "@/constants/config";
 import * as bookingService from "@/services/booking.service";
+import { createBookingSchema } from "@/lib/validations/booking.validation";
 
 export const GET = withApiHandler(async (req) => {
   const { searchParams } = new URL(req.url);
@@ -17,6 +18,7 @@ export const GET = withApiHandler(async (req) => {
 
 export const POST = withApiHandler(async (req) => {
   const body = await req.json();
-  const booking = await bookingService.createBooking(body);
+  const validated = createBookingSchema.parse(body);
+  const booking = await bookingService.createBooking(validated);
   return Response.json(successResponse(booking, MESSAGES.SUCCESS.CREATE), { status: 201 });
 });

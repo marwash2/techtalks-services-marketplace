@@ -2,6 +2,7 @@ import { withApiHandler } from "@/lib/api-handler";
 import { successResponse } from "@/lib/api-response";
 import { MESSAGES } from "@/constants/config";
 import * as notificationService from "@/services/notification.service";
+import { updateNotificationSchema } from "@/lib/validations/notification.validation";
 
 export const GET = withApiHandler(async (_req, { params }) => {
   const { id } = await params;
@@ -12,7 +13,8 @@ export const GET = withApiHandler(async (_req, { params }) => {
 export const PUT = withApiHandler(async (req, { params }) => {
   const { id } = await params;
   const body = await req.json();
-  const notification = await notificationService.updateNotification(id, body);
+  const validated = updateNotificationSchema.parse(body);
+  const notification = await notificationService.updateNotification(id, validated);
   return Response.json(successResponse(notification, MESSAGES.SUCCESS.UPDATE));
 });
 

@@ -2,6 +2,7 @@ import { withApiHandler } from "@/lib/api-handler";
 import { successResponse } from "@/lib/api-response";
 import { MESSAGES } from "@/constants/config";
 import * as providerService from "@/services/provider.service";
+import { updateProviderSchema } from "@/lib/validations/provider.validation";
 
 export const GET = withApiHandler(async (_req, { params }) => {
   const { id } = await params;
@@ -12,7 +13,8 @@ export const GET = withApiHandler(async (_req, { params }) => {
 export const PUT = withApiHandler(async (req, { params }) => {
   const { id } = await params;
   const body = await req.json();
-  const provider = await providerService.updateProvider(id, body);
+  const validated = updateProviderSchema.parse(body);
+  const provider = await providerService.updateProvider(id, validated);
   return Response.json(successResponse(provider, MESSAGES.SUCCESS.UPDATE));
 });
 

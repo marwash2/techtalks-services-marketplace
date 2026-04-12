@@ -2,6 +2,7 @@ import { withApiHandler } from "@/lib/api-handler";
 import { successResponse } from "@/lib/api-response";
 import { MESSAGES } from "@/constants/config";
 import * as reviewService from "@/services/review.service";
+import { updateReviewSchema } from "@/lib/validations/review.validation";
 
 export const GET = withApiHandler(async (_req, { params }) => {
   const { id } = await params;
@@ -12,7 +13,8 @@ export const GET = withApiHandler(async (_req, { params }) => {
 export const PUT = withApiHandler(async (req, { params }) => {
   const { id } = await params;
   const body = await req.json();
-  const review = await reviewService.updateReview(id, body);
+  const validated = updateReviewSchema.parse(body);
+  const review = await reviewService.updateReview(id, validated);
   return Response.json(successResponse(review, MESSAGES.SUCCESS.UPDATE));
 });
 

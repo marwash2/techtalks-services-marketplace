@@ -2,6 +2,7 @@ import { withApiHandler } from "@/lib/api-handler";
 import { successResponse } from "@/lib/api-response";
 import { MESSAGES, PAGINATION } from "@/constants/config";
 import * as reviewService from "@/services/review.service";
+import { createReviewSchema } from "@/lib/validations/review.validation";
 
 export const GET = withApiHandler(async (req) => {
   const { searchParams } = new URL(req.url);
@@ -16,6 +17,7 @@ export const GET = withApiHandler(async (req) => {
 
 export const POST = withApiHandler(async (req) => {
   const body = await req.json();
-  const review = await reviewService.createReview(body);
+  const validated = createReviewSchema.parse(body);
+  const review = await reviewService.createReview(validated);
   return Response.json(successResponse(review, MESSAGES.SUCCESS.CREATE), { status: 201 });
 });

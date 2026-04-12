@@ -2,6 +2,7 @@ import { withApiHandler } from "@/lib/api-handler";
 import { successResponse } from "@/lib/api-response";
 import { MESSAGES } from "@/constants/config";
 import * as categoryService from "@/services/category.service";
+import { updateCategorySchema } from "@/lib/validations/category.validation";
 
 export const GET = withApiHandler(async (_req, { params }) => {
   const { id } = await params;
@@ -12,7 +13,8 @@ export const GET = withApiHandler(async (_req, { params }) => {
 export const PUT = withApiHandler(async (req, { params }) => {
   const { id } = await params;
   const body = await req.json();
-  const category = await categoryService.updateCategory(id, body);
+  const validated = updateCategorySchema.parse(body);
+  const category = await categoryService.updateCategory(id, validated);
   return Response.json(successResponse(category, MESSAGES.SUCCESS.UPDATE));
 });
 

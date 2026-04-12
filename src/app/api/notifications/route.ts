@@ -2,6 +2,7 @@ import { withApiHandler } from "@/lib/api-handler";
 import { successResponse } from "@/lib/api-response";
 import { MESSAGES, PAGINATION } from "@/constants/config";
 import * as notificationService from "@/services/notification.service";
+import { createNotificationSchema } from "@/lib/validations/notification.validation";
 
 export const GET = withApiHandler(async (req) => {
   const { searchParams } = new URL(req.url);
@@ -17,6 +18,7 @@ export const GET = withApiHandler(async (req) => {
 
 export const POST = withApiHandler(async (req) => {
   const body = await req.json();
-  const notification = await notificationService.createNotification(body);
+  const validated = createNotificationSchema.parse(body);
+  const notification = await notificationService.createNotification(validated);
   return Response.json(successResponse(notification, MESSAGES.SUCCESS.CREATE), { status: 201 });
 });

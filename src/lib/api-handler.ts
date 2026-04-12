@@ -1,7 +1,6 @@
-// src/lib/api-handler.ts
-
 import { ApiError } from "./api-error";
 import { errorResponse } from "./api-response";
+import { ZodError } from "zod";
 
 export function withApiHandler(
   handler: (req: Request, context?: any) => Promise<Response>
@@ -10,6 +9,19 @@ export function withApiHandler(
     try {
       return await handler(req, context);
     } catch (err) {
+      if (err instanceof ZodError) {
+        return Response.json(
+          errorResponse(
+            "Validation failed",
+            err.issues.map((e) => ({
+              field: e.path.join("."),
+              message: e.message,
+            }))
+          ),
+          { status: 422 }
+        );
+      }
+
       if (err instanceof ApiError) {
         return Response.json(
           errorResponse(err.message, err.details),

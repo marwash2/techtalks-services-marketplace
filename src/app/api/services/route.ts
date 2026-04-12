@@ -2,6 +2,7 @@ import { withApiHandler } from "@/lib/api-handler";
 import { successResponse } from "@/lib/api-response";
 import { MESSAGES, PAGINATION } from "@/constants/config";
 import * as serviceService from "@/services/service.service";
+import { createServiceSchema } from "@/lib/validations/service.validation";
 
 export const GET = withApiHandler(async (req) => {
   const { searchParams } = new URL(req.url);
@@ -16,6 +17,7 @@ export const GET = withApiHandler(async (req) => {
 
 export const POST = withApiHandler(async (req) => {
   const body = await req.json();
-  const service = await serviceService.createService(body);
+  const validated = createServiceSchema.parse(body);
+  const service = await serviceService.createService(validated);
   return Response.json(successResponse(service, MESSAGES.SUCCESS.CREATE), { status: 201 });
 });
