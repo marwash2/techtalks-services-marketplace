@@ -1,0 +1,105 @@
+import { connectDB } from "@/lib/db";
+import { Booking } from "@/lib/schemas/Booking.schema";
+import { MESSAGES, PAGINATION, BOOKING_STATUS } from "@/constants/config";
+import { ApiError } from "@/lib/api-error";
+import { toBookingDTO, toBookingListDTO } from "@/lib/dto/booking.dto";
+
+type BookingFilters = {
+  userId?: string;
+  providerId?: string;
+  status?: string;
+};
+
+type CreateBookingInput = {
+  userId: string;
+  providerId: string;
+  serviceId: string;
+  date: string;
+  notes?: string;
+};
+
+type UpdateBookingInput = {
+  status?: string;
+  notes?: string;
+};
+
+export async function getAllBookings(
+  page = 1,
+  limit = PAGINATION.DEFAULT_LIMIT,
+  filters: BookingFilters = {}
+) {
+  await connectDB();
+
+  const skip = (page - 1) * limit;
+  const query: Record<string, string> = {};
+
+  if (filters.userId) query.userId = filters.userId;
+  if (filters.providerId) query.providerId = filters.providerId;
+  if (filters.status) query.status = filters.status;
+
+  const bookings = await Booking.find(query)
+    .populate("userId", "name email")
+    .populate("providerId", "businessName location")
+    .populate("serviceId", "title price duration")
+    .skip(skip)
+    .limit(limit)
+    .exec();
+  const total = await Booking.countDocuments(query);
+
+  return {
+    bookings: toBookingListDTO(bookings),
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+  };
+}
+
+export async function createBooking(bookingData: CreateBookingInput) {
+  await connectDB();
+
+  const { userId, providerId, serviceId, date } = bookingData;
+
+  if (!userId || !providerId || !serviceId || !date) {
+    throw new ApiError(MESSAGES.ERROR.INVALID_INPUT, 400);
+  }
+
+  const booking = new Booking({
+    ...bookingData,
+    status: BOOKING_STATUS.PENDING,
+  });
+  await booking.save();
+
+  return toBookingDTO(booking);
+}
+
+export async function getBookingById(id: string) {
+  await connectDB();
+
+  const booking = await Booking.findById(id)
+    .populate("userId", "name email")
+    .populate("providerId", "businessName location")
+    .populate("serviceId", "title price duration");
+
+  if (!booking) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
+
+  return toBookingDTO(booking);
+}
+
+export async function updateBooking(id: string, bookingData: UpdateBookingInput) {
+  await connectDB();
+
+  const booking = await Booking.findByIdAndUpdate(id, bookingData, {
+    new: true,
+    runValidators: true,
+  });
+  if (!booking) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
+
+  return toBookingDTO(booking);
+}
+
+export async function deleteBooking(id: string) {
+  await connectDB();
+
+  const booking = await Booking.findByIdAndDelete(id);
+  if (!booking) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
+
+  return toBookingDTO(booking);
+}

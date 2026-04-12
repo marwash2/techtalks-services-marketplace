@@ -1,112 +1,23 @@
-import { connectDB } from "@/lib/db";
-import { Service } from "@/lib/schemas/Service.schema";
+import { withApiHandler } from "@/lib/api-handler";
+import { successResponse } from "@/lib/api-response";
 import { MESSAGES } from "@/constants/config";
-import { NextRequest, NextResponse } from "next/server";
+import * as serviceService from "@/services/service.service";
 
-function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : MESSAGES.ERROR.SERVER_ERROR;
-}
+export const GET = withApiHandler(async (_req, { params }) => {
+  const { id } = await params;
+  const service = await serviceService.getServiceById(id);
+  return Response.json(successResponse(service));
+});
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  try {
-    await connectDB();
-    const { id } = await params;
+export const PUT = withApiHandler(async (req, { params }) => {
+  const { id } = await params;
+  const body = await req.json();
+  const service = await serviceService.updateService(id, body);
+  return Response.json(successResponse(service, MESSAGES.SUCCESS.UPDATE));
+});
 
-    const service = await Service.findById(id)
-      .populate("providerId", "businessName location")
-      .populate("categoryId", "name");
-
-    if (!service) {
-      return NextResponse.json(
-        { success: false, message: MESSAGES.ERROR.NOT_FOUND },
-        { status: 404 },
-      );
-    }
-
-    return NextResponse.json({ success: true, data: service });
-  } catch (error: unknown) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: MESSAGES.ERROR.SERVER_ERROR,
-        error: getErrorMessage(error),
-      },
-      { status: 500 },
-    );
-  }
-}
-
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  try {
-    await connectDB();
-    const { id } = await params;
-
-    const body = await req.json();
-    const service = await Service.findByIdAndUpdate(id, body, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!service) {
-      return NextResponse.json(
-        { success: false, message: MESSAGES.ERROR.NOT_FOUND },
-        { status: 404 },
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: MESSAGES.SUCCESS.UPDATE,
-      data: service,
-    });
-  } catch (error: unknown) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: MESSAGES.ERROR.SERVER_ERROR,
-        error: getErrorMessage(error),
-      },
-      { status: 500 },
-    );
-  }
-}
-
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  try {
-    await connectDB();
-    const { id } = await params;
-
-    const service = await Service.findByIdAndDelete(id);
-
-    if (!service) {
-      return NextResponse.json(
-        { success: false, message: MESSAGES.ERROR.NOT_FOUND },
-        { status: 404 },
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: MESSAGES.SUCCESS.DELETE,
-      data: service,
-    });
-  } catch (error: unknown) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: MESSAGES.ERROR.SERVER_ERROR,
-        error: getErrorMessage(error),
-      },
-      { status: 500 },
-    );
-  }
-}
+export const DELETE = withApiHandler(async (_req, { params }) => {
+  const { id } = await params;
+  await serviceService.deleteService(id);
+  return Response.json(successResponse(null, MESSAGES.SUCCESS.DELETE));
+});  
