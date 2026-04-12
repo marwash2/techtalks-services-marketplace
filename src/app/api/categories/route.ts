@@ -1,70 +1,19 @@
-import { connectDB } from "@/lib/db";
-import { Category } from "@/lib/schemas/Category.schema";
+import { withApiHandler } from "@/lib/api-handler";
+import { successResponse } from "@/lib/api-response";
 import { MESSAGES, PAGINATION } from "@/constants/config";
-import { NextRequest, NextResponse } from "next/server";
+import * as categoryService from "@/services/category.service";
 
-export async function GET(req: NextRequest) {
-  try {
-    await connectDB();
+export const GET = withApiHandler(async (req) => {
+  const { searchParams } = new URL(req.url);
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || String(PAGINATION.DEFAULT_LIMIT));
 
-    const page = parseInt(req.nextUrl.searchParams.get("page") || "1");
-    const limit = parseInt(
-      req.nextUrl.searchParams.get("limit") || String(PAGINATION.DEFAULT_LIMIT)
-    );
+  const result = await categoryService.getAllCategories(page, limit);
+  return Response.json(successResponse(result));
+});
 
-    const skip = (page - 1) * limit;
-    const categories = await Category.find().skip(skip).limit(limit).exec();
-    const total = await Category.countDocuments();
-
-    return NextResponse.json({
-      success: true,
-      data: categories,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
-    });
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(req: NextRequest) {
-  try {
-    await connectDB();
-
-    const body = await req.json();
-    const { name, description, icon, slug } = body;
-
-    if (!name) {
-      return NextResponse.json(
-        { success: false, message: MESSAGES.ERROR.INVALID_INPUT },
-        { status: 400 }
-      );
-    }
-
-    const category = new Category({
-      name,
-      description,
-      icon,
-      slug: slug || name.toLowerCase().replace(/\s+/g, "-"),
-    });
-
-    await category.save();
-
-    return NextResponse.json(
-      { success: true, message: MESSAGES.SUCCESS.CREATE, data: category },
-      { status: 201 }
-    );
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
-      { status: 500 }
-    );
-  }
-}
+export const POST = withApiHandler(async (req) => {
+  const body = await req.json();
+  const category = await categoryService.createCategory(body);
+  return Response.json(successResponse(category, MESSAGES.SUCCESS.CREATE), { status: 201 });
+});

@@ -1,91 +1,23 @@
-import { connectDB } from "@/lib/db";
-import { Category } from "@/lib/schemas/Category.schema";
+import { withApiHandler } from "@/lib/api-handler";
+import { successResponse } from "@/lib/api-response";
 import { MESSAGES } from "@/constants/config";
-import { NextRequest, NextResponse } from "next/server";
+import * as categoryService from "@/services/category.service";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    await connectDB();
+export const GET = withApiHandler(async (_req, { params }) => {
+  const { id } = await params;
+  const category = await categoryService.getCategoryById(id);
+  return Response.json(successResponse(category));
+});
 
-    const category = await Category.findById(params.id);
+export const PUT = withApiHandler(async (req, { params }) => {
+  const { id } = await params;
+  const body = await req.json();
+  const category = await categoryService.updateCategory(id, body);
+  return Response.json(successResponse(category, MESSAGES.SUCCESS.UPDATE));
+});
 
-    if (!category) {
-      return NextResponse.json(
-        { success: false, message: MESSAGES.ERROR.NOT_FOUND },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ success: true, data: category });
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    await connectDB();
-
-    const body = await req.json();
-    const category = await Category.findByIdAndUpdate(params.id, body, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!category) {
-      return NextResponse.json(
-        { success: false, message: MESSAGES.ERROR.NOT_FOUND },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: MESSAGES.SUCCESS.UPDATE,
-      data: category,
-    });
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    await connectDB();
-
-    const category = await Category.findByIdAndDelete(params.id);
-
-    if (!category) {
-      return NextResponse.json(
-        { success: false, message: MESSAGES.ERROR.NOT_FOUND },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: MESSAGES.SUCCESS.DELETE,
-      data: category,
-    });
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
-      { status: 500 }
-    );
-  }
-}
+export const DELETE = withApiHandler(async (_req, { params }) => {
+  const { id } = await params;
+  await categoryService.deleteCategory(id);
+  return Response.json(successResponse(null, MESSAGES.SUCCESS.DELETE));
+});
