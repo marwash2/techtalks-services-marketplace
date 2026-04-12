@@ -1,94 +1,23 @@
-import { connectDB } from "@/lib/db";
-import { User } from "@/lib/schemas/User.schema";
+import { withApiHandler } from "@/lib/api-handler";
+import { successResponse } from "@/lib/api-response";
 import { MESSAGES } from "@/constants/config";
-import { NextRequest, NextResponse } from "next/server";
+import * as userService from "@/services/user.service";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    await connectDB();
-    const { id } = await params;
+export const GET = withApiHandler(async (_req, { params }) => {
+  const { id } = await params;
+  const user = await userService.getUserById(id);
+  return Response.json(successResponse(user));
+});
 
-    const user = await User.findById(id);
+export const PUT = withApiHandler(async (req, { params }) => {
+  const { id } = await params;
+  const body = await req.json();
+  const user = await userService.updateUser(id, body);
+  return Response.json(successResponse(user, MESSAGES.SUCCESS.UPDATE));
+});
 
-    if (!user) {
-      return NextResponse.json(
-        { success: false, message: MESSAGES.ERROR.NOT_FOUND },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ success: true, data: user });
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    await connectDB();
-    const { id } = await params;
-
-    const body = await req.json();
-    const user = await User.findByIdAndUpdate(id, body, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { success: false, message: MESSAGES.ERROR.NOT_FOUND },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: MESSAGES.SUCCESS.UPDATE,
-      data: user,
-    });
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    await connectDB();
-    const { id } = await params;
-
-    const user = await User.findByIdAndDelete(id);
-
-    if (!user) {
-      return NextResponse.json(
-        { success: false, message: MESSAGES.ERROR.NOT_FOUND },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: MESSAGES.SUCCESS.DELETE,
-      data: user,
-    });
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
-      { status: 500 }
-    );
-  }
-}
+export const DELETE = withApiHandler(async (_req, { params }) => {
+  const { id } = await params;
+  await userService.deleteUser(id);
+  return Response.json(successResponse(null, MESSAGES.SUCCESS.DELETE));
+});

@@ -4,11 +4,11 @@ import { ApiError } from "./api-error";
 import { errorResponse } from "./api-response";
 
 export function withApiHandler(
-  handler: (req: Request) => Promise<Response>
+  handler: (req: Request, context?: any) => Promise<Response>
 ) {
-  return async (req: Request) => {
+  return async (req: Request, context?: any) => {
     try {
-      return await handler(req);
+      return await handler(req, context);
     } catch (err) {
       if (err instanceof ApiError) {
         return Response.json(

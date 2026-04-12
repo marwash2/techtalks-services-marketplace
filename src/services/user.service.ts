@@ -1,8 +1,9 @@
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/schemas/User.schema";
-import { PAGINATION, MESSAGES } from "@/constants/config";
+import { MESSAGES, PAGINATION } from "@/constants/config";
+import { ApiError } from "@/lib/api-error";
+import { toUserDTO, toUserListDTO } from "@/lib/dto/user.dto";
 
-// Get all users with pagination
 export async function getAllUsers(page = 1, limit = PAGINATION.DEFAULT_LIMIT) {
   await connectDB();
 
@@ -11,7 +12,7 @@ export async function getAllUsers(page = 1, limit = PAGINATION.DEFAULT_LIMIT) {
   const total = await User.countDocuments();
 
   return {
-    users,
+    users: toUserListDTO(users),
     pagination: {
       page,
       limit,
@@ -21,7 +22,6 @@ export async function getAllUsers(page = 1, limit = PAGINATION.DEFAULT_LIMIT) {
   };
 }
 
-// Create new user
 export async function createUser(userData: {
   name: string;
   email: string;
@@ -32,66 +32,48 @@ export async function createUser(userData: {
 
   const { name, email, password, role } = userData;
 
-  // Check if email already exists
-  const existingUser = await User.findOne({ email });
-  //   if (existingUser) {
-  //     throw new Error("Email already exists");
-  //   }
-  if (existingUser) {
-    throw new Error(MESSAGES.ERROR.DUPLICATE_EMAIL);
+  if (!name || !email || !password) {
+    throw new ApiError(MESSAGES.ERROR.INVALID_INPUT, 400);
   }
+
+  const existingUser = await User.findOne({ email });
+  if (existingUser) throw new ApiError(MESSAGES.ERROR.DUPLICATE_EMAIL, 409);
 
   const user = new User({ name, email, password, role: role || "user" });
   await user.save();
 
-  return user;
+  return toUserDTO(user);
 }
 
-// Get user by ID
 export async function getUserById(id: string) {
   await connectDB();
 
   const user = await User.findById(id);
-  //   if (!user) {
-  //     throw new Error("User not found");
-  //   }
-  if (!user) {
-    throw new Error(MESSAGES.ERROR.NOT_FOUND);
-  }
+  if (!user) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
 
-  return user;
+  return toUserDTO(user);
 }
 
-// Update user
-export async function updateUser(id: string, userData: any) {
+export async function updateUser(
+  id: string,
+  userData: Partial<{ name: string; email: string; role: string }>
+) {
   await connectDB();
 
   const user = await User.findByIdAndUpdate(id, userData, {
     new: true,
     runValidators: true,
   });
+  if (!user) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
 
-  //   if (!user) {
-  //     throw new Error("User not found");
-  //   }
-  if (!user) {
-    throw new Error(MESSAGES.ERROR.NOT_FOUND);
-  }
-
-  return user;
+  return toUserDTO(user);
 }
 
-// Delete user
 export async function deleteUser(id: string) {
   await connectDB();
 
   const user = await User.findByIdAndDelete(id);
-  //   if (!user) {
-  //     throw new Error("User not found");
-  //   }
-  if (!user) {
-    throw new Error(MESSAGES.ERROR.NOT_FOUND);
-  }
+  if (!user) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
 
-  return user;
+  return toUserDTO(user);
 }
