@@ -3,6 +3,7 @@ import { User } from "@/lib/schemas/User.schema";
 import { MESSAGES, PAGINATION } from "@/constants/config";
 import { ApiError } from "@/lib/api-error";
 import { toUserDTO, toUserListDTO } from "@/lib/dto/user.dto";
+import bcrypt from "bcryptjs";
 
 export async function getAllUsers(page = 1, limit = PAGINATION.DEFAULT_LIMIT) {
   await connectDB();
@@ -39,8 +40,26 @@ export async function createUser(userData: {
   const existingUser = await User.findOne({ email });
   if (existingUser) throw new ApiError(MESSAGES.ERROR.DUPLICATE_EMAIL, 409);
 
-  const user = new User({ name, email, password, role: role || "user" });
+  const hashedPassword = await bcrypt.hash(password, 12);
+
+  const user = new User({ name, email, password: hashedPassword, role: role || "user" });
   await user.save();
+
+  return toUserDTO(user);
+}
+
+export async function loginUser(email: string, password: string) {
+  await connectDB();
+
+  if (!email || !password) {
+    throw new ApiError(MESSAGES.ERROR.INVALID_INPUT, 400);
+  }
+
+  const user = await User.findOne({ email });
+  if (!user) throw new ApiError(MESSAGES.ERROR.INVALID_CREDENTIALS, 401);
+
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) throw new ApiError(MESSAGES.ERROR.INVALID_CREDENTIALS, 401);
 
   return toUserDTO(user);
 }
