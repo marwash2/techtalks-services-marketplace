@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import { dbConnect } from "@/lib/db";
-import User from "@/models/User.model";  
+import bcrypt from "bcryptjS";
+import { connectDB } from "@/lib/db";
+import User from "@/models/User.model";
 
 // POST request handler for signup + login
 export async function POST(req: Request) {
-  await dbConnect();
+  await connectDB();
   const body = await req.json();
   const { action, email, password, role } = body;
 
@@ -13,7 +13,10 @@ export async function POST(req: Request) {
     //  Signup logic
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return NextResponse.json({ error: "User already exists" }, { status: 400 });
+      return NextResponse.json(
+        { error: "User already exists" },
+        { status: 400 },
+      );
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -36,7 +39,10 @@ export async function POST(req: Request) {
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Invalid credentials" },
+        { status: 401 },
+      );
     }
 
     return NextResponse.json({ message: "Login successful", user });
