@@ -1,25 +1,113 @@
 import { withApiHandler } from "@/lib/api-handler";
 import { successResponse } from "@/lib/api-response";
 import { MESSAGES } from "@/constants/config";
-import * as bookingService from "@/services/booking.service";
-import { updateBookingSchema } from "@/lib/validations/booking.validation";
+import { NextRequest, NextResponse } from "next/server";
 
-export const GET = withApiHandler(async (_req, { params }) => {
-  const { id } = await params;
-  const booking = await bookingService.getBookingById(id);
-  return Response.json(successResponse(booking));
-});
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : MESSAGES.ERROR.SERVER_ERROR;
+}
 
-export const PUT = withApiHandler(async (req, { params }) => {
-  const { id } = await params;
-  const body = await req.json();
-  const validated = updateBookingSchema.parse(body);
-  const booking = await bookingService.updateBooking(id, validated);
-  return Response.json(successResponse(booking, MESSAGES.SUCCESS.UPDATE));
-});
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    await connectDB();
+    const { id } = await params;
 
-export const DELETE = withApiHandler(async (_req, { params }) => {
-  const { id } = await params;
-  await bookingService.deleteBooking(id);
-  return Response.json(successResponse(null, MESSAGES.SUCCESS.DELETE));
-});
+    const booking = await Booking.findById(id)
+      .populate("userId", "name email")
+      .populate("providerId", "businessName location")
+      .populate("serviceId", "title price");
+
+    if (!booking) {
+      return NextResponse.json(
+        { success: false, message: MESSAGES.ERROR.NOT_FOUND },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({ success: true, data: booking });
+  } catch (error: unknown) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: MESSAGES.ERROR.SERVER_ERROR,
+        error: getErrorMessage(error),
+      },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    await connectDB();
+    const { id } = await params;
+
+    const body = await req.json();
+    const booking = await Booking.findByIdAndUpdate(id, body, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!booking) {
+      return NextResponse.json(
+        { success: false, message: MESSAGES.ERROR.NOT_FOUND },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: MESSAGES.SUCCESS.UPDATE,
+      data: booking,
+    });
+  } catch (error: unknown) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: MESSAGES.ERROR.SERVER_ERROR,
+        error: getErrorMessage(error),
+      },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    await connectDB();
+    const { id } = await params;
+
+    const booking = await Booking.findByIdAndDelete(id);
+
+    if (!booking) {
+      return NextResponse.json(
+        { success: false, message: MESSAGES.ERROR.NOT_FOUND },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: MESSAGES.SUCCESS.DELETE,
+      data: booking,
+    });
+  } catch (error: unknown) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: MESSAGES.ERROR.SERVER_ERROR,
+        error: getErrorMessage(error),
+      },
+      { status: 500 },
+    );
+  }
+}
