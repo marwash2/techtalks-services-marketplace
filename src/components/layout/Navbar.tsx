@@ -22,7 +22,7 @@ export default function Navbar() {
   const guestLinks = [
     { name: "Home", path: "/" },
     { name: "Login", path: "/(auth)/login" },
-    { name: "Register", path: "/(auth)/register" },
+    { name: "Register", path: "/register" },
   ];
 
   // User (client)
@@ -103,7 +103,7 @@ export default function Navbar() {
                 Log in
               </Link>
               <Link
-                href="/(auth)/register"
+                href="/register"
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
               >
                 Sign Up
