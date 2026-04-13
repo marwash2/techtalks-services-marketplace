@@ -1,6 +1,9 @@
 import { connectDB } from "@/lib/db";
 import { Provider } from "@/lib/schemas/Provider.schema";
-import { PAGINATION, MESSAGES } from "@/constants/config";
+import { User } from "@/lib/schemas/User.schema";
+import { MESSAGES, PAGINATION } from "@/constants/config";
+import { ApiError } from "@/lib/api-error";
+import { toProviderDTO, toProviderListDTO } from "@/lib/dto/provider.dto";
 
 type CreateProviderInput = {
   userId: string;
@@ -15,11 +18,7 @@ type CreateProviderInput = {
 
 type UpdateProviderInput = Partial<CreateProviderInput>;
 
-// Get all providers with pagination
-export async function getAllProviders(
-  page = 1,
-  limit = PAGINATION.DEFAULT_LIMIT
-) {
+export async function getAllProviders(page = 1, limit = PAGINATION.DEFAULT_LIMIT) {
   await connectDB();
 
   const skip = (page - 1) * limit;
@@ -31,65 +30,58 @@ export async function getAllProviders(
   const total = await Provider.countDocuments();
 
   return {
-    providers,
-    pagination: {
-      page,
-      limit,
-      total,
-      pages: Math.ceil(total / limit),
-    },
+    providers: toProviderListDTO(providers),
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
   };
 }
 
-// Create new provider
 export async function createProvider(providerData: CreateProviderInput) {
   await connectDB();
+
+  const { userId, businessName, location } = providerData;
+
+  if (!userId || !businessName || !location) {
+    throw new ApiError(MESSAGES.ERROR.INVALID_INPUT, 400);
+  }
+
+  const user = await User.findById(userId);
+  if (!user) throw new ApiError("User not found", 404);
+
+  const existingProvider = await Provider.findOne({ userId });
+  if (existingProvider) throw new ApiError("User already has a provider account", 409);
 
   const provider = new Provider(providerData);
   await provider.save();
 
-  return provider;
+  return toProviderDTO(provider);
 }
 
-// Get provider by ID
 export async function getProviderById(id: string) {
   await connectDB();
 
-  const provider = await Provider.findById(id).populate("userId");
-  if (!provider) {
-    throw new Error(MESSAGES.ERROR.NOT_FOUND);
-  }
+  const provider = await Provider.findById(id).populate("userId", "name email");
+  if (!provider) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
 
-  return provider;
+  return toProviderDTO(provider);
 }
 
-// Update provider
-export async function updateProvider(
-  id: string,
-  providerData: UpdateProviderInput
-) {
+export async function updateProvider(id: string, providerData: UpdateProviderInput) {
   await connectDB();
 
   const provider = await Provider.findByIdAndUpdate(id, providerData, {
     new: true,
     runValidators: true,
   });
+  if (!provider) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
 
-  if (!provider) {
-    throw new Error(MESSAGES.ERROR.NOT_FOUND);
-  }
-
-  return provider;
+  return toProviderDTO(provider);
 }
 
-// Delete provider
 export async function deleteProvider(id: string) {
   await connectDB();
 
   const provider = await Provider.findByIdAndDelete(id);
-  if (!provider) {
-    throw new Error(MESSAGES.ERROR.NOT_FOUND);
-  }
+  if (!provider) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
 
-  return provider;
+  return toProviderDTO(provider);
 }

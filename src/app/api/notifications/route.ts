@@ -1,83 +1,24 @@
-import { connectDB } from "@/lib/db";
-import { Notification } from "@/lib/schemas/Notification.schema";
+import { withApiHandler } from "@/lib/api-handler";
+import { successResponse } from "@/lib/api-response";
 import { MESSAGES, PAGINATION } from "@/constants/config";
-import { NextRequest, NextResponse } from "next/server";
+import * as notificationService from "@/services/notification.service";
+import { createNotificationSchema } from "@/lib/validations/notification.validation";
 
-export async function GET(req: NextRequest) {
-  try {
-    await connectDB();
+export const GET = withApiHandler(async (req) => {
+  const { searchParams } = new URL(req.url);
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || String(PAGINATION.DEFAULT_LIMIT));
+  const userId = searchParams.get("userId") || undefined;
+  const isReadParam = searchParams.get("isRead");
+  const isRead = isReadParam !== null ? isReadParam === "true" : undefined;
 
-    const page = parseInt(req.nextUrl.searchParams.get("page") || "1");
-    const limit = parseInt(
-      req.nextUrl.searchParams.get("limit") || String(PAGINATION.DEFAULT_LIMIT)
-    );
-    const userId = req.nextUrl.searchParams.get("userId");
-    const isRead = req.nextUrl.searchParams.get("isRead");
+  const result = await notificationService.getAllNotifications(page, limit, { userId, isRead });
+  return Response.json(successResponse(result));
+});
 
-    const skip = (page - 1) * limit;
-    const filter: any = {};
-
-    if (userId) filter.userId = userId;
-    if (isRead !== null) filter.isRead = isRead === "true";
-
-    const notifications = await Notification.find(filter)
-      .populate("userId")
-      .skip(skip)
-      .limit(limit)
-      .sort({ createdAt: -1 })
-      .exec();
-    const total = await Notification.countDocuments(filter);
-
-    return NextResponse.json({
-      success: true,
-      data: notifications,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
-    });
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
-      { status: 500 }
-    );
-  }
-}
-
-export async function POST(req: NextRequest) {
-  try {
-    await connectDB();
-
-    const body = await req.json();
-    const { userId, title, message, type, link } = body;
-
-    if (!userId || !title || !message) {
-      return NextResponse.json(
-        { success: false, message: MESSAGES.ERROR.INVALID_INPUT },
-        { status: 400 }
-      );
-    }
-
-    const notification = new Notification({
-      userId,
-      title,
-      message,
-      type: type || "other",
-      link,
-    });
-
-    await notification.save();
-
-    return NextResponse.json(
-      { success: true, message: MESSAGES.SUCCESS.CREATE, data: notification },
-      { status: 201 }
-    );
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
-      { status: 500 }
-    );
-  }
-}
+export const POST = withApiHandler(async (req) => {
+  const body = await req.json();
+  const validated = createNotificationSchema.parse(body);
+  const notification = await notificationService.createNotification(validated);
+  return Response.json(successResponse(notification, MESSAGES.SUCCESS.CREATE), { status: 201 });
+});

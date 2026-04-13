@@ -1,5 +1,5 @@
-import { connectDB } from "@/lib/db";
-import { Booking } from "@/lib/schemas/Booking.schema";
+import { withApiHandler } from "@/lib/api-handler";
+import { successResponse } from "@/lib/api-response";
 import { MESSAGES } from "@/constants/config";
 import { NextRequest, NextResponse } from "next/server";
 

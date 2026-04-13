@@ -1,6 +1,10 @@
 import { connectDB } from "@/lib/db";
 import { Service } from "@/lib/schemas/Service.schema";
+import { Provider } from "@/lib/schemas/Provider.schema";
+import { Category } from "@/lib/schemas/Category.schema";
 import { MESSAGES, PAGINATION } from "@/constants/config";
+import { ApiError } from "@/lib/api-error";
+import { toServiceDTO, toServiceListDTO } from "@/lib/dto/service.dto";
 
 type ServiceFilters = {
   providerId?: string;
@@ -20,16 +24,15 @@ type CreateServiceInput = {
 
 type UpdateServiceInput = Partial<CreateServiceInput>;
 
-// Get all services with pagination and filters
 export async function getAllServices(
   page = 1,
   limit = PAGINATION.DEFAULT_LIMIT,
-  filters: ServiceFilters = {},
+  filters: ServiceFilters = {}
 ) {
   await connectDB();
 
   const skip = (page - 1) * limit;
-  const query: ServiceFilters = {};
+  const query: Record<string, string> = {};
 
   if (filters.providerId) query.providerId = filters.providerId;
   if (filters.categoryId) query.categoryId = filters.categoryId;
@@ -43,65 +46,58 @@ export async function getAllServices(
   const total = await Service.countDocuments(query);
 
   return {
-    services,
-    pagination: {
-      page,
-      limit,
-      total,
-      pages: Math.ceil(total / limit),
-    },
+    services: toServiceListDTO(services),
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
   };
 }
 
-// Create new service
 export async function createService(serviceData: CreateServiceInput) {
   await connectDB();
+
+  const { providerId, categoryId, title, price, duration } = serviceData;
+
+  if (!providerId || !categoryId || !title || !price || !duration) {
+    throw new ApiError(MESSAGES.ERROR.INVALID_INPUT, 400);
+  }
+
+  const provider = await Provider.findById(providerId);
+  if (!provider) throw new ApiError("Provider not found", 404);
+
+  const category = await Category.findById(categoryId);
+  if (!category) throw new ApiError("Category not found", 404);
 
   const service = new Service(serviceData);
   await service.save();
 
-  return service;
+  return toServiceDTO(service);
 }
 
-// Get service by ID
 export async function getServiceById(id: string) {
   await connectDB();
 
   const service = await Service.findById(id).populate("providerId categoryId");
-  if (!service) {
-    throw new Error(MESSAGES.ERROR.NOT_FOUND);
-  }
+  if (!service) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
 
-  return service;
+  return toServiceDTO(service);
 }
 
-// Update service
-export async function updateService(
-  id: string,
-  serviceData: UpdateServiceInput,
-) {
+export async function updateService(id: string, serviceData: UpdateServiceInput) {
   await connectDB();
 
   const service = await Service.findByIdAndUpdate(id, serviceData, {
     new: true,
     runValidators: true,
   });
+  if (!service) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
 
-  if (!service) {
-    throw new Error(MESSAGES.ERROR.NOT_FOUND);
-  }
-
-  return service;
+  return toServiceDTO(service);
 }
 
-// Delete service
 export async function deleteService(id: string) {
   await connectDB();
 
   const service = await Service.findByIdAndDelete(id);
-  if (!service) {
-    throw new Error(MESSAGES.ERROR.NOT_FOUND);
-  }
+  if (!service) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
 
-  return service;
+  return toServiceDTO(service);
 }
