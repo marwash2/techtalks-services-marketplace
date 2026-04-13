@@ -1,47 +1,55 @@
-import { NextResponse } from "next/server";
+import NextAuth from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { dbConnect } from "@/lib/db";
-import User from "@/models/User.model";  
+import { connectDB } from "@/lib/db";
+import User from "@/models/User.model";
 
-// POST request handler for signup + login
-export async function POST(req: Request) {
-  await dbConnect();
-  const body = await req.json();
-  const { action, email, password, role } = body;
+const handler = NextAuth({
+  providers: [
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        await connectDB();
 
-  if (action === "signup") {
-    //  Signup logic
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return NextResponse.json({ error: "User already exists" }, { status: 400 });
-    }
+        // Find user by email
+        const user = await User.findOne({ email: credentials?.email });
+        if (!user) throw new Error("No user found");
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({
-      email,
-      password: hashedPassword,
-      role: role || "user", // default role if not provided
-    });
+        // Validate password
+        const isValid = await bcrypt.compare(credentials!.password, user.password);
+        if (!isValid) throw new Error("Invalid password");
+        return {
+          id: user._id.toString(),
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        } as any;
+      },
+    }),
+  ],
+   callbacks: {
+    async jwt({ token, user }) {
+      // Attach role to JWT when user signs in
+      if (user) {
+        token.role = user.role;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      // Pass role into session so frontend can use it
+      if (token && session.user) {
+        (session.user as any).role = token.role;
+      }
+      return session;
+    },
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+});
+export { handler as GET, handler as POST };
 
-    await newUser.save();
-    return NextResponse.json({ message: "Signup successful", user: newUser });
-  }
 
-  if (action === "login") {
-    //  Login logic
-    const user = await User.findOne({ email });
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
-    }
-
-    return NextResponse.json({ message: "Login successful", user });
-  }
-
-  // If action is missing or invalid
-  return NextResponse.json({ error: "Invalid action" }, { status: 400 });
-}
