@@ -1,121 +1,23 @@
-import { connectDB } from "@/lib/db";
-import { Service } from "@/lib/schemas/Service.schema";
-import { Provider } from "@/lib/schemas/Provider.schema";
-import { Category } from "@/lib/schemas/Category.schema";
+import { withApiHandler } from "@/lib/api-handler";
+import { successResponse } from "@/lib/api-response";
 import { MESSAGES, PAGINATION } from "@/constants/config";
-import { NextRequest, NextResponse } from "next/server";
+import * as serviceService from "@/services/service.service";
+import { createServiceSchema } from "@/lib/validations/service.validation";
 
-export async function GET(req: NextRequest) {
-  try {
-    await connectDB();
+export const GET = withApiHandler(async (req) => {
+  const { searchParams } = new URL(req.url);
+  const page = parseInt(searchParams.get("page") || "1");
+  const limit = parseInt(searchParams.get("limit") || String(PAGINATION.DEFAULT_LIMIT));
+  const providerId = searchParams.get("providerId") || undefined;
+  const categoryId = searchParams.get("categoryId") || undefined;
 
-    const page = parseInt(req.nextUrl.searchParams.get("page") || "1");
-    const limit = parseInt(
-      req.nextUrl.searchParams.get("limit") || String(PAGINATION.DEFAULT_LIMIT),
-    );
-    const providerId = req.nextUrl.searchParams.get("providerId");
-    const categoryId = req.nextUrl.searchParams.get("categoryId");
+  const result = await serviceService.getAllServices(page, limit, { providerId, categoryId });
+  return Response.json(successResponse(result));
+});
 
-    const skip = (page - 1) * limit;
-    const filter: any = {};
-
-    if (providerId) filter.providerId = providerId;
-    if (categoryId) filter.categoryId = categoryId;
-
-    const services = await Service.find(filter)
-      .populate("providerId", "businessName location")
-      .populate("categoryId", "name")
-      .skip(skip)
-      .limit(limit)
-      .exec();
-    const total = await Service.countDocuments(filter);
-
-    return NextResponse.json({
-      success: true,
-      data: services,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
-    });
-  } catch (error: any) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: MESSAGES.ERROR.SERVER_ERROR,
-        error: error.message,
-      },
-      { status: 500 },
-    );
-  }
-}
-
-export async function POST(req: NextRequest) {
-  try {
-    await connectDB();
-
-    const body = await req.json();
-    const { providerId, categoryId, title, description, price, duration } =
-      body;
-
-    if (!providerId || !categoryId || !title || !price || !duration) {
-      return NextResponse.json(
-        { success: false, message: MESSAGES.ERROR.INVALID_INPUT },
-        { status: 400 },
-      );
-    }
-
-    // ✅ Validate provider
-    const provider = await Provider.findById(providerId);
-    if (!provider) {
-      return NextResponse.json(
-        { success: false, message: "Provider not found" },
-        { status: 404 },
-      );
-    }
-    // const currentUserId = req.headers.get("userId");
-
-    // if (provider.userId.toString() !== currentUserId) {
-    //   return NextResponse.json(
-    //     { success: false, message: "Not your provider account" },
-    //     { status: 403 },
-    //   );
-    // }
-
-    // ✅ Validate category
-    const category = await Category.findById(categoryId);
-    if (!category) {
-      return NextResponse.json(
-        { success: false, message: "Category not found" },
-        { status: 404 },
-      );
-    }
-
-    const service = new Service({
-      providerId,
-      categoryId,
-      title,
-      description,
-      price,
-      duration,
-    });
-
-    await service.save();
-
-    return NextResponse.json(
-      { success: true, message: MESSAGES.SUCCESS.CREATE, data: service },
-      { status: 201 },
-    );
-  } catch (error: any) {
-    return NextResponse.json(
-      {
-        success: false,
-        message: MESSAGES.ERROR.SERVER_ERROR,
-        error: error.message,
-      },
-      { status: 500 },
-    );
-  }
-}
+export const POST = withApiHandler(async (req) => {
+  const body = await req.json();
+  const validated = createServiceSchema.parse(body);
+  const service = await serviceService.createService(validated);
+  return Response.json(successResponse(service, MESSAGES.SUCCESS.CREATE), { status: 201 });
+});

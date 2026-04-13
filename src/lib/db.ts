@@ -10,7 +10,7 @@ if (!MONGODB_URI) {
 let cached = (global as any).mongoose ?? { conn: null, promise: null };
 (global as any).mongoose = cached;
 
-export async function dbConnect() {
+export async function connectDB() {
   if (cached.conn) return cached.conn;
 
   if (!cached.promise) {
@@ -19,6 +19,11 @@ export async function dbConnect() {
     });
   }
 
-  cached.conn = await cached.promise;
-  return cached.conn;
+  try {
+    cached.conn = await cached.promise;
+    return cached.conn;
+  } catch (error) {
+    cached.promise = null;
+    throw error;
+  }
 }

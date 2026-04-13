@@ -1,93 +1,25 @@
-import { connectDB } from "@/lib/db";
-import { Review } from "@/lib/schemas/Review.schema";
+import { withApiHandler } from "@/lib/api-handler";
+import { successResponse } from "@/lib/api-response";
 import { MESSAGES } from "@/constants/config";
-import { NextRequest, NextResponse } from "next/server";
+import * as reviewService from "@/services/review.service";
+import { updateReviewSchema } from "@/lib/validations/review.validation";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    await connectDB();
+export const GET = withApiHandler(async (_req, { params }) => {
+  const { id } = await params;
+  const review = await reviewService.getReviewById(id);
+  return Response.json(successResponse(review));
+});
 
-    const review = await Review.findById(params.id).populate(
-      "userId providerId serviceId"
-    );
+export const PUT = withApiHandler(async (req, { params }) => {
+  const { id } = await params;
+  const body = await req.json();
+  const validated = updateReviewSchema.parse(body);
+  const review = await reviewService.updateReview(id, validated);
+  return Response.json(successResponse(review, MESSAGES.SUCCESS.UPDATE));
+});
 
-    if (!review) {
-      return NextResponse.json(
-        { success: false, message: MESSAGES.ERROR.NOT_FOUND },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ success: true, data: review });
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    await connectDB();
-
-    const body = await req.json();
-    const review = await Review.findByIdAndUpdate(params.id, body, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!review) {
-      return NextResponse.json(
-        { success: false, message: MESSAGES.ERROR.NOT_FOUND },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: MESSAGES.SUCCESS.UPDATE,
-      data: review,
-    });
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    await connectDB();
-
-    const review = await Review.findByIdAndDelete(params.id);
-
-    if (!review) {
-      return NextResponse.json(
-        { success: false, message: MESSAGES.ERROR.NOT_FOUND },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: MESSAGES.SUCCESS.DELETE,
-      data: review,
-    });
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
-      { status: 500 }
-    );
-  }
-}
+export const DELETE = withApiHandler(async (_req, { params }) => {
+  const { id } = await params;
+  await reviewService.deleteReview(id);
+  return Response.json(successResponse(null, MESSAGES.SUCCESS.DELETE));
+});

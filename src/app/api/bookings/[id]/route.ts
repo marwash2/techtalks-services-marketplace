@@ -1,44 +1,55 @@
-import { connectDB } from "@/lib/db";
-import { Booking } from "@/lib/schemas/Booking.schema";
+import { withApiHandler } from "@/lib/api-handler";
+import { successResponse } from "@/lib/api-response";
 import { MESSAGES } from "@/constants/config";
 import { NextRequest, NextResponse } from "next/server";
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : MESSAGES.ERROR.SERVER_ERROR;
+}
+
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     await connectDB();
+    const { id } = await params;
 
-    const booking = await Booking.findById(params.id).populate(
-      "userId providerId serviceId"
-    );
+    const booking = await Booking.findById(id)
+      .populate("userId", "name email")
+      .populate("providerId", "businessName location")
+      .populate("serviceId", "title price");
 
     if (!booking) {
       return NextResponse.json(
         { success: false, message: MESSAGES.ERROR.NOT_FOUND },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     return NextResponse.json({ success: true, data: booking });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
-      { status: 500 }
+      {
+        success: false,
+        message: MESSAGES.ERROR.SERVER_ERROR,
+        error: getErrorMessage(error),
+      },
+      { status: 500 },
     );
   }
 }
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     await connectDB();
+    const { id } = await params;
 
     const body = await req.json();
-    const booking = await Booking.findByIdAndUpdate(params.id, body, {
+    const booking = await Booking.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true,
     });
@@ -46,7 +57,7 @@ export async function PUT(
     if (!booking) {
       return NextResponse.json(
         { success: false, message: MESSAGES.ERROR.NOT_FOUND },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -55,27 +66,32 @@ export async function PUT(
       message: MESSAGES.SUCCESS.UPDATE,
       data: booking,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
-      { status: 500 }
+      {
+        success: false,
+        message: MESSAGES.ERROR.SERVER_ERROR,
+        error: getErrorMessage(error),
+      },
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     await connectDB();
+    const { id } = await params;
 
-    const booking = await Booking.findByIdAndDelete(params.id);
+    const booking = await Booking.findByIdAndDelete(id);
 
     if (!booking) {
       return NextResponse.json(
         { success: false, message: MESSAGES.ERROR.NOT_FOUND },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -84,10 +100,14 @@ export async function DELETE(
       message: MESSAGES.SUCCESS.DELETE,
       data: booking,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { success: false, message: MESSAGES.ERROR.SERVER_ERROR, error: error.message },
-      { status: 500 }
+      {
+        success: false,
+        message: MESSAGES.ERROR.SERVER_ERROR,
+        error: getErrorMessage(error),
+      },
+      { status: 500 },
     );
   }
 }
