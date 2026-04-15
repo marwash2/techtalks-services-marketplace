@@ -1,23 +1,49 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
-  const [form, setForm] = useState({ email: "", password: "", role: "user" });
+  const router = useRouter();
+
+  const [form, setForm] = useState({ name: "" , email: "", password: "", role: "user" });
+  const [error, setError] = useState(""); // error message display
+  const [loading, setLoading] = useState(false); // loading state for submit button
+
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    
-    // send form data to out signup API endpoint
-    const res = await fetch("/api/auth", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, action: "signup" }),
-    });
-    // parse the response from the server
-    const data = await res.json();
-    alert(data.message || data.error);
+    setError("");
+    setLoading(true);
+
+    try {
+      // Call backend signup API
+      const res = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, action: "signup" }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        // Show error if signup failed
+        setError(data.error || "Signup failed");
+      } else {
+        // Redirect user based on role after successful signup
+        if (data.user.role === "provider") {
+          router.push("/provider-dashboard");
+        } else {
+          router.push("/dashboard");
+        }
+      }
+    } catch (err) {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
+
 
   return (
     <div className="max-w-md mx-auto mt-10">
@@ -26,6 +52,17 @@ export default function RegisterPage() {
 
       {/*  Signup form */}
       <form onSubmit={handleSubmit} className="space-y-4">
+
+        {/* Name input */}
+        <input
+          type="text"
+          placeholder="Name"
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          className="w-full border p-2"
+          required
+        />
+        {/* email input*/}
         <input
           type="email"
           placeholder="Email"
@@ -43,7 +80,7 @@ export default function RegisterPage() {
           className="w-full border p-2"
           required
         />
-        {/* Role dropdown user or provider*/}
+        {/* Role dropdown */}
         <select
           value={form.role}
           onChange={(e) => setForm({ ...form, role: e.target.value })}
@@ -52,11 +89,20 @@ export default function RegisterPage() {
           <option value="user">User</option>
           <option value="provider">Provider</option>
         </select>
+
+         {/* Error message */}
+        {error && <p className="text-red-500">{error}</p>}
+
         
         {/* Submit button */}
-        <button type="submit" className="w-full bg-blue-500 text-white p-2">
-          Sign Up
+        <button
+          type="submit"
+          className="w-full bg-blue-500 text-white p-2 disabled:opacity-50"
+          disabled={loading}
+        >
+          {loading ? "Signing up..." : "Sign Up"}
         </button>
+
       </form>
     </div>
   );
