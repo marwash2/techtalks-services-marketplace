@@ -6,50 +6,65 @@ import User from "@/models/User.model";
 
 const handler = NextAuth({
   providers: [
-    CredentialsProvider({
-      name: "Credentials",
-      credentials: {
-        email: { label: "Email", type: "text" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        await connectDB();
+   CredentialsProvider({
+  name: "Credentials",
+  credentials: {
+    email: { label: "Email", type: "email" },
+    password: { label: "Password", type: "password" },
+  },
 
-        // Find user by email
-        const user = await User.findOne({ email: credentials?.email });
-        if (!user) throw new Error("No user found");
+  async authorize(credentials) {
+    if (!credentials) return null;
 
-        // Validate password
-        const isValid = await bcrypt.compare(credentials!.password, user.password);
-        if (!isValid) throw new Error("Invalid password");
-        return {
-          id: user._id.toString(),
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        } as any;
-      },
-    }),
+    await connectDB();
+
+    const user = await User.findOne({
+      email: credentials.email,
+    });
+
+    if (!user) throw new Error("User not found");
+
+    const isMatch = await bcrypt.compare(
+      credentials.password,
+      user.password
+    );
+
+    if (!isMatch) throw new Error("Invalid credentials");
+
+    return {
+      id: user._id.toString(),
+      email: user.email,
+      role: user.role,
+    };
+  },
+})
   ],
-   callbacks: {
+
+  session: {
+    strategy: "jwt", // uses JWT internally
+  },
+
+  callbacks: {
     async jwt({ token, user }) {
-      // Attach role to JWT when user signs in
       if (user) {
-        token.role = user.role;
+        token.role = user.role; // store role in token
       }
       return token;
     },
+
     async session({ session, token }) {
-      // Pass role into session so frontend can use it
-      if (token && session.user) {
-        (session.user as any).role = token.role;
+       if (session.user && token.role){
+        session.user.role = token.role;
       }
       return session;
     },
   },
+
+  pages: {
+    signIn: "/login", // your custom login page
+  },
+
   secret: process.env.NEXTAUTH_SECRET,
 });
+
 export { handler as GET, handler as POST };
-
-
-
