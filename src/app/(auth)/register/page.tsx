@@ -9,7 +9,7 @@ export default function RegisterPage() {
     e.preventDefault();
     
     // send form data to out signup API endpoint
-    const res = await fetch("/api/auth", {
+    const res = await fetch("/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...form, action: "signup" }),

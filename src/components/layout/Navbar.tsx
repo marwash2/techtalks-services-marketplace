@@ -4,46 +4,48 @@ import Link from "next/link";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 
-type User = {
-  role: "user" | "provider" | "admin";
-} | null;
+// NextAuth
+import { useSession, signOut } from "next-auth/react";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Replace later with real auth!!!
-  const [user, setUser] = useState<User>(null);
-  
+  // Get session from NextAuth
+  const { data: session } = useSession();
+
   // Detect active link
   const isActive = (path: string) => pathname === path;
 
-  // Guest
+  // Extract role safely
+  const role = session?.user?.role;
+
+  // Guest links
   const guestLinks = [
     { name: "Home", path: "/" },
-    { name: "Login", path: "/(auth)/login" },
+    { name: "Login", path: "/login" },
     { name: "Register", path: "/register" },
   ];
 
-  // User (client)
+  // User links
   const userLinks = [
-    { name: "Dashboard", path: "/user" },
+    { name: "Dashboard", path: "/user/dashboard" },
     { name: "Explore Services", path: "/user/services" },
     { name: "My Bookings", path: "/user/bookings" },
     { name: "Profile", path: "/user/profile" },
-    {name: "AI Assistant", path: "/user/ai-assistant" },
+    { name: "AI Assistant", path: "/user/ai-assistant" },
   ];
 
-  // Provider
+  // Provider links
   const providerLinks = [
-    { name: "Dashboard", path: "/provider" },
+    { name: "Dashboard", path: "/provider/dashboard" },
     { name: "My Services", path: "/provider/services" },
     { name: "Bookings", path: "/provider/bookings" },
     { name: "Profile", path: "/provider/profile" },
-    {name: "Availability", path: "/provider/availability" },
+    { name: "Availability", path: "/provider/availability" },
   ];
 
-  //  Admin
+  // Admin links
   const adminLinks = [
     { name: "Dashboard", path: "/admin" },
     { name: "Users", path: "/admin/users" },
@@ -53,11 +55,11 @@ export default function Navbar() {
     { name: "My Services", path: "/admin/services" },
   ];
 
-  // Role Logic
+  // Role-based navigation (NextAuth)
   const getLinks = () => {
-    if (!user) return guestLinks;
-    if (user.role === "admin") return adminLinks;
-    if (user.role === "provider") return providerLinks;
+    if (!session) return guestLinks;
+    if (role === "admin") return adminLinks;
+    if (role === "provider") return providerLinks;
     return userLinks;
   };
 
@@ -67,15 +69,12 @@ export default function Navbar() {
 
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
-          {/* <div className="bg-blue-600 text-white px-2 py-1 rounded-lg font-bold">
-            
-          </div> */}
           <span className="text-lg font-semibold text-gray-800">
             <span className="text-blue-600">Matchify</span>
           </span>
         </Link>
 
-        {/* Desktop Nav */}
+        {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
           {getLinks().map((link) => (
             <Link
@@ -94,10 +93,11 @@ export default function Navbar() {
 
         {/* Right Side */}
         <div className="hidden md:flex items-center space-x-4">
-          {!user ? (
+          {!session ? (
             <>
+              {/* Guest */}
               <Link
-                href="/(auth)/login"
+                href="/login"
                 className="text-sm text-gray-600 hover:text-blue-600"
               >
                 Log in
@@ -111,27 +111,18 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              {/* Provider */}
-              {user.role === "provider" && (
-              <>
-                 <Link
-                  href="/(auth)/login"
-                  className="text-sm text-gray-600 hover:text-blue-600"
-                >
-                 Log in
-                </Link>
-
+              {/* Provider CTA */}
+              {role === "provider" && (
                 <Link
                   href="/provider/services/new"
                   className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700"
                 >
                   + Add Service
                 </Link>
-                 </>
               )}
 
-              {/* Admin Label */}
-              {user.role === "admin" && (
+              {/* Admin label */}
+              {role === "admin" && (
                 <span className="text-sm text-gray-500">
                   Admin Panel
                 </span>
@@ -139,8 +130,8 @@ export default function Navbar() {
 
               {/* Logout */}
               <button
-                onClick={() => setUser(null)}
-                className="text-sm text-red-500 hover:text-red-600"
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="px-3 py-1 rounded-md text-sm text-red-500 hover:bg-red-50"
               >
                 Logout
               </button>
@@ -171,19 +162,16 @@ export default function Navbar() {
             </Link>
           ))}
 
-          {!user ? (
+          {!session ? (
             <>
-              <Link href="/(auth)/login">Login</Link>
-              <Link href="/(auth)/register" className="text-blue-600 font-semibold">
+              <Link href="/login">Login</Link>
+              <Link href="/register" className="text-blue-600 font-semibold">
                 Sign Up
               </Link>
             </>
           ) : (
             <button
-              onClick={() => {
-                setUser(null);
-                setMenuOpen(false);
-              }}
+              onClick={() => signOut({ callbackUrl: "/" })}
               className="text-red-500"
             >
               Logout

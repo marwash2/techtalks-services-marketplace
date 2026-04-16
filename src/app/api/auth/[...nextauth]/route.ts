@@ -1,53 +1,70 @@
-import { NextResponse } from "next/server";
-import bcrypt from "bcryptjS";
+import NextAuth from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User.model";
 
-// POST request handler for signup + login
-export async function POST(req: Request) {
-  await connectDB();
-  const body = await req.json();
-  const { action, email, password, role } = body;
+const handler = NextAuth({
+  providers: [
+   CredentialsProvider({
+  name: "Credentials",
+  credentials: {
+    email: { label: "Email", type: "email" },
+    password: { label: "Password", type: "password" },
+  },
 
-  if (action === "signup") {
-    //  Signup logic
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return NextResponse.json(
-        { error: "User already exists" },
-        { status: 400 },
-      );
-    }
+  async authorize(credentials) {
+    if (!credentials) return null;
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({
-      email,
-      password: hashedPassword,
-      role: role || "user", // default role if not provided
+    await connectDB();
+
+    const user = await User.findOne({
+      email: credentials.email,
     });
 
-    await newUser.save();
-    return NextResponse.json({ message: "Signup successful", user: newUser });
-  }
+    if (!user) throw new Error("User not found");
 
-  if (action === "login") {
-    //  Login logic
-    const user = await User.findOne({ email });
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    const isMatch = await bcrypt.compare(
+      credentials.password,
+      user.password
+    );
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 },
-      );
-    }
+    if (!isMatch) throw new Error("Invalid credentials");
 
-    return NextResponse.json({ message: "Login successful", user });
-  }
+    return {
+      id: user._id.toString(),
+      email: user.email,
+      role: user.role,
+    };
+  },
+})
+  ],
 
-  // If action is missing or invalid
-  return NextResponse.json({ error: "Invalid action" }, { status: 400 });
-}
+  session: {
+    strategy: "jwt", // uses JWT internally
+  },
+
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role; // store role in token
+      }
+      return token;
+    },
+
+    async session({ session, token }) {
+       if (session.user && token.role){
+        session.user.role = token.role;
+      }
+      return session;
+    },
+  },
+
+  pages: {
+    signIn: "/login", // your custom login page
+  },
+
+  secret: process.env.NEXTAUTH_SECRET,
+});
+
+export { handler as GET, handler as POST };
