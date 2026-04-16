@@ -90,11 +90,11 @@ export default function Navbar() {
 
         {/* Right Side */}
         <div className="hidden md:flex items-center gap-3 space-x-4">
-          {!user ? (
+          {!session ? (
             <>
               {/* Guest */}
               <Link
-                href="/(auth)/login"
+                href="/login"
                 className="text-sm text-gray-600 hover:text-blue-600 transition"
               >
                 Log in
@@ -109,15 +109,8 @@ export default function Navbar() {
           ) : (
             <>
               {/* Provider */}
-              {user.role === "provider" && (
+              {role === "provider" && (
                 <>
-                  <Link
-                    href="/(auth)/login"
-                    className="text-sm text-gray-600 hover:text-blue-600"
-                  >
-                    Log in
-                  </Link>
-
                   <Link
                     href="/provider/services/new"
                     className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700"
@@ -128,7 +121,7 @@ export default function Navbar() {
               )}
 
               {/* Admin Label */}
-              {user.role === "admin" && (
+              {role === "admin" && (
                 <span className="text-sm text-gray-500">Admin Panel</span>
               )}
 
@@ -168,9 +161,9 @@ export default function Navbar() {
 
           {!session ? (
             <>
-              <Link href="/(auth)/login">Login</Link>
+              <Link href="/login">Login</Link>
               <Link
-                href="/(auth)/register"
+                href="/register"
                 className="text-blue-600 font-semibold"
               >
                 Sign Up
