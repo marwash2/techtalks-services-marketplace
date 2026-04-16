@@ -1,9 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
-  const [form, setForm] = useState({ email: "", password: "", role: "user" });
+  const router = useRouter();
+
+  const [form, setForm] = useState({ name: "" , email: "", password: "", role: "user" });
+  const [error, setError] = useState(""); // error message display
+  const [loading, setLoading] = useState(false); // loading state for submit button
+
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -19,6 +25,7 @@ export default function RegisterPage() {
     alert(data.message || data.error);
   }
 
+
   return (
     <div className="max-w-md mx-auto mt-10">
          {/*  page title*/}
@@ -26,6 +33,17 @@ export default function RegisterPage() {
 
       {/*  Signup form */}
       <form onSubmit={handleSubmit} className="space-y-4">
+
+        {/* Name input */}
+        <input
+          type="text"
+          placeholder="Name"
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          className="w-full border p-2"
+          required
+        />
+        {/* email input*/}
         <input
           type="email"
           placeholder="Email"
@@ -43,7 +61,7 @@ export default function RegisterPage() {
           className="w-full border p-2"
           required
         />
-        {/* Role dropdown user or provider*/}
+        {/* Role dropdown */}
         <select
           value={form.role}
           onChange={(e) => setForm({ ...form, role: e.target.value })}
@@ -52,11 +70,20 @@ export default function RegisterPage() {
           <option value="user">User</option>
           <option value="provider">Provider</option>
         </select>
+
+         {/* Error message */}
+        {error && <p className="text-red-500">{error}</p>}
+
         
         {/* Submit button */}
-        <button type="submit" className="w-full bg-blue-500 text-white p-2">
-          Sign Up
+        <button
+          type="submit"
+          className="w-full bg-blue-500 text-white p-2 disabled:opacity-50"
+          disabled={loading}
+        >
+          {loading ? "Signing up..." : "Sign Up"}
         </button>
+
       </form>
     </div>
   );
