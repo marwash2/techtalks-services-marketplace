@@ -77,11 +77,10 @@ export default function Navbar() {
             <Link
               key={link.path}
               href={link.path}
-              className={`text-sm font-medium transition ${
-                isActive(link.path)
+              className={`text-sm font-medium transition ${isActive(link.path)
                   ? "text-gray-700 hover:text-blue-600 transition"
                   : "text-gray-700 hover:text-blue-600 transition"
-              }`}
+                }`}
             >
               {link.name}
             </Link>
@@ -90,15 +89,15 @@ export default function Navbar() {
 
         {/* Right Side */}
         <div className="hidden md:flex items-center gap-3 space-x-4">
-          {!user ? (
+          {!session ? (
             <>
-              {/* Guest */}
               <Link
                 href="/(auth)/login"
                 className="text-sm text-gray-600 hover:text-blue-600 transition"
               >
                 Log in
               </Link>
+
               <Link
                 href="/register"
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition"
@@ -109,26 +108,17 @@ export default function Navbar() {
           ) : (
             <>
               {/* Provider */}
-              {user.role === "provider" && (
-                <>
-                  <Link
-                    href="/(auth)/login"
-                    className="text-sm text-gray-600 hover:text-blue-600"
-                  >
-                    Log in
-                  </Link>
-
-                  <Link
-                    href="/provider/services/new"
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700"
-                  >
-                    + Add Service
-                  </Link>
-                </>
+              {session.user?.role === "provider" && (
+                <Link
+                  href="/provider/services/new"
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700"
+                >
+                  + Add Service
+                </Link>
               )}
 
-              {/* Admin Label */}
-              {user.role === "admin" && (
+              {/* Admin */}
+              {session.user?.role === "admin" && (
                 <span className="text-sm text-gray-500">Admin Panel</span>
               )}
 
