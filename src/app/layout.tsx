@@ -12,10 +12,13 @@ import Footer from "@/components/layout/Footer";
 import SessionProviderWrapper from "@/components/providers/SessionProviderWrapper";
 
 export const metadata: Metadata = {
-  title: "Matchify | Services Marketplace",
-  description:
-    "Find trusted service providers using AI-powered matching.",
+  title: "Khidmati | Services Marketplace",
+  description: "Find trusted service providers using AI-powered matching.",
+  icons: {
+    icon: "/Khidmati.png",
+  },
 };
+
 
 export default function RootLayout({
   children,
@@ -24,7 +27,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-gray-50 text-gray-900">
+      <body className="bg-gray-100 text-gray-900 ">
 
         {/* Client wrapper inside server layout */}
         <SessionProviderWrapper>
