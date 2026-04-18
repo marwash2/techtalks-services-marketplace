@@ -76,8 +76,8 @@ export default function Navbar() {
           ))}
         </nav>
 
-        {/* RIGHT SIDE */}
-        <div className="hidden md:flex items-center gap-3">
+        {/* Right Side */}
+        <div className="hidden md:flex items-center gap-3 space-x-4">
           {!session ? (
             <>
               <Link
@@ -96,15 +96,22 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              {role === "provider" && (
+              {/* Provider */}
+              {session.user?.role === "provider" && (
                 <Link
                   href="/provider/services/new"
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700 transition"
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700"
                 >
                   + Add Service
                 </Link>
               )}
 
+              {/* Admin */}
+              {session.user?.role === "admin" && (
+                <span className="text-sm text-gray-500">Admin Panel</span>
+              )}
+
+              {/* Logout */}
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
                 className="text-sm bg-red-500 hover:bg-red-700 px-3 py-1 rounded-md transition"
