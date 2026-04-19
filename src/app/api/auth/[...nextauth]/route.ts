@@ -4,67 +4,45 @@ import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User.model";
 
-const handler = NextAuth({
-  providers: [
-   CredentialsProvider({
-  name: "Credentials",
-  credentials: {
-    email: { label: "Email", type: "email" },
-    password: { label: "Password", type: "password" },
-  },
+// POST request handler for signup + login
+export async function POST(req: Request) {
+  await dbConnect();
+  const body = await req.json();
+  const { action, email, password, role } = body;
 
-  async authorize(credentials) {
-    if (!credentials) return null;
+  if (action === "signup") {
+    //  Signup logic
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return NextResponse.json({ error: "User already exists" }, { status: 400 });
+    }
 
-    await connectDB();
-
-    const user = await User.findOne({
-      email: credentials.email,
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({
+      email,
+      password: hashedPassword,
+      role: role || "user", // default role if not provided
     });
 
-    if (!user) throw new Error("User not found");
+    await newUser.save();
+    return NextResponse.json({ message: "Signup successful", user: newUser });
+  }
 
-    const isMatch = await bcrypt.compare(
-      credentials.password,
-      user.password
-    );
+  if (action === "login") {
+    //  Login logic
+    const user = await User.findOne({ email });
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
 
-    if (!isMatch) throw new Error("Invalid credentials");
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    }
 
-    return {
-      id: user._id.toString(),
-      email: user.email,
-      role: user.role,
-    };
-  },
-})
-  ],
+    return NextResponse.json({ message: "Login successful", user });
+  }
 
-  session: {
-    strategy: "jwt", // uses JWT internally
-  },
-
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.role = user.role; // store role in token
-      }
-      return token;
-    },
-
-    async session({ session, token }) {
-       if (session.user && token.role){
-        session.user.role = token.role;
-      }
-      return session;
-    },
-  },
-
-  pages: {
-    signIn: "/login", // your custom login page
-  },
-
-  secret: process.env.NEXTAUTH_SECRET,
-});
-
-export { handler as GET, handler as POST };
+  // If action is missing or invalid
+  return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+}

@@ -12,6 +12,8 @@ export const GET = withApiHandler(async (req) => {
   const categoryId = searchParams.get("categoryId") || undefined;
 
   const result = await serviceService.getAllServices(page, limit, { providerId, categoryId });
+  // Debug log
+  console.log("Fetched categories:", result);
   return Response.json(successResponse(result));
 });
 
