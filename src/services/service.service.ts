@@ -7,8 +7,12 @@ import { ApiError } from "@/lib/api-error";
 import { toServiceDTO, toServiceListDTO } from "@/lib/dto/service.dto";
 
 type ServiceFilters = {
-  providerId?: string;
+ providerId?: string;
   categoryId?: string;
+  search?: string;
+  price?: number;
+  location?: string;
+  category?: string; 
 };
 
 type CreateServiceInput = {
@@ -32,22 +36,58 @@ export async function getAllServices(
   await connectDB();
 
   const skip = (page - 1) * limit;
-  const query: Record<string, string> = {};
+  const query: any = {};
 
   if (filters.providerId) query.providerId = filters.providerId;
   if (filters.categoryId) query.categoryId = filters.categoryId;
 
-  const services = await Service.find(query)
+  // 🔍 search (title)
+  if (filters.search) {
+    query.title = { $regex: filters.search, $options: "i" };
+  }
+
+  // 💰 max price
+  if (filters.price) {
+    query.price = { $lte: filters.price };
+  }
+
+  let services = await Service.find(query)
     .populate("providerId", "businessName location")
     .populate("categoryId", "name")
     .skip(skip)
     .limit(limit)
     .exec();
-  const total = await Service.countDocuments(query);
+
+  // 🏷️ filter by category name
+  if (filters.category) {
+    services = services.filter(
+      (s: any) =>
+        typeof s.categoryId === "object" &&
+        s.categoryId?.name?.toLowerCase() ===
+          filters.category?.toLowerCase()
+    );
+  }
+
+  // 📍 filter by provider location
+  if (filters.location) {
+    services = services.filter(
+      (s: any) =>
+        typeof s.providerId === "object" &&
+        s.providerId?.location?.toLowerCase() ===
+          filters.location?.toLowerCase()
+    );
+  }
+
+  const total = services.length;
 
   return {
     services: toServiceListDTO(services),
-    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit),
+    },
   };
 }
 
