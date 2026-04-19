@@ -2,6 +2,8 @@ import { withApiHandler } from "@/lib/api-handler";
 import { successResponse } from "@/lib/api-response";
 import { MESSAGES } from "@/constants/config";
 import { NextRequest, NextResponse } from "next/server";
+import { connectDB } from "@/lib/db";
+import { Booking } from "@/models";
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : MESSAGES.ERROR.SERVER_ERROR;

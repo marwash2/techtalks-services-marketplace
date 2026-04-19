@@ -13,37 +13,17 @@ export default function RegisterPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      // Call backend signup API
-      const res = await fetch("/api/auth", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, action: "signup" }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        // Show error if signup failed
-        setError(data.error || "Signup failed");
-      } else {
-        // Redirect user based on role after successful signup
-        if (data.user.role === "provider") {
-          router.push("/provider-dashboard");
-        } else {
-          router.push("/dashboard");
-        }
-      }
-    } catch (err) {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    
+    // send form data to out signup API endpoint
+    const res = await fetch("/api/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...form, action: "signup" }),
+    });
+    // parse the response from the server
+    const data = await res.json();
+    alert(data.message || data.error);
   }
-
 
   return (
     <div className="max-w-md mx-auto mt-10">

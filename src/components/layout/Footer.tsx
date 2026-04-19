@@ -16,10 +16,9 @@ import {
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-950 text-gray-400">
-      <div className="max-w-7xl mx-auto px-6 py-14">
-        <div className="grid md:grid-cols-4 gap-10">
-
+    <footer className=" bg-gray-50 border-t border-gray-100 mt-16">
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-16">
           {/* Brand */}
           <div>
             <Link href="/" className="flex items-center space-x-2 mb-4">
@@ -27,47 +26,96 @@ export default function Footer() {
                 
               </div> */}
               <span className="text-xl font-bold text-white">
-                <span className="text-blue-500">Matchify</span>
+                <span className="text-gray-900">Matchify</span>
               </span>
             </Link>
 
-            <p className="text-sm leading-relaxed">
+            <p className="text-sm text-gray-500 leading-relaxed">
               Discover trusted service providers powered by smart AI matching.
               Compare, choose, and book with confidence.
             </p>
 
             <div className="flex space-x-4 mt-4 text-lg">
-              <FontAwesomeIcon icon={faFacebook} className="hover:text-white cursor-pointer" />
-              <FontAwesomeIcon icon={faTwitter} className="hover:text-white cursor-pointer" />
-              <FontAwesomeIcon icon={faInstagram} className="hover:text-white cursor-pointer" />
-              <FontAwesomeIcon icon={faLinkedin} className="hover:text-white cursor-pointer" />
+              <FontAwesomeIcon
+                icon={faFacebook}
+                className="hover:text-blue-600 cursor-pointer"
+              />
+              <FontAwesomeIcon
+                icon={faTwitter}
+                className="hover:text-blue-600 cursor-pointer"
+              />
+              <FontAwesomeIcon
+                icon={faInstagram}
+                className="hover:text-orange-600 cursor-pointer"
+              />
+              <FontAwesomeIcon
+                icon={faLinkedin}
+                className="hover:text-blue-600 cursor-pointer"
+              />
             </div>
           </div>
 
           {/*Explore */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Explore</h3>
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/user/services" className="hover:text-white">Browse Services</Link></li>
-              <li><Link href="/user/ai-assistant" className="hover:text-white">AI Assistant</Link></li>
-              <li><Link href="/user/dashboard" className="hover:text-white">My Dashboard</Link></li>
-              
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">
+              Explore
+            </h3>
+            <ul className="space-y-2 text-sm text-gray-500">
+              <li>
+                <Link
+                  href="/user/services"
+                  className="hover:text-blue-600 transition cursor-pointer"
+                >
+                  Browse Services
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/user/ai-assistant"
+                  className="hover:text-blue-600 transition cursor-pointer"
+                >
+                  AI Assistant
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/user/dashboard"
+                  className="hover:text-blue-600 transition cursor-pointer"
+                >
+                  My Dashboard
+                </Link>
+              </li>
             </ul>
           </div>
 
           {/* Platform */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Platform</h3>
-            <ul className="space-y-2 text-sm">
-              <li><Link href="/about" className="hover:text-white">About Us</Link></li>
-              <li><Link href="/faq" className="hover:text-white">FAQs</Link></li>
-              <li><Link href="/privacy" className="hover:text-white">Privacy Policy</Link></li>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">
+              Platform
+            </h3>
+            <ul className="space-y-2 text-sm text-gray-500">
+              <li>
+                <Link
+                  href="/about"
+                  className="hover:text-blue-600 transition cursor-pointer"
+                >
+                  About Us
+                </Link>
+                <div className="mt-4 text-sm">
+                  <p className="text-sm font-semibold text-gray-900 mb-3">
+                    Support Hours
+                  </p>
+                  <p>Mon - Fri: 9:00 AM - 5:00 PM</p>
+                </div>
+              </li>
             </ul>
           </div>
 
           {/* Contact */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Contact</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">
+              Contact
+            </h3>
 
             <div className="space-y-3 text-sm">
               <div className="flex items-center space-x-2">
@@ -85,19 +133,13 @@ export default function Footer() {
                 <span>support@matchify.com</span>
               </div>
             </div>
-
-            <div className="mt-4 text-sm">
-              <p className="text-white font-medium">Support Hours</p>
-              <p>Mon - Fri: 9:00 AM - 5:00 PM</p>
-            </div>
           </div>
         </div>
 
         {/*Bottom Bar */}
-        <div className="border-t border-gray-800 mt-10 pt-6 text-center text-sm">
-          <p>
-            © {new Date().getFullYear()} techtalks. All rights reserved.
-          </p>
+        <div className="mt-10 pt-6 border-t border-gray-100 text-center text-xs text-gray-500">
+          © {new Date().getFullYear()} Techtalk Services Marketplace. All rights
+          reserved.
         </div>
       </div>
     </footer>
