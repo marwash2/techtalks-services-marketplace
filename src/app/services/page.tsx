@@ -5,19 +5,28 @@ import { Suspense } from 'react'
 
 export default function Page() {
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Services</h1>
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8">
+      <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6">
+        Services
+      </h1>
+
       <Suspense fallback={<div>Loading...</div>}>
-        <div className="flex gap-6">
-          <div className="w-64 shrink-0">
+        <div className="flex flex-col md:flex-row gap-6">
+          
+          {/* Filters */}
+          <div className="w-full md:w-64 shrink-0">
             <Filters />
           </div>
+
+          {/* Content */}
           <div className="flex-1 flex flex-col gap-4">
             <SearchBar />
-            <div className="bg-white border border-gray-200 rounded-xl p-12 text-center text-gray-400 text-sm">
+
+            <div className="bg-white border border-gray-200 rounded-xl p-6 sm:p-8 md:p-12 text-center text-gray-400 text-sm">
               Results will appear here in Dev 3
             </div>
           </div>
+
         </div>
       </Suspense>
     </div>
