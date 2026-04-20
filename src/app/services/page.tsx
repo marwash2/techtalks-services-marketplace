@@ -142,6 +142,7 @@ export default function Page() {
             <SearchBar />
             <ServicesContent />
           </div>
+
         </div>
       </Suspense>
     </div>

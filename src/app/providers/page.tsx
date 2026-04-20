@@ -16,9 +16,27 @@ type ProviderDTO = {
 };
 
 export default async function ProvidersPage() {
-  const { providers } = (await getAllProviders(1, 100)) as {
-    providers: ProviderDTO[];
-  };
+  let providers: ProviderDTO[] = [];
+
+  try {
+    const response = await getAllProviders(1, 100);
+    providers = response.providers;
+  } catch (error) {
+    console.error("Error fetching providers:", error);
+    return (
+      <div className="flex justify-center items-center py-20">
+        <p className="text-red-600">Failed to load providers. Please try again later.</p>
+      </div>
+    );
+  }
+
+  if (!providers) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <p className="text-slate-600">Loading providers...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">

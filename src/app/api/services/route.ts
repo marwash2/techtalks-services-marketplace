@@ -31,6 +31,9 @@ export const GET = withApiHandler(async (req) => {
     filters
   );
 
+  const result = await serviceService.getAllServices(page, limit, { providerId, categoryId });
+  // Debug log
+  console.log("Fetched categories:", result);
   return Response.json(successResponse(result));
 });
 
