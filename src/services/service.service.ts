@@ -23,7 +23,7 @@ type CreateServiceInput = {
   price: number;
   duration: number;
   image?: string | null;
-  isActive?: boolean;
+
 };
 
 type UpdateServiceInput = Partial<CreateServiceInput>;
@@ -36,52 +36,50 @@ export async function getAllServices(
   await connectDB();
 
   const skip = (page - 1) * limit;
+
+  // 🔍 DB query (only DB filters)
   const query: any = {};
 
-  if (filters.providerId) query.providerId = filters.providerId;
-  if (filters.categoryId) query.categoryId = filters.categoryId;
-
-  // 🔍 search (title)
   if (filters.search) {
-    query.title = { $regex: filters.search, $options: "i" };
+    query.title = {
+      $regex: filters.search,
+      $options: "i",
+    };
   }
 
-  // 💰 max price
   if (filters.price) {
     query.price = { $lte: filters.price };
   }
 
+  // 📦 Fetch with populate
   let services = await Service.find(query)
-    .populate("providerId", "businessName location")
-    .populate("categoryId", "name")
-    .skip(skip)
-    .limit(limit)
-    .exec();
+    .populate("providerId", "location businessName")
+    .populate("categoryId", "name");
 
-  // 🏷️ filter by category name
-  if (filters.category) {
-    services = services.filter(
-      (s: any) =>
-        typeof s.categoryId === "object" &&
-        s.categoryId?.name?.toLowerCase() ===
-          filters.category?.toLowerCase()
-    );
-  }
-
-  // 📍 filter by provider location
+  // 🟡 JS filtering (location + category)
   if (filters.location) {
-    services = services.filter(
-      (s: any) =>
-        typeof s.providerId === "object" &&
-        s.providerId?.location?.toLowerCase() ===
-          filters.location?.toLowerCase()
+    services = services.filter((s: any) =>
+      s.providerId?.location
+        ?.toLowerCase()
+        .includes(filters.location!.toLowerCase())
     );
   }
 
+  if (filters.category) {
+    services = services.filter((s: any) =>
+      s.categoryId?.name
+        ?.toLowerCase()
+        .includes(filters.category!.toLowerCase())
+    );
+  }
+
+  // 📊 IMPORTANT FIX (pagination correct)
   const total = services.length;
 
+  const paginatedServices = services.slice(skip, skip + limit);
+
   return {
-    services: toServiceListDTO(services),
+    services: paginatedServices,
     pagination: {
       page,
       limit,
