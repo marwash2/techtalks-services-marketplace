@@ -10,6 +10,8 @@ export const GET = withApiHandler(async (req) => {
   const limit = parseInt(searchParams.get("limit") || String(PAGINATION.DEFAULT_LIMIT));
 
   const result = await categoryService.getAllCategories(page, limit);
+  // Debug log
+  console.log("Fetched categories:", result);
   return Response.json(successResponse(result));
 });
 

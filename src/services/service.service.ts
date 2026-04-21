@@ -7,8 +7,12 @@ import { ApiError } from "@/lib/api-error";
 import { toServiceDTO, toServiceListDTO } from "@/lib/dto/service.dto";
 
 type ServiceFilters = {
-  providerId?: string;
+ providerId?: string;
   categoryId?: string;
+  search?: string;
+  price?: number;
+  location?: string;
+  category?: string; 
 };
 
 type CreateServiceInput = {
@@ -19,7 +23,7 @@ type CreateServiceInput = {
   price: number;
   duration: number;
   image?: string | null;
-  isActive?: boolean;
+
 };
 
 type UpdateServiceInput = Partial<CreateServiceInput>;
@@ -32,22 +36,56 @@ export async function getAllServices(
   await connectDB();
 
   const skip = (page - 1) * limit;
-  const query: Record<string, string> = {};
 
-  if (filters.providerId) query.providerId = filters.providerId;
-  if (filters.categoryId) query.categoryId = filters.categoryId;
+  // 🔍 DB query (only DB filters)
+  const query: any = {};
 
-  const services = await Service.find(query)
-    .populate("providerId", "businessName location")
-    .populate("categoryId", "name")
-    .skip(skip)
-    .limit(limit)
-    .exec();
-  const total = await Service.countDocuments(query);
+  if (filters.search) {
+    query.title = {
+      $regex: filters.search,
+      $options: "i",
+    };
+  }
+
+  if (filters.price) {
+    query.price = { $lte: filters.price };
+  }
+
+  // 📦 Fetch with populate
+  let services = await Service.find(query)
+    .populate("providerId", "location businessName")
+    .populate("categoryId", "name");
+
+  // 🟡 JS filtering (location + category)
+  if (filters.location) {
+    services = services.filter((s: any) =>
+      s.providerId?.location
+        ?.toLowerCase()
+        .includes(filters.location!.toLowerCase())
+    );
+  }
+
+  if (filters.category) {
+    services = services.filter((s: any) =>
+      s.categoryId?.name
+        ?.toLowerCase()
+        .includes(filters.category!.toLowerCase())
+    );
+  }
+
+  // 📊 IMPORTANT FIX (pagination correct)
+  const total = services.length;
+
+  const paginatedServices = services.slice(skip, skip + limit);
 
   return {
-    services: toServiceListDTO(services),
-    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    services: paginatedServices,
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit),
+    },
   };
 }
 

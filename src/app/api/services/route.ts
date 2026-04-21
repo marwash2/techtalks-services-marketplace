@@ -6,12 +6,34 @@ import { createServiceSchema } from "@/lib/validations/service.validation";
 
 export const GET = withApiHandler(async (req) => {
   const { searchParams } = new URL(req.url);
+
   const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(searchParams.get("limit") || String(PAGINATION.DEFAULT_LIMIT));
-  const providerId = searchParams.get("providerId") || undefined;
-  const categoryId = searchParams.get("categoryId") || undefined;
+  const limit = parseInt(
+    searchParams.get("limit") || String(PAGINATION.DEFAULT_LIMIT)
+  );
+
+  // ✅ from filters UI
+  const search = searchParams.get("search") || undefined;
+  const category = searchParams.get("category") || undefined;
+  const location = searchParams.get("location") || undefined;
+  const maxPrice = searchParams.get("maxPrice");
+
+  const filters: any = {};
+
+  if (search) filters.search = search;
+  if (category) filters.category = category;
+  if (location) filters.location = location;
+  if (maxPrice) filters.price = Number(maxPrice);
+
+  const result = await serviceService.getAllServices(
+    page,
+    limit,
+    filters
+  );
 
   const result = await serviceService.getAllServices(page, limit, { providerId, categoryId });
+  // Debug log
+  console.log("Fetched categories:", result);
   return Response.json(successResponse(result));
 });
 
