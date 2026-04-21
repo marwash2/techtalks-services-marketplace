@@ -10,6 +10,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const { data: session } = useSession();
+  const user = session?.user;
 
   const role = session?.user?.role;
 
@@ -80,6 +81,8 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-3 space-x-4">
           {!session ? (
             <>
+              {/* Guest */}
+
               <Link
                 href="/login"
                 className="text-sm text-gray-600 hover:text-blue-600 transition"
@@ -97,13 +100,22 @@ export default function Navbar() {
           ) : (
             <>
               {/* Provider */}
-              {session.user?.role === "provider" && (
-                <Link
-                  href="/provider/services/new"
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700"
-                >
-                  + Add Service
-                </Link>
+              {user.role === "provider" && (
+                <>
+                  <Link
+                    href="/login"
+                    className="text-sm text-gray-600 hover:text-blue-600"
+                  >
+                    Log in
+                  </Link>
+
+                  <Link
+                    href="/provider/services/new"
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700"
+                  >
+                    + Add Service
+                  </Link>
+                </>
               )}
 
               {/* Admin */}

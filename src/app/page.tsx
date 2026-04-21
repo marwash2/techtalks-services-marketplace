@@ -1,9 +1,29 @@
+"use client";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+
+import BecomeProviderSection from "@/components/layout/BecomeProvider";
 import HeroSection from "@/components/layout/HeroSection";
 import Button from "@/components/ui/Button";
 import FeaturedCategories from "@/components/home/FeaturedCategories";
 import FeaturedServices from "@/components/home/FeaturedServices";
 
 export default function Home() {
+  const { data: session } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!session) {
+      return;
+    } // if not logged in, stay on homepage
+
+    if (session.user.role === "provider") {
+      router.push("/provider/dashboard");
+    } else {
+      router.push("/user/dashboard");
+    }
+  }, [session]);
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
       {/* Hero Section */}
@@ -35,6 +55,10 @@ export default function Home() {
         <h2 className="text-2xl font-semibold mb-6">Featured Services</h2>
         <FeaturedServices />
       </section>
+      <BecomeProviderSection />
+      {/*HERO SECTION: title+search*/}
+      {/*Categories */}
+      {/*featured Services */}
     </div>
   );
 }
