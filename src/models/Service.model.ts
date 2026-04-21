@@ -9,6 +9,9 @@ const ServiceSchema = new Schema<IService>(
     price:        { type: Number, required: true },
     tags:         { type: [String], default: [] }, // powers AI semantic search
     availability: { type: String, required: true },
+    description: { type: String },
+    image: { type: String, default: null },
+     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
 );

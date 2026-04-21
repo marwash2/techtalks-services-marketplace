@@ -13,6 +13,7 @@ export default function Navbar() {
 
   // Get session from NextAuth
   const { data: session } = useSession();
+  const user = session?.user;
 
   // Detect active link
   const isActive = (path: string) => pathname === path;
@@ -93,8 +94,9 @@ export default function Navbar() {
           {!user ? (
             <>
               {/* Guest */}
+
               <Link
-                href="/(auth)/login"
+                href="/login"
                 className="text-sm text-gray-600 hover:text-blue-600 transition"
               >
                 Log in
@@ -112,7 +114,7 @@ export default function Navbar() {
               {user.role === "provider" && (
                 <>
                   <Link
-                    href="/(auth)/login"
+                    href="/login"
                     className="text-sm text-gray-600 hover:text-blue-600"
                   >
                     Log in
@@ -168,11 +170,8 @@ export default function Navbar() {
 
           {!session ? (
             <>
-              <Link href="/(auth)/login">Login</Link>
-              <Link
-                href="/(auth)/register"
-                className="text-blue-600 font-semibold"
-              >
+              <Link href="/login">Login</Link>
+              <Link href="/register" className="text-blue-600 font-semibold">
                 Sign Up
               </Link>
             </>

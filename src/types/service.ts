@@ -7,6 +7,8 @@ export interface IService extends Document {
   price: number;
   tags: string[];           // enables AI semantic search + keyword search
   availability: string;
+  description:String;
+  image:String;
   createdAt: Date;
   updatedAt: Date;
 }
