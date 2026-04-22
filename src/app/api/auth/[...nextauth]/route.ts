@@ -1,12 +1,11 @@
-import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
+import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User.model";
 
 // POST request handler for signup + login
 export async function POST(req: Request) {
-  await dbConnect();
+  await connectDB();
   const body = await req.json();
   const { action, email, password, role } = body;
 

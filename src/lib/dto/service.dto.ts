@@ -13,32 +13,33 @@ interface ServiceDocument {
   createdAt?: Date;
 }
 
-export function toServiceDTO(service: ServiceDocument) {
+export function toServiceDTO(service: any) {
   return {
-    id: service._id.toString(),
-     providerId: service.providerId?._id
-      ? {
-          id: service.providerId._id.toString(),
-          businessName: service.providerId.businessName,
-          location: service.providerId.location,
-        }
-      : service.providerId, // fallback if not populated
-    categoryId: service.categoryId?._id
-      ? {
-          id: service.categoryId._id.toString(),
-          name: service.categoryId.name,
-        }
-      : service.categoryId, // fallback if not populated
+    _id: service._id.toString(),
     title: service.title,
     description: service.description,
     price: service.price,
     duration: service.duration,
-    image: service.image,
-    isActive: service.isActive,
-    createdAt: service.createdAt,
+    image: service.image || null,
+
+    // FIX PROVIDER
+    provider: service.providerId
+      ? {
+          _id: service.providerId._id?.toString(),
+          businessName: service.providerId.businessName,
+          location: service.providerId.location,
+        }
+      : null,
+
+    // FIX CATEGORY
+    category: service.categoryId
+      ? {
+          name: service.categoryId.name,
+        }
+      : null,
   };
 }
 
-export function toServiceListDTO(services: ServiceDocument[]) {
+export function toServiceListDTO(services: any[]) {
   return services.map(toServiceDTO);
 }
