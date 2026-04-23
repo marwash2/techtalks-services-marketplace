@@ -12,7 +12,7 @@ export const GET = withApiHandler(async (req) => {
     searchParams.get("limit") || String(PAGINATION.DEFAULT_LIMIT)
   );
 
-  // ✅ from filters UI
+  // Filters from UI
   const search = searchParams.get("search") || undefined;
   const category = searchParams.get("category") || undefined;
   const location = searchParams.get("location") || undefined;
@@ -25,21 +25,36 @@ export const GET = withApiHandler(async (req) => {
   if (location) filters.location = location;
   if (maxPrice) filters.price = Number(maxPrice);
 
+  // MAIN QUERY 
   const result = await serviceService.getAllServices(
     page,
     limit,
     filters
   );
 
-  const result = await serviceService.getAllServices(page, limit, { providerId, categoryId });
-  // Debug log
-  console.log("Fetched categories:", result);
+  // SECOND QUERY 
+  try {
+    const debugResult = await serviceService.getAllServices(
+      page,
+      limit,
+      { category, location }
+    );
+    console.log("Fetched categories:", debugResult);
+  } catch (err) {
+    console.error("Debug query failed:", err);
+  }
+
   return Response.json(successResponse(result));
 });
 
 export const POST = withApiHandler(async (req) => {
   const body = await req.json();
   const validated = createServiceSchema.parse(body);
+
   const service = await serviceService.createService(validated);
-  return Response.json(successResponse(service, MESSAGES.SUCCESS.CREATE), { status: 201 });
+
+  return Response.json(
+    successResponse(service, MESSAGES.SUCCESS.CREATE),
+    { status: 201 }
+  );
 });

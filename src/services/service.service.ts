@@ -37,7 +37,7 @@ export async function getAllServices(
 
   const skip = (page - 1) * limit;
 
-  // 🔍 DB query (only DB filters)
+  //  DB query (only DB filters)
   const query: any = {};
 
   if (filters.search) {
@@ -51,10 +51,10 @@ export async function getAllServices(
     query.price = { $lte: filters.price };
   }
 
-  // 📦 Fetch with populate
+  //  Fetch with populate
   let services = await Service.find(query)
-    .populate("providerId", "location businessName")
-    .populate("categoryId", "name");
+    .populate("providerId", "businessName location")
+    .populate("categoryId", "name")
 
   // 🟡 JS filtering (location + category)
   if (filters.location) {
@@ -73,7 +73,7 @@ export async function getAllServices(
     );
   }
 
-  // 📊 IMPORTANT FIX (pagination correct)
+  // Pagination
   const total = services.length;
 
   const paginatedServices = services.slice(skip, skip + limit);
