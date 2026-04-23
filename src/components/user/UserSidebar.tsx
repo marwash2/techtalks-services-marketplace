@@ -11,30 +11,35 @@ import {
 } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
 
-const providerLinks = [
+const userLinks = [
   {
     name: "Home",
     path: "/",
     icon: House,
   },
   {
-    name: "Provider Profile",
-    path: "/provider/profile",
-    icon: CircleUserRound,
+    name: "Dashboard",
+    path: "/user/dashboard",
+    icon: Sparkles,
   },
   {
-    name: "My Services",
-    path: "/provider/services",
+    name: "Services",
+    path: "/user/services",
     icon: BriefcaseBusiness,
   },
   {
     name: "Bookings",
-    path: "/provider/bookings",
+    path: "/user/bookings",
     icon: CalendarDays,
+  },
+  {
+    name: "Profile",
+    path: "/user/profile",
+    icon: CircleUserRound,
   },
 ];
 
-export default function ProviderSidebar() {
+export default function UserSidebar() {
   const pathname = usePathname();
   const { isOpen, close } = useSidebar();
 
@@ -64,13 +69,13 @@ export default function ProviderSidebar() {
               Khidmati
             </p>
             <p className="text-xs uppercase tracking-[0.16em] text-slate-400">
-              Provider Area
+              User Area
             </p>
           </div>
         </div>
 
         <nav className="mt-6 space-y-2">
-          {providerLinks.map((link) => {
+          {userLinks.map((link) => {
             const Icon = link.icon;
             const isActive = pathname === link.path;
 

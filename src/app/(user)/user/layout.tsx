@@ -1,6 +1,6 @@
-import ProviderSidebar from "@/components/provider/ProviderSidebar";
+import UserSidebar from "@/components/user/UserSidebar";
 
-export default function ProviderLayout({
+export default function UserLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -8,7 +8,7 @@ export default function ProviderLayout({
   return (
     <div className="mx-auto max-w-7xl py-8">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-        <ProviderSidebar />
+        <UserSidebar />
         <div className="min-w-0 flex-1">{children}</div>
       </div>
     </div>

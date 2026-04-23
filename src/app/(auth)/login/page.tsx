@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import GoogleIcon from "@/components/icons/GoogleIcon";
 
@@ -29,7 +29,18 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-      window.location.href = "/";
+
+      // Get session to determine role and redirect directly to dashboard
+      const session = await getSession();
+      const role = session?.user?.role;
+
+      if (role === "provider") {
+        window.location.href = "/provider/dashboard";
+      } else if (role === "admin") {
+        window.location.href = "/admin";
+      } else {
+        window.location.href = "/user/dashboard";
+      }
     } catch (err) {
       setError("An error occurred. Please try again.");
       setLoading(false);

@@ -16,7 +16,7 @@ interface ServiceDocument {
 export function toServiceDTO(service: ServiceDocument) {
   return {
     id: service._id.toString(),
-     providerId: service.providerId?._id
+    providerId: service.providerId?._id
       ? {
           id: service.providerId._id.toString(),
           businessName: service.providerId.businessName,

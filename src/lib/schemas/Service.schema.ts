@@ -1,6 +1,28 @@
-import mongoose from "mongoose";
+import mongoose, { Document, Types } from "mongoose";
 
-const serviceSchema = new mongoose.Schema(
+export interface IService extends Document {
+  providerId: Types.ObjectId;
+
+  categoryId: Types.ObjectId;
+
+  title: string;
+
+  description?: string;
+
+  price: number;
+
+  duration: number;
+
+  image?: string | null;
+
+  isActive: boolean;
+
+  createdAt: Date;
+
+  updatedAt: Date;
+}
+
+const serviceSchema = new mongoose.Schema<IService>(
   {
     providerId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -19,7 +41,7 @@ const serviceSchema = new mongoose.Schema(
     image: { type: String, default: null },
     isActive: { type: Boolean, default: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export const Service =

@@ -38,8 +38,8 @@ export async function POST(req: Request) {
     const resetLink = `http://localhost:3000/reset-password?token=${rawToken}`;
 
     await resend.emails.send({
-      from: "onboarding@resend.dev",
-      to: email,
+      from: `onboarding@resend.dev`,
+      to: `khidmati.lb@gmail.com`,
       subject: "Password Reset Request",
       html: `
         <p>Hello ${user.name},</p>
