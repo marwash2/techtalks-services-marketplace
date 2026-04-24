@@ -6,7 +6,7 @@ import User from "@/models/User.model";
 
 // POST request handler for signup + login
 export async function POST(req: Request) {
-  await dbConnect();
+  await connectDB();
   const body = await req.json();
   const { action, email, password, role } = body;
 
