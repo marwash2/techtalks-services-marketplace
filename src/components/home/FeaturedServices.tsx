@@ -4,14 +4,26 @@ import { useEffect, useState } from "react";
 import ServiceCard from "@/components/services/ServiceCard";
 
 interface ServiceDTO {
-  id: string;
+  _id?: string;
+  id?: string;
   title: string;
   description?: string;
   price: number;
   duration: number;
   image?: string | null;
-  categoryId?: { name?: string } | string | null;
-  providerId?: { businessName?: string; location?: string } | string | null;
+  categoryId?:
+    | {
+        name?: string;
+      }
+    | null
+    | string;
+  providerId?:
+    | {
+        businessName?: string;
+        location?: string;
+      }
+    | null
+    | string;
 }
 
 export default function FeaturedServices() {
@@ -23,8 +35,8 @@ export default function FeaturedServices() {
       try {
         const res = await fetch("/api/services?page=1&limit=3");
         const json = await res.json();
-        console.log(json); 
-        setServices(json.data.services);
+        console.log(json);
+        setServices(json.data.services || []);
       } catch (err) {
         console.error("Error fetching services:", err);
       } finally {
@@ -35,17 +47,34 @@ export default function FeaturedServices() {
   }, []);
 
   if (loading) return <p className="text-center py-6">Loading services...</p>;
-  if (services.length === 0) return <p className="text-center py-6 text-gray-600">No services available yet</p>;
+  if (services.length === 0)
+    return (
+      <p className="text-center py-6 text-gray-600">
+        No services available yet
+      </p>
+    );
 
   return (
-    <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
-      {services.map((service) => (
+    <div className="grid gap-6 grid-cols-1 md:grid-cols-3 shadow-gray-200 shadow-md py-6 px-6">
+      {services.map((service, index) => (
         <ServiceCard
-          key={service.id}
-          service={service}
-          providerLocation={
-            typeof service.providerId === "object" ? service.providerId?.location : undefined
-          }
+          key={service._id || service.id || index}
+          service={{
+            id: service._id || service.id || "",
+            title: service.title,
+            description: service.description,
+            price: service.price,
+            duration: service.duration,
+            image: service.image,
+            categoryId:
+              typeof service.categoryId === "object"
+                ? service.categoryId
+                : { name: "" },
+            providerId:
+              typeof service.providerId === "object"
+                ? service.providerId
+                : { location: "", businessName: "" },
+          }}
         />
       ))}
     </div>

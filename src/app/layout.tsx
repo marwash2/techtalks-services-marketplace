@@ -7,6 +7,7 @@ config.autoAddCss = false;
 
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { SidebarProvider } from "@/components/layout/SidebarContext";
 
 // Import wrapper (NOT SessionProvider directly)
 import SessionProviderWrapper from "@/components/providers/SessionProviderWrapper";
@@ -19,7 +20,6 @@ export const metadata: Metadata = {
   },
 };
 
-
 export default function RootLayout({
   children,
 }: {
@@ -28,20 +28,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-gray-100 text-gray-900 ">
-
         {/* Client wrapper inside server layout */}
         <SessionProviderWrapper>
+          <SidebarProvider>
+            <Navbar />
 
-          <Navbar />
+            <main className="bg-white ">{children}</main>
 
-          <main className="min-h-screen px-4 md:px-6 lg:px-8">
-            {children}
-          </main>
-
-          <Footer />
-
+            <Footer />
+          </SidebarProvider>
         </SessionProviderWrapper>
-
       </body>
     </html>
   );

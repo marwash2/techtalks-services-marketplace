@@ -13,7 +13,10 @@ type CreateCategoryInput = {
 
 type UpdateCategoryInput = Partial<CreateCategoryInput>;
 
-export async function getAllCategories(page = 1, limit = PAGINATION.DEFAULT_LIMIT) {
+export async function getAllCategories(
+  page = 1,
+  limit = PAGINATION.DEFAULT_LIMIT,
+) {
   await connectDB();
 
   const skip = (page - 1) * limit;
@@ -53,7 +56,17 @@ export async function getCategoryById(id: string) {
   return toCategoryDTO(category);
 }
 
-export async function updateCategory(id: string, categoryData: UpdateCategoryInput) {
+export async function getCategoryBySlug(slug: string) {
+  await connectDB();
+  const category = await Category.findOne({ slug });
+  if (!category) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
+  return toCategoryDTO(category);
+}
+
+export async function updateCategory(
+  id: string,
+  categoryData: UpdateCategoryInput,
+) {
   await connectDB();
 
   const category = await Category.findByIdAndUpdate(id, categoryData, {
