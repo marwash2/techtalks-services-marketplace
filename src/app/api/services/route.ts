@@ -41,6 +41,7 @@ export const POST = withApiHandler(async (req) => {
   const session = await requireAuth(req, ["provider", "admin"]);
   const body = await req.json();
   const validated = createServiceSchema.parse(body);
+
   const service = await serviceService.createService(validated);
   return Response.json(successResponse(service, MESSAGES.SUCCESS.CREATE), {
     status: 201,
