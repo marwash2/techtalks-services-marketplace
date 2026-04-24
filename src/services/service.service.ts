@@ -5,14 +5,15 @@ import { Category } from "@/lib/schemas/Category.schema";
 import { MESSAGES, PAGINATION } from "@/constants/config";
 import { ApiError } from "@/lib/api-error";
 import { toServiceDTO, toServiceListDTO } from "@/lib/dto/service.dto";
-
+import { FilterQuery } from "mongoose";
+import { IService } from "@/lib/schemas/Service.schema";
 type ServiceFilters = {
- providerId?: string;
+  providerId?: string;
   categoryId?: string;
   search?: string;
   price?: number;
   location?: string;
-  category?: string; 
+  category?: string;
 };
 
 type CreateServiceInput = {
@@ -23,22 +24,29 @@ type CreateServiceInput = {
   price: number;
   duration: number;
   image?: string | null;
-
 };
 
 type UpdateServiceInput = Partial<CreateServiceInput>;
+type PopulatedService = IService & {
+  providerId?: {
+    location?: string;
+  };
+  categoryId?: {
+    name?: string;
+  };
+};
 
 export async function getAllServices(
-  page = 1,
-  limit = PAGINATION.DEFAULT_LIMIT,
-  filters: ServiceFilters = {}
+  page: number = 1,
+  limit: number = PAGINATION.DEFAULT_LIMIT,
+  filters: ServiceFilters = {},
 ) {
   await connectDB();
 
   const skip = (page - 1) * limit;
 
   // 🔍 DB query (only DB filters)
-  const query: any = {};
+  const query: FilterQuery<IService> = {};
 
   if (filters.search) {
     query.title = {
@@ -50,6 +58,12 @@ export async function getAllServices(
   if (filters.price) {
     query.price = { $lte: filters.price };
   }
+  if (filters.categoryId) {
+    query.categoryId = filters.categoryId;
+  }
+  if (filters.providerId) {
+    query.providerId = filters.providerId;
+  }
 
   // 📦 Fetch with populate
   let services = await Service.find(query)
@@ -58,18 +72,18 @@ export async function getAllServices(
 
   // 🟡 JS filtering (location + category)
   if (filters.location) {
-    services = services.filter((s: any) =>
-      s.providerId?.location
+    services = services.filter((s) =>
+      (s as PopulatedService).providerId?.location
         ?.toLowerCase()
-        .includes(filters.location!.toLowerCase())
+        .includes(filters.location!.toLowerCase()),
     );
   }
 
   if (filters.category) {
-    services = services.filter((s: any) =>
-      s.categoryId?.name
+    services = services.filter((s) =>
+      (s as PopulatedService).categoryId?.name
         ?.toLowerCase()
-        .includes(filters.category!.toLowerCase())
+        .includes(filters.category!.toLowerCase()),
     );
   }
 
@@ -119,7 +133,10 @@ export async function getServiceById(id: string) {
   return toServiceDTO(service);
 }
 
-export async function updateService(id: string, serviceData: UpdateServiceInput) {
+export async function updateService(
+  id: string,
+  serviceData: UpdateServiceInput,
+) {
   await connectDB();
 
   const service = await Service.findByIdAndUpdate(id, serviceData, {
