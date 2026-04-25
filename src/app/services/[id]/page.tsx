@@ -1,88 +1,73 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useParams, notFound } from "next/navigation";
+import Link from "next/link";
+import { ChevronLeft, Clock, MapPin, Tag, Phone, Star } from "lucide-react";
+import Button from "@/components/ui/Button";
+import EmptyState from "@/components/shared/EmptyState";
+import Loader from "@/components/shared/Loader";
 
-type Service = {
+interface ServiceDetail {
   _id: string;
   title: string;
-  description?: string;
+  description: string;
   price: number;
   duration: number;
+  image?: string;
+  categoryId: {
+    name: string;
+  };
+  providerId: {
+    businessName: string;
+    location: string;
+    phone?: string;
+  };
+  reviews?: Array<{
+    rating: number;
+    comment: string;
+  }>;
+}
 
-  provider?: {
-    _id?: string;
-    businessName?: string;
-    location?: string;
-  } | null;
-
-  category?: {
-    name?: string;
-  } | null;
-
-  availability?: string;
-};
-
-export default function ServiceDetailsPage() {
-  const { id } = useParams();
-  const router = useRouter();
-  const { data: session } = useSession();
-
-  const [service, setService] = useState<Service | null>(null);
+export default function ServiceDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
+  const [service, setService] = useState<ServiceDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Protected action handler
-  const handleProtectedAction = (callback: () => void) => {
-    if (!session) {
-      router.push(`/login?redirect=/services/${id}`);
-      return;
-    }
-    callback();
-  };
-
-  // Fetch service by ID
   useEffect(() => {
-    const fetchService = async () => {
+    async function fetchService() {
+      setLoading(true);
       try {
-        setLoading(true);
-
         const res = await fetch(`/api/services/${id}`);
-        const data = await res.json();
-
-        // Safe extraction
-        const serviceData = data.data?.service || data.service;
-
-        if (!serviceData) {
-          setError("Service not found");
-          return;
+        if (!res.ok) {
+          throw new Error("Service not found");
         }
-
-        setService(serviceData);
+        const data = await res.json();
+        setService(data.data);
       } catch (err) {
-        console.error(err);
-        setError("Failed to load service");
+        setError("Service not found");
       } finally {
         setLoading(false);
       }
-    };
-
+    }
     if (id) fetchService();
   }, [id]);
 
-  // Loading state
   if (loading) {
     return (
       <div className="text-center py-10 text-gray-400">Loading service...</div>
     );
   }
 
-  // Error / Not found
   if (error || !service) {
     return (
-      <div className="text-center py-10 text-red-500">
-        {error || "Service not found"}
+      <div className="min-h-screen bg-gray-50">
+        <EmptyState
+          title="Service not found"
+          description="The service you are looking for does not exist or has been removed."
+        />
       </div>
     );
   }
