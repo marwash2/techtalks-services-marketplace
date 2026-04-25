@@ -13,6 +13,7 @@ const BookingSchema = new Schema<IBooking>(
     },
     date:  { type: Date,   required: true },
     price: { type: Number, required: true },
+      notes: { type: String, default: null },
     
   },
   { timestamps: true }

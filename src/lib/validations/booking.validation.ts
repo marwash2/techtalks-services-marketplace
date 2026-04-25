@@ -29,6 +29,7 @@ export const createBookingSchema = z.object({
   providerId: z.string().min(1, "Provider ID is required"),
   serviceId:  z.string().min(1, "Service ID is required"),
   date:       z.string().datetime("Invalid date format"),
+  price:      z.number().positive("Price must be a positive number"),
   notes:      z.string().optional(),
 });
 

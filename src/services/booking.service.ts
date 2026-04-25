@@ -15,6 +15,7 @@ type CreateBookingInput = {
   providerId: string;
   serviceId: string;
   date: string;
+  price: number;
   notes?: string;
 };
 
