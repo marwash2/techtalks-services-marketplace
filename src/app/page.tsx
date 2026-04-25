@@ -39,55 +39,58 @@ export default function Home() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 flex flex-col gap-16 w-screen overflow-hidden ">
+    <div className="w-full overflow-hidden">
       {/* Hero Section */}
       <HeroSection />
 
-      {/* Short App Description */}
-      <section className=" border-gray-200 text-center">
-        <p className="text-gray-700 text-lg">
-          Our platform connects you with trusted providers offering a wide range
-          of services. Explore categories, compare ratings, and choose the best
-          fit for your needs.
-        </p>
+      <div className="max-w-6xl mx-auto px-4 py-6 flex flex-col gap-16">
+        {/* Short App Description */}
+        <section className=" border-gray-200 text-center">
+          <p className="text-gray-700 text-lg">
+            Our platform connects you with trusted providers offering a wide
+            range of services. Explore categories, compare ratings, and choose
+            the best fit for your needs.
+          </p>
 
-        {/* CTA Button */}
-        <div className="text-center mt-6">
-          <Button href="/services" variant="cta">
-            Browse Services
-          </Button>
-        </div>
-      </section>
-      <HowItWorks />
-      {/*how it's work  */}
-      <WhychooseUs />
-      {/* Featured Categories */}
-      <section className="py-12">
-        <h2 className="text-xl md:text-4xl font-bold text-slate-900">
-          Popular Categories
-        </h2>
+          {/* CTA Button */}
+          <div className="text-center mt-6">
+            <Button href="/services" variant="cta">
+              Browse Services
+            </Button>
+          </div>
+        </section>
+        <HowItWorks />
+        {/*how it's work  */}
+        <WhychooseUs />
+        {/* Featured Categories */}
+        <section className="py-12">
+          <h2 className="text-xl md:text-4xl font-bold text-slate-900">
+            Popular Categories
+          </h2>
 
-        <p className="text-sm text-slate-500 mt-2">
-          Explore the most popular services trusted by thousands of users
-        </p>
-        <FeaturedCategories />
-      </section>
+          <p className="text-sm text-slate-500 mt-2">
+            Explore the most popular services trusted by thousands of users
+          </p>
+          <FeaturedCategories />
+        </section>
 
-      {/* Featured Services */}
-      <section className="py-12">
-        <h2 className="text-xl md:text-4xl font-bold text-slate-900">
-          Featured Services
-        </h2>
-        <p className="text-sm text-slate-500 mt-2">
-          Handpicked services <span className="text-blue-500">from</span>{" "}
-          top-rated professionals
-        </p>
-        <FeaturedServices />
-      </section>
+        {/* Featured Services */}
+        <section className="py-12">
+          <h2 className="text-xl md:text-4xl font-bold text-slate-900">
+            Featured Services
+          </h2>
+          <p className="text-sm text-slate-500 mt-2">
+            Handpicked services <span className="text-blue-500">from</span>{" "}
+            top-rated professionals
+          </p>
+          <FeaturedServices />
+        </section>
+        {/*HERO SECTION: title+search*/}
+        {/*Categories */}
+        {/*featured Services */}
+      </div>
+
       <BecomeProviderSection />
-      {/*HERO SECTION: title+search*/}
-      {/*Categories */}
-      {/*featured Services */}
     </div>
   );
 }

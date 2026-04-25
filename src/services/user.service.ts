@@ -1,5 +1,5 @@
 import { connectDB } from "@/lib/db";
-import { User } from "@/lib/schemas/User.schema";
+import { User } from "@/models/User.model";
 import { MESSAGES, PAGINATION } from "@/constants/config";
 import { ApiError } from "@/lib/api-error";
 import { toUserDTO, toUserListDTO } from "@/lib/dto/user.dto";

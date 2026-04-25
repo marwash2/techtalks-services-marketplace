@@ -3,10 +3,11 @@ import { Types } from "mongoose";
 interface CategoryDocument {
   _id: Types.ObjectId;
   name: string;
-  description?: string;
-  icon?: string;
+  description?: string | null;
+  icon: string;
   slug: string;
   createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export function toCategoryDTO(category: CategoryDocument) {

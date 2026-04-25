@@ -1,5 +1,5 @@
 import { connectDB } from "@/lib/db";
-import { Category } from "@/lib/schemas/Category.schema";
+import Category from "@/models/Category.model";
 import { MESSAGES, PAGINATION } from "@/constants/config";
 import { ApiError } from "@/lib/api-error";
 import { toCategoryDTO, toCategoryListDTO } from "@/lib/dto/category.dto";

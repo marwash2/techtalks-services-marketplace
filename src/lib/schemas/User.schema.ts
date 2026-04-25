@@ -13,8 +13,11 @@ const userSchema = new mongoose.Schema(
     avatar: { type: String, default: null },
     phone: { type: String, default: null },
     bio: { type: String, default: null },
+    resetToken: String,
+    resetTokenExpiry: Date,
+    favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "Provider" }],
   },
   { timestamps: true },
 );
 
-export const User = mongoose.models.User || mongoose.model("User", userSchema);
+export default userSchema;
