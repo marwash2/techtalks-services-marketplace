@@ -1,0 +1,228 @@
+[33mcommit c654a984d35fb05bebaae649be2122bfbdec80e8[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Jamal Alboukai <jamalalboukai@gmail.com>
+Date:   Mon Apr 20 15:18:25 2026 +0300
+
+    Feature/build services page
+    
+    * i complete the task 1 by creating services page
+    update on the filter page and services card
+    
+    * feat: refactor service structure and enhance ServiceCard component
+    
+    ---------
+    
+    Co-authored-by: marwash2 <marwashreif4@gmail.com>
+
+[33mcommit 11a5daff0d9ebe1ac96cd4b6099d01d8f2bc2326[m
+Author: Malik Itani <malikitani.bey@gmail.com>
+Date:   Mon Apr 20 15:10:48 2026 +0300
+
+    fix: services page responsiveness
+
+[33mcommit aa4f4ae97667de5223004769e294d0ba29a41656[m
+Author: judiabbas <152221880+judiabbas@users.noreply.github.com>
+Date:   Sun Apr 19 15:29:13 2026 +0300
+
+    Home Page, Provider List Page ,ProviderCard (#15)
+    
+    * Add signup form UI at /register
+    
+    * Signup form with role assignment
+    
+    * Finish NextAuth and role support
+
+[33mcommit 8eda42110d49d5bb737db5d1a863d7856246b840[m
+Merge: e755fc1 b5831ee
+Author: marwash2 <marwashreif4@gmail.com>
+Date:   Sat Apr 18 23:34:17 2026 +0300
+
+    Search bar & filter
+    
+    feat: search + filters UI with URL sync (TM-159, TM-160)
+
+[33mcommit b5831eeee56b784ce23e32a8b05959b4f12da2b5[m
+Merge: 409f3e2 e755fc1
+Author: marwash2 <marwashreif4@gmail.com>
+Date:   Sat Apr 18 23:28:58 2026 +0300
+
+    Merge branch 'main' into feature/TM-159-search-and-TM-160-filters-ui
+
+[33mcommit e755fc1e25ab2ce31443292d982bd7ada2da7231[m
+Merge: d8a9ef0 33df3b3
+Author: marwash2 <marwashreif4@gmail.com>
+Date:   Sat Apr 18 21:37:36 2026 +0300
+
+    Merge pull request #13 from marwash2/feature/provider-profile-page
+    
+    Feature/provider profile page
+
+[33mcommit 409f3e203f4f8ede5d5068e7caf60a1caaf2520a[m
+Author: MoeTahech <Mohamed.tahech10@outlook.com>
+Date:   Sat Apr 18 21:11:43 2026 +0300
+
+    feat: build Filters component and enhance search/filter UI (TM-159, TM-160)
+
+[33mcommit 33df3b34bb8ced65eeeafe7977b7bc09e69997e9[m[33m ([m[1;31morigin/feature/provider-profile-page[m[33m)[m
+Author: Malek Itani <malikitani.bey@gmail.com>
+Date:   Sat Apr 18 20:04:04 2026 +0300
+
+    Finished create provider profile and display provider services
+
+[33mcommit 325a03ec46e4ef46f51e4ddea1e61fe909d6e4f3[m
+Author: MoeTahech <Mohamed.tahech10@outlook.com>
+Date:   Sat Apr 18 01:10:58 2026 +0300
+
+    feat: build SearchBar component with URL sync (TM-159)
+
+[33mcommit 98169a87f2e3416e38f4d274b246d6b42ec0acb6[m[33m ([m[1;31morigin/feature/provider-public-page[m[33m)[m
+Author: Malek Itani <malikitani.bey@gmail.com>
+Date:   Thu Apr 16 22:05:52 2026 +0300
+
+    add provider public page
+
+[33mcommit d8a9ef017763273e84a58fb2ce497efe691f33cb[m
+Author: Reina123976 <reinakazan3@gmail.com>
+Date:   Thu Apr 16 17:50:17 2026 +0300
+
+    sign in page and nextAuth session/token
+    
+    sign in page
+
+[33mcommit deadfbf84009c878d0d8b091f982a9879becd529[m
+Author: MarwaSharif <marwashreif332@gmail.com>
+Date:   Thu Apr 16 07:45:20 2026 -0700
+
+    add tailwind css styling to ui components
+
+[33mcommit e5e270d8a499d12c95ea8e2b14d23a19175a350a[m
+Author: judiabbas <152221880+judiabbas@users.noreply.github.com>
+Date:   Thu Apr 16 00:45:15 2026 +0300
+
+    Signup (#10)
+    
+    * Add signup form UI at /register
+    
+    * Signup form with role assignment
+    
+    * Finish NextAuth and role support
+    
+    ---------
+    
+    Co-authored-by: marwash2 <marwashreif4@gmail.com>
+
+[33mcommit 15690712fa084d2f668f6d22adeea807dd5968f1[m
+Author: MarwaSharif <marwashreif332@gmail.com>
+Date:   Mon Apr 13 10:15:11 2026 -0700
+
+    readme changes
+
+[33mcommit 3710c9ebb47bca885839e6fec8c1aeb13caf5f11[m
+Merge: b2f4692 cc04214
+Author: marwash2 <marwashreif4@gmail.com>
+Date:   Mon Apr 13 20:09:45 2026 +0300
+
+    Merge pull request #9 from marwash2/bug_fix
+    
+    fix Db connection and routes error , upload api and setup middleware
+
+[33mcommit cc04214f2130002bad4ee4081caf84879370cec8[m[33m ([m[1;31morigin/bug_fix[m[33m)[m
+Author: MarwaSharif <marwashreif332@gmail.com>
+Date:   Mon Apr 13 10:06:56 2026 -0700
+
+    fix Db connection, upload api and setup middleware
+
+[33mcommit b2f4692a510fc5fcd0710b398a7bb4d4c1dd4068[m
+Author: marwash2 <marwashreif4@gmail.com>
+Date:   Mon Apr 13 19:18:24 2026 +0300
+
+    Feature/api structure
+    
+    * feat(api): add base API structure and standardize service layer naming
+    >>
+    >> - added api-response, api-error, api-handler utilities
+    >> - standardized service files naming to *.service.ts for consistency was booking.server.ts
+    
+    * feat(api): complete user API structure with service layer, DTO, and error handling
+    - refactor user.service.ts to use ApiError instead of plain Error
+    - add DTO layer (src/lib/dto/user.dto.ts) to shape responses and strip password
+    - refactor api/users/route.ts and api/users/[id]/route.ts to use withApiHandler
+    - update withApiHandler to accept optional context for dynamic route params
+    - rename connectDb to connectDB in db.ts for naming consistency
+    - routes are now thin: no try/catch, no DB calls, no business logic
+    
+    * feat(api): add booking, service, provider routes with service layer and DTO
+    - implement booking.service.ts from scratch with ApiError and DTO
+    - refactor service.service.ts and provider.service.ts to use ApiError and DTO
+    - add booking.dto.ts, service.dto.ts, provider.dto.ts
+    - all routes now thin: no try/catch, no DB calls, no business logic
+    - validation intentionally excluded, handled in next Jira task
+    
+    * feat(api): complete API structure for all remaining resources
+    - add category, review, notification service files
+    - add DTOs for category, review, notification
+    - refactor all routes (categories, reviews, notifications) to use withApiHandler
+    - all services use ApiError with correct status codes
+    - consistent pattern across all 7 resources: users, providers, services, bookings, categories, reviews, notifications
+    
+    * feat(auth): add register, login, logout routes with bcrypt
+    - createUser now hashes password with bcrypt (salt rounds: 12)
+    - add loginUser to user.service.ts with bcrypt.compare
+    - register and login routes use service layer
+    - password never returned in response (stripped by DTO)
+    
+    * feat(validation): add Zod validation across all API routes
+    - add validation schemas for all resources
+    - update api-handler to catch ZodError and return 422 with field details
+    - all POST and PUT routes now validate input before hitting service layer
+    
+    ---------
+    
+    Co-authored-by: MoeTahech <Mohamed.tahech10@outlook.com>
+
+[33mcommit 95218aedfbf202422bf4769b1b7d4f4ac3ab4e18[m
+Author: judiabbas <152221880+judiabbas@users.noreply.github.com>
+Date:   Mon Apr 13 18:56:12 2026 +0300
+
+     signup form with role assignment
+    
+    * Add signup form UI at /register
+    
+    * Signup form with role assignment
+
+[33mcommit 7788fbf025e768ea2172ab9fde9b7efd59936767[m
+Merge: d869676 3d7ff87
+Author: marwash2 <marwashreif4@gmail.com>
+Date:   Sun Apr 12 19:12:42 2026 +0300
+
+    Merge pull request #7 from marwash2/setup-constants
+    
+    Setup constants
+
+[33mcommit 3d7ff874f956a8fdbe76561d7d6e5ff542df0d2e[m[33m ([m[1;31morigin/setup-constants[m[33m)[m
+Merge: 5f910cc d869676
+Author: marwash2 <marwashreif4@gmail.com>
+Date:   Sun Apr 12 18:35:27 2026 +0300
+
+    Merge pull request #6 from marwash2/main
+    
+    Booking finished
+
+[33mcommit 5f910ccf6c045e8bebff379254f0f8d1b06db859[m
+Author: Malek Itani <malikitani.bey@gmail.com>
+Date:   Fri Apr 10 22:02:46 2026 +0300
+
+    save progress
+
+[33mcommit d869676c83e9422ac3f180f31f1ac9e603ee4b53[m
+Merge: 409c769 7affd93
+Author: marwash2 <marwashreif4@gmail.com>
+Date:   Fri Apr 10 21:47:05 2026 +0300
+
+    Merge pull request #5 from marwash2/setup-constants
+    
+    finish users, services, providers and categories logic
+
+[33mcommit 409c76941e4bb59da5a9fdd5fae2778be65cb952[m
+Merge: 6a14bee cb9047f
+Author: marwash2 <marwashreif4@gmail.com>
+Date:   Fri Apr 10 21:46:28 2026 +

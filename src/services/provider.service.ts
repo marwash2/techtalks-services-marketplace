@@ -1,6 +1,6 @@
 import { connectDB } from "@/lib/db";
-import { Provider } from "@/lib/schemas/Provider.schema";
-import { User } from "@/lib/schemas/User.schema";
+import { Provider } from "@/models/Provider.model";
+import { User } from "@/models/User.model";
 import { MESSAGES, PAGINATION } from "@/constants/config";
 import { ApiError } from "@/lib/api-error";
 import { toProviderDTO, toProviderListDTO } from "@/lib/dto/provider.dto";

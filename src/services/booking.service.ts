@@ -1,5 +1,5 @@
 import { connectDB } from "@/lib/db";
-import { Booking } from "@/lib/schemas/Booking.schema";
+import Booking from "@/models/Booking.model";
 import { MESSAGES, PAGINATION, BOOKING_STATUS } from "@/constants/config";
 import { ApiError } from "@/lib/api-error";
 import { toBookingDTO, toBookingListDTO } from "@/lib/dto/booking.dto";

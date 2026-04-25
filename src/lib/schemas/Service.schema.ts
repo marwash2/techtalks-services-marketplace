@@ -6,7 +6,7 @@ export interface IService extends Document {
   categoryId: Types.ObjectId;
 
   title: string;
-
+  
   description?: string;
 
   price: number;
@@ -14,7 +14,9 @@ export interface IService extends Document {
   duration: number;
 
   image?: string | null;
-
+  tags: string[];
+  availability: string;
+  location?: string;
   isActive: boolean;
 
   createdAt: Date;
@@ -40,9 +42,11 @@ const serviceSchema = new mongoose.Schema<IService>(
     duration: { type: Number, required: true }, // in minutes
     image: { type: String, default: null },
     isActive: { type: Boolean, default: true },
+    tags: { type: [String], default: [] },
+    availability: { type: String, required: true },
+    location: { type: String },
   },
   { timestamps: true },
 );
 
-export const Service =
-  mongoose.models.Service || mongoose.model("Service", serviceSchema);
+export default serviceSchema;
