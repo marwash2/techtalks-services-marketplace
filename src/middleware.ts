@@ -8,9 +8,9 @@ export async function middleware(request: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
   const { pathname } = request.nextUrl;
-  const protectedRoutes = ["/user", "/providers", "/admin", "/bookings"];
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route),
+  const protectedRoutes = ["/user", "/provider", "/admin", "/bookings"];
+  const isProtectedRoute = protectedRoutes.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
   if (isProtectedRoute && !token) {
     return NextResponse.redirect(new URL("/login", request.url));
@@ -18,7 +18,10 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith("/admin") && token?.role !== "admin") {
     return NextResponse.redirect(new URL("/", request.url));
   }
-  if (pathname.startsWith("/providers") && token?.role !== "provider") {
+  if (
+    (pathname === "/provider" || pathname.startsWith("/provider/")) &&
+    token?.role !== "provider"
+  ) {
     return NextResponse.redirect(new URL("/", request.url));
   }
   return NextResponse.next();
@@ -29,7 +32,7 @@ export const config = {
   matcher: [
     "/((?!api|_next/static|_next/image|favicon.ico).*)",
     "/user/:path*",
-    "/providers/:path*",
+    "/provider/:path*",
     "/admin/:path*",
     "/bookings/:path*",
   ],
