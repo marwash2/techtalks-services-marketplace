@@ -8,11 +8,12 @@ const BookingSchema = new Schema<IBooking>(
     serviceId:  { type: Schema.Types.ObjectId, ref: "Service",  required: true },
     status:     {
       type: String,
-      enum: ["pending", "confirmed", "done", "cancelled"],
+      enum: ["pending", "confirmed", "done", "completed","cancelled"],
       default: "pending",
     },
     date:  { type: Date,   required: true },
     price: { type: Number, required: true },
+    
   },
   { timestamps: true }
 );

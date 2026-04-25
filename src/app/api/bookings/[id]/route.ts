@@ -1,115 +1,54 @@
-import { withApiHandler } from "@/lib/api-handler";
-import { successResponse } from "@/lib/api-response";
-import { MESSAGES } from "@/constants/config";
-import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import { Booking } from "@/models";
+/**
+ * @file app/api/bookings/[id]/route.ts
+ * GET /api/bookings/[id]
+ */
 
-function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : MESSAGES.ERROR.SERVER_ERROR;
-}
+import "@/models";
+import { NextRequest, NextResponse } from "next/server";
+import { ZodError } from "zod";
+import { getBookingById } from "@/services/booking.service";
+import { ApiError } from "@/lib/api-error";
+
+type RouteContext = { params: Promise<{ id: string }> };
+
+// ─── GET /api/bookings/[id] ───────────────────────────────────────────────────
 
 export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  _req: NextRequest,
+  { params }: RouteContext
 ) {
+  const { id } = await params;
+
   try {
-    await connectDB();
-    const { id } = await params;
+    const booking = await getBookingById(id);
 
-    const booking = await Booking.findById(id)
-      .populate("userId", "name email")
-      .populate("providerId", "businessName location")
-      .populate("serviceId", "title price");
-
-    if (!booking) {
-      return NextResponse.json(
-        { success: false, message: MESSAGES.ERROR.NOT_FOUND },
-        { status: 404 },
-      );
-    }
-
-    return NextResponse.json({ success: true, data: booking });
-  } catch (error: unknown) {
     return NextResponse.json(
-      {
-        success: false,
-        message: MESSAGES.ERROR.SERVER_ERROR,
-        error: getErrorMessage(error),
-      },
-      { status: 500 },
+      { success: true, data: booking },
+      { status: 200 }
     );
+  } catch (error) {
+    return handleError(error, id);
   }
 }
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  try {
-    await connectDB();
-    const { id } = await params;
+// ─── Error Handler ────────────────────────────────────────────────────────────
 
-    const body = await req.json();
-    const booking = await Booking.findByIdAndUpdate(id, body, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!booking) {
-      return NextResponse.json(
-        { success: false, message: MESSAGES.ERROR.NOT_FOUND },
-        { status: 404 },
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: MESSAGES.SUCCESS.UPDATE,
-      data: booking,
-    });
-  } catch (error: unknown) {
+function handleError(error: unknown, id: string): NextResponse {
+  if (error instanceof ZodError) {
     return NextResponse.json(
-      {
-        success: false,
-        message: MESSAGES.ERROR.SERVER_ERROR,
-        error: getErrorMessage(error),
-      },
-      { status: 500 },
+      { success: false, message: "Validation failed", errors: error.flatten().fieldErrors },
+      { status: 400 }
     );
   }
-}
-
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  try {
-    await connectDB();
-    const { id } = await params;
-
-    const booking = await Booking.findByIdAndDelete(id);
-
-    if (!booking) {
-      return NextResponse.json(
-        { success: false, message: MESSAGES.ERROR.NOT_FOUND },
-        { status: 404 },
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: MESSAGES.SUCCESS.DELETE,
-      data: booking,
-    });
-  } catch (error: unknown) {
+  if (error instanceof ApiError) {
     return NextResponse.json(
-      {
-        success: false,
-        message: MESSAGES.ERROR.SERVER_ERROR,
-        error: getErrorMessage(error),
-      },
-      { status: 500 },
+      { success: false, message: error.message },
+      { status: error.statusCode }
     );
   }
+  console.error(`[GET /api/bookings/${id}]`, error);
+  return NextResponse.json(
+    { success: false, message: "Internal server error" },
+    { status: 500 }
+  );
 }
