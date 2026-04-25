@@ -1,6 +1,6 @@
 import { Document, Types } from "mongoose";
 
-export type BookingStatus = "pending" | "confirmed" | "done" | "cancelled";
+export type BookingStatus = "pending" | "confirmed" |"completed"| "done" | "cancelled";
 
 export interface IBooking extends Document {
   userId: Types.ObjectId;
@@ -9,6 +9,7 @@ export interface IBooking extends Document {
   status: BookingStatus;
   date: Date;
   price: number;
+  notes?: string;
   createdAt: Date;
   updatedAt: Date;
 }
