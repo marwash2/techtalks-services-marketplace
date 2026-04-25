@@ -12,11 +12,11 @@ type ServiceCardProps = {
     duration: number;
     image?: string | null;
 
-    category?: {
+    categoryId?: {
       name?: string;
     } | null;
 
-    provider?: {
+    providerId?: {
       location?: string;
       businessName?: string;
     } | null;
@@ -32,9 +32,9 @@ function formatCurrency(value: number) {
 }
 
 export default function ServiceCard({ service }: ServiceCardProps) {
-  const categoryName = service.category?.name || "Service";
+  const categoryName = service.categoryId?.name || "Service";
 
-  const location = service.provider?.location || "Location not available";
+  const location = service.providerId?.location || "Location not available";
 
   return (
     <article

@@ -16,12 +16,12 @@ type Service = {
   duration: number;
   image?: string | null;
 
-  provider?: {
+  providerId?: {
     location?: string;
     businessName?: string;
   } | null;
 
-  category?: {
+  categoryId?: {
     name?: string;
   } | null;
 };
@@ -54,17 +54,13 @@ function ServicesContent() {
 
   if (loading) {
     return (
-      <div className="text-center py-10 text-gray-400">
-        Loading services...
-      </div>
+      <div className="text-center py-10 text-gray-400">Loading services...</div>
     );
   }
 
   if (services.length === 0) {
     return (
-      <div className="text-center py-10 text-gray-400">
-        No services found
-      </div>
+      <div className="text-center py-10 text-gray-400">No services found</div>
     );
   }
 
@@ -80,8 +76,8 @@ function ServicesContent() {
             price: service.price,
             duration: service.duration,
             image: service.image,
-            provider: service.provider ?? null,
-            category: service.category ?? null,
+            providerId: service.providerId ?? null,
+            categoryId: service.categoryId ?? null,
           }}
         />
       ))}
@@ -142,7 +138,6 @@ export default function Page() {
             <SearchBar />
             <ServicesContent />
           </div>
-
         </div>
       </Suspense>
     </div>
