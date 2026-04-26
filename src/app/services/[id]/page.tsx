@@ -1,37 +1,33 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, notFound } from "next/navigation";
-import Link from "next/link";
-import { ChevronLeft, Clock, MapPin, Tag, Phone, Star } from "lucide-react";
-import Button from "@/components/ui/Button";
+import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import EmptyState from "@/components/shared/EmptyState";
-import Loader from "@/components/shared/Loader";
 
 interface ServiceDetail {
-  _id: string;
+  id: string;
   title: string;
   description: string;
   price: number;
   duration: number;
-  image?: string;
-  categoryId: {
+  image?: string | null;
+  categoryId?: {
     name: string;
-  };
-  providerId: {
+  } | null;
+  providerId?: {
+    _id: string;
     businessName: string;
     location: string;
-    phone?: string;
-  };
-  reviews?: Array<{
-    rating: number;
-    comment: string;
-  }>;
+  } | null;
 }
 
 export default function ServiceDetailPage() {
   const params = useParams();
   const id = params.id as string;
+  const router = useRouter();
+  const { data: session } = useSession();
+
   const [service, setService] = useState<ServiceDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -45,7 +41,7 @@ export default function ServiceDetailPage() {
           throw new Error("Service not found");
         }
         const data = await res.json();
-        setService(data.data);
+        setService(data.data.service);
       } catch (err) {
         setError("Service not found");
       } finally {
@@ -54,6 +50,14 @@ export default function ServiceDetailPage() {
     }
     if (id) fetchService();
   }, [id]);
+
+  const handleProtectedAction = (action: () => void) => {
+    if (!session) {
+      router.push("/login");
+      return;
+    }
+    action();
+  };
 
   if (loading) {
     return (
@@ -87,7 +91,7 @@ export default function ServiceDetailPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white p-6 rounded-2xl shadow-sm border">
         <div>
           <p className="text-sm text-gray-400">Category</p>
-          <p className="font-semibold">{service.category?.name || "N/A"}</p>
+          <p className="font-semibold">{service.categoryId?.name || "N/A"}</p>
         </div>
 
         <div>
@@ -97,7 +101,9 @@ export default function ServiceDetailPage() {
 
         <div>
           <p className="text-sm text-gray-400">Location</p>
-          <p className="font-semibold">{service.provider?.location || "N/A"}</p>
+          <p className="font-semibold">
+            {service.providerId?.location || "N/A"}
+          </p>
         </div>
 
         <div>
@@ -112,7 +118,7 @@ export default function ServiceDetailPage() {
           <p className="text-sm text-gray-400">Provider</p>
 
           <h3 className="text-xl font-semibold text-gray-800">
-            {service.provider?.businessName || "Unknown provider"}
+            {service.providerId?.businessName || "Unknown provider"}
           </h3>
 
           {!session && (
@@ -123,11 +129,11 @@ export default function ServiceDetailPage() {
         </div>
 
         {/* 🔐 PROTECTED BUTTON */}
-        {service.provider?._id && (
+        {service.providerId?._id && (
           <button
             onClick={() =>
               handleProtectedAction(() =>
-                router.push(`/providers/${service.provider?._id}`),
+                router.push(`/providers/${service.providerId?._id}`),
               )
             }
             className="px-5 py-2 rounded-lg bg-gray-900 text-white hover:bg-black transition"

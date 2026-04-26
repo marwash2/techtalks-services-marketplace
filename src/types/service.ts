@@ -10,6 +10,7 @@ export interface IService extends Document {
   description: string;
   location: string;
   image: string;
+  reviews?: Types.ObjectId[]; // for future use, to link to Review documents
   createdAt: Date;
   updatedAt: Date;
   isActive: boolean; // for soft deletes and admin control

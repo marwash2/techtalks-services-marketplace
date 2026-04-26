@@ -6,7 +6,7 @@ export interface IService extends Document {
   categoryId: Types.ObjectId;
 
   title: string;
-  
+
   description?: string;
 
   price: number;
@@ -18,6 +18,7 @@ export interface IService extends Document {
   availability: string;
   location?: string;
   isActive: boolean;
+  reviews?: Types.ObjectId[];
 
   createdAt: Date;
 
