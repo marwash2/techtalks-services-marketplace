@@ -1,18 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { signIn, getSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import GoogleIcon from "@/components/icons/GoogleIcon";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { status } = useSession();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/auth/redirect");
+    }
+  }, [status, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -23,6 +31,7 @@ export default function LoginPage() {
         email,
         password,
         redirect: false,
+        callbackUrl: "/auth/redirect",
       });
       if (res?.error) {
         setError("Invalid email or password");
@@ -30,18 +39,12 @@ export default function LoginPage() {
         return;
       }
 
-      // Get session to determine role and redirect directly to dashboard
-      const session = await getSession();
-      const role = session?.user?.role;
-
-      if (role === "provider") {
-        window.location.href = "/provider/dashboard";
-      } else if (role === "admin") {
-        window.location.href = "/admin";
+      if (res?.url) {
+        router.replace(res.url);
       } else {
-        window.location.href = "/user/dashboard";
+        router.replace("/auth/redirect");
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred. Please try again.");
       setLoading(false);
     }
@@ -66,7 +69,7 @@ export default function LoginPage() {
 
           {/* GOOGLE LOGIN */}
           <button
-            onClick={() => signIn("google")}
+            onClick={() => signIn("google", { callbackUrl: "/auth/redirect" })}
             className="w-full border border-gray-200 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-50 cursor-pointer transition mb-4"
           >
             <GoogleIcon />

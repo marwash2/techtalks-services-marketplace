@@ -71,8 +71,20 @@ export const authOptions: NextAuthOptions = {
     },
 
     async jwt({ token, user }) {
-      if (user) {
+      if (user?.role) {
         token.role = user.role;
+      }
+
+      // For OAuth logins, fetch role from DB when provider user object has no role.
+      if (!token.role && token.email) {
+        await connectDB();
+        const existingUser = await User.findOne({ email: token.email })
+          .select("role")
+          .lean<{ role?: string }>();
+
+        if (existingUser?.role) {
+          token.role = existingUser.role;
+        }
       }
 
       return token;
@@ -80,7 +92,8 @@ export const authOptions: NextAuthOptions = {
 
     async session({ session, token }) {
       if (session.user) {
-        session.user.role = token.role as string;
+        session.user.role = (token.role as string) || "user";
+        session.user.id = token.sub || session.user.id;
       }
       return session;
     },
