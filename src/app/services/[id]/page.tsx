@@ -6,7 +6,7 @@ import Button from "@/components/ui/Button";
 import EmptyState from "@/components/shared/EmptyState";
 
 interface ServiceDetail {
-  _id: string;
+  id: string;
   title: string;
   description: string;
   price: number;
