@@ -73,13 +73,18 @@ export default function ResetPasswordPage() {
         email: data.email,
         password,
         redirect: false,
+        callbackUrl: "/auth/redirect",
       });
       if (result?.error) {
         router.push("/login");
         return;
       }
-      router.push("/user/dashboard");
-    } catch (error) {
+      if (result?.url) {
+        router.replace(result.url);
+      } else {
+        router.replace("/auth/redirect");
+      }
+    } catch {
       setMessage("An error occurred. Please try again.");
     } finally {
       setLoading(false);

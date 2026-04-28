@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import Button from "@/components/ui/Button";
 import EmptyState from "@/components/shared/EmptyState";
 
 interface ServiceDetail {
@@ -11,48 +11,61 @@ interface ServiceDetail {
   description: string;
   price: number;
   duration: number;
-  image?: string | null;
-  categoryId?: {
+  image?: string;
+
+  categoryId: {
     name: string;
-  } | null;
-  providerId?: {
+  };
+
+  providerId: {
     _id: string;
     businessName: string;
     location: string;
-  } | null;
+    phone?: string;
+  };
+
+  reviews?: Array<{
+    rating: number;
+    comment: string;
+  }>;
 }
 
 export default function ServiceDetailPage() {
   const params = useParams();
-  const id = params.id as string;
   const router = useRouter();
-  const { data: session } = useSession();
+
+  const id = params?.id as string;
 
   const [service, setService] = useState<ServiceDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // (temporary auth placeholder — replace with NextAuth if needed)
+  const session = null;
 
   useEffect(() => {
     async function fetchService() {
       setLoading(true);
       try {
         const res = await fetch(`/api/services/${id}`);
-        if (!res.ok) {
-          throw new Error("Service not found");
-        }
+
+        if (!res.ok) throw new Error("Service not found");
+
         const data = await res.json();
-        setService(data.data.service);
-      } catch (err) {
+        setService(data.data);
+      } catch {
         setError("Service not found");
       } finally {
         setLoading(false);
       }
     }
+
     if (id) fetchService();
   }, [id]);
 
   const handleProtectedAction = (action: () => void) => {
     if (!session) {
+      alert("You must be logged in");
       router.push("/login");
       return;
     }
@@ -61,7 +74,9 @@ export default function ServiceDetailPage() {
 
   if (loading) {
     return (
-      <div className="text-center py-10 text-gray-400">Loading service...</div>
+      <div className="text-center py-10 text-gray-400">
+        Loading service...
+      </div>
     );
   }
 
@@ -80,7 +95,9 @@ export default function ServiceDetailPage() {
     <div className="max-w-5xl mx-auto p-6 space-y-8">
       {/* HEADER */}
       <div className="space-y-2">
-        <h1 className="text-4xl font-bold text-gray-900">{service.title}</h1>
+        <h1 className="text-4xl font-bold text-gray-900">
+          {service.title}
+        </h1>
 
         <p className="text-gray-500 text-lg">
           {service.description || "No description available"}
@@ -91,12 +108,16 @@ export default function ServiceDetailPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white p-6 rounded-2xl shadow-sm border">
         <div>
           <p className="text-sm text-gray-400">Category</p>
-          <p className="font-semibold">{service.categoryId?.name || "N/A"}</p>
+          <p className="font-semibold">
+            {service.categoryId?.name || "N/A"}
+          </p>
         </div>
 
         <div>
           <p className="text-sm text-gray-400">Price</p>
-          <p className="font-semibold text-blue-600">${service.price}</p>
+          <p className="font-semibold text-blue-600">
+            ${service.price}
+          </p>
         </div>
 
         <div>
@@ -108,7 +129,9 @@ export default function ServiceDetailPage() {
 
         <div>
           <p className="text-sm text-gray-400">Duration</p>
-          <p className="font-semibold">{service.duration || "N/A"} mins</p>
+          <p className="font-semibold">
+            {service.duration || "N/A"} mins
+          </p>
         </div>
       </div>
 
@@ -133,7 +156,7 @@ export default function ServiceDetailPage() {
           <button
             onClick={() =>
               handleProtectedAction(() =>
-                router.push(`/providers/${service.providerId?._id}`),
+                router.push(`/providers/${service.providerId._id}`)
               )
             }
             className="px-5 py-2 rounded-lg bg-gray-900 text-white hover:bg-black transition"
@@ -151,7 +174,9 @@ export default function ServiceDetailPage() {
           </h3>
 
           {!session && (
-            <p className="text-sm text-gray-500">Please log in to continue</p>
+            <p className="text-sm text-gray-500">
+              Please log in to continue
+            </p>
           )}
         </div>
 
