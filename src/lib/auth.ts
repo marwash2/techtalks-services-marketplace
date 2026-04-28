@@ -2,7 +2,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { connectDB } from "@/lib/db";
-import {User} from "@/models/User.model";
+import { User } from "@/models/User.model";
 import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
@@ -70,9 +70,19 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
 
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.role = user.role;
+        token.id = user.id;
+      }
+
+      if (trigger === "update" && token.id) {
+        await connectDB();
+
+        const userFromDb = await User.findById(token.id).select("role");
+        if (userFromDb) {
+          token.role = userFromDb.role;
+        }
       }
 
       return token;
@@ -81,6 +91,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         session.user.role = token.role as string;
+        session.user.id = token.id as string;
       }
       return session;
     },

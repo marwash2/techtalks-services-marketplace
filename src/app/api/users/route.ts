@@ -12,8 +12,15 @@ export const GET = withApiHandler(async (req) => {
   const limit = parseInt(
     searchParams.get("limit") || String(PAGINATION.DEFAULT_LIMIT),
   );
+  const role = searchParams.get("role"); // Filter by role: user, provider, admin
 
-  const result = await userService.getAllUsers(page, limit);
+  const result = role
+    ? await userService.getUsersByRole(
+        role as "user" | "provider" | "admin",
+        page,
+        limit,
+      )
+    : await userService.getAllUsers(page, limit);
   return Response.json(successResponse(result));
 });
 

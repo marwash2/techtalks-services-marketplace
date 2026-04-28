@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Bell } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
+import Image from "next/image";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -24,10 +25,11 @@ export default function Navbar() {
         { name: "Home", path: "/" },
         { name: "Services", path: "/services" },
         { name: "Providers", path: "/providers" },
+        { name: "About", path: "/about" },
       ]
     : role === "admin"
       ? [
-          { name: "Dashboard", path: "/admin" },
+          { name: "Dashboard", path: "/admin/dashboard" },
           { name: "Users", path: "/admin/users" },
           { name: "Providers", path: "/admin/providers" },
           { name: "Reports", path: "/admin/reports" },
@@ -40,7 +42,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         {/* LEFT: Notification + Logo */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4 ">
           {/* Notification bell for logged-in users */}
           {session && (
             <Link
@@ -58,23 +60,15 @@ export default function Navbar() {
             <button
               onClick={toggle}
               className="flex items-center cursor-pointer"
-              aria-label="Toggle sidebar"
+              aria-label="Toggle sidebar "
             >
-              <img
-                src="/logo-removebg-preview.png"
-                alt="Logo"
-                width={50}
-                height={30}
-              />
+              {/* <img src="/logo-icon.png" alt="Logo" width={50} height={30} />*/}
+              <Image src="/logo-icon.png" alt="Logo" width={150} height={80} />
             </button>
           ) : (
             <Link href="/" className="flex items-center">
-              <img
-                src="/logo-removebg-preview.png"
-                alt="Logo"
-                width={50}
-                height={30}
-              />
+              {/* <img src="/logo-icon.png" alt="Logo" width={50} height={30} />*/}
+              <Image src="/logo-icon.png" alt="Logo" width={150} height={80} />
             </Link>
           )}
         </div>

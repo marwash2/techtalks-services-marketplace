@@ -2,12 +2,9 @@
 
 import { useState } from "react";
 import { signIn, getSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import GoogleIcon from "@/components/icons/GoogleIcon";
 
 export default function LoginPage() {
-  const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -37,11 +34,11 @@ export default function LoginPage() {
       if (role === "provider") {
         window.location.href = "/provider/dashboard";
       } else if (role === "admin") {
-        window.location.href = "/admin";
+        window.location.href = "/admin/dashboard";
       } else {
         window.location.href = "/user/dashboard";
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred. Please try again.");
       setLoading(false);
     }

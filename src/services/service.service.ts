@@ -1,7 +1,7 @@
 import { connectDB } from "@/lib/db";
 import { Service } from "@/models/Service.model";
-import { Provider } from "@/models/Provider.model"
-import  Category  from "@/models/Category.model";
+import { Provider } from "@/models/Provider.model";
+import Category from "@/models/Category.model";
 import { MESSAGES, PAGINATION } from "@/constants/config";
 import { ApiError } from "@/lib/api-error";
 import { toServiceDTO, toServiceListDTO } from "@/lib/dto/service.dto";
@@ -93,7 +93,7 @@ export async function getAllServices(
   const paginatedServices = services.slice(skip, skip + limit);
 
   return {
-    services: paginatedServices,
+    services: toServiceListDTO(paginatedServices),
     pagination: {
       page,
       limit,

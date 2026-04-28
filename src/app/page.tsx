@@ -7,9 +7,10 @@ import HowItWorks from "@/components/home/HowItWorks";
 import WhychooseUs from "@/components/home/WhyChooseUs";
 import BecomeProviderSection from "@/components/layout/BecomeProvider";
 import HeroSection from "@/components/layout/HeroSection";
-import Button from "@/components/ui/Button";
 import FeaturedCategories from "@/components/home/FeaturedCategories";
 import FeaturedServices from "@/components/home/FeaturedServices";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -18,10 +19,12 @@ export default function Home() {
   useEffect(() => {
     if (status !== "authenticated" || !session) return;
 
-    // Redirect non-admin authenticated users to their dashboard
+    // Redirect authenticated users to their role dashboard
     if (session.user.role === "provider") {
       router.replace("/provider/dashboard");
-    } else if (session.user.role !== "admin") {
+    } else if (session.user.role === "admin") {
+      router.replace("/admin/dashboard");
+    } else {
       router.replace("/user/dashboard");
     }
   }, [status, session, router]);
@@ -29,7 +32,7 @@ export default function Home() {
   // Show loading spinner while session is loading or redirecting
   if (
     status === "loading" ||
-    (status === "authenticated" && session?.user?.role !== "admin")
+    status === "authenticated"
   ) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -45,18 +48,28 @@ export default function Home() {
 
       <div className="max-w-6xl mx-auto px-4 py-6 flex flex-col gap-16">
         {/* Short App Description */}
-        <section className=" border-gray-200 text-center">
-          <p className="text-gray-700 text-lg">
+        <section className="  relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 to-blue-700 text-white p-10 md:p-16 text-center">
+          <p className="text-white-700 text-lg">
             Our platform connects you with trusted providers offering a wide
             range of services. Explore categories, compare ratings, and choose
             the best fit for your needs.
           </p>
 
           {/* CTA Button */}
-          <div className="text-center mt-6">
-            <Button href="/services" variant="cta">
-              Browse Services
-            </Button>
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/services"
+              className="inline-flex items-center gap-2 bg-white text-blue-600 hover:bg-blue-50 px-8 py-3.5 rounded-xl font-semibold transition shadow-lg"
+            >
+              Explore Services
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/providers"
+              className="inline-flex items-center gap-2 bg-blue-500/30 hover:bg-blue-500/40 text-white border border-white/30 px-8 py-3.5 rounded-xl font-medium transition backdrop-blur-sm"
+            >
+              Find providers
+            </Link>
           </div>
         </section>
         <HowItWorks />

@@ -41,38 +41,22 @@ export function toServiceDTO(service: ServiceDocument) {
     id: service._id.toString(),
     providerId: isPopulatedProvider(service.providerId)
       ? {
-          id: service.providerId._id.toString(),
+          _id: service.providerId._id.toString(),
           businessName: service.providerId.businessName,
           location: service.providerId.location,
         }
-      : service.providerId, // fallback if not populated
+      : service.providerId.toString(),
     categoryId: isPopulatedCategory(service.categoryId)
       ? {
-          id: service.categoryId._id.toString(),
+          _id: service.categoryId._id.toString(),
           name: service.categoryId.name,
         }
-      : service.categoryId, // fallback if not populated
+      : service.categoryId.toString(),
     title: service.title,
     description: service.description,
     price: service.price,
     duration: service.duration,
     image: service.image || null,
-
-    // FIX PROVIDER
-    provider: isPopulatedProvider(service.providerId)
-      ? {
-          _id: service.providerId._id.toString(),
-          businessName: service.providerId.businessName,
-          location: service.providerId.location,
-        }
-      : null,
-
-    // FIX CATEGORY
-    category: isPopulatedCategory(service.categoryId)
-      ? {
-          name: service.categoryId.name,
-        }
-      : null,
   };
 }
 
