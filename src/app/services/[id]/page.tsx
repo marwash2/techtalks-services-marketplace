@@ -78,7 +78,7 @@ export default function ServiceDetailPage() {
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-8">
-      {/* 🔷 HEADER */}
+      {/* HEADER */}
       <div className="space-y-2">
         <h1 className="text-4xl font-bold text-gray-900">{service.title}</h1>
 
@@ -87,7 +87,7 @@ export default function ServiceDetailPage() {
         </p>
       </div>
 
-      {/* 🔷 INFO CARD */}
+      {/* INFO CARD */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white p-6 rounded-2xl shadow-sm border">
         <div>
           <p className="text-sm text-gray-400">Category</p>
@@ -112,7 +112,7 @@ export default function ServiceDetailPage() {
         </div>
       </div>
 
-      {/* 🔷 PROVIDER CARD */}
+      {/* PROVIDER CARD */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border flex items-center justify-between">
         <div>
           <p className="text-sm text-gray-400">Provider</p>
@@ -128,7 +128,7 @@ export default function ServiceDetailPage() {
           )}
         </div>
 
-        {/* 🔐 PROTECTED BUTTON */}
+        {/* PROTECTED BUTTON */}
         {service.providerId?._id && (
           <button
             onClick={() =>
@@ -143,7 +143,7 @@ export default function ServiceDetailPage() {
         )}
       </div>
 
-      {/* 🔷 BOOKING SECTION */}
+      {/* BOOKING SECTION */}
       <div className="bg-blue-50 p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
           <h3 className="text-lg font-semibold text-gray-800">
