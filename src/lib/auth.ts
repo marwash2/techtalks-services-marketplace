@@ -2,7 +2,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { connectDB } from "@/lib/db";
-import {User} from "@/models/User.model";
+import { User } from "@/models/User.model";
 import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
@@ -18,17 +18,13 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         await connectDB();
 
-        const user = await User.findOne({
-          email: credentials?.email,
-        });
-
+        const user = await User.findOne({ email: credentials?.email });
         if (!user) throw new Error("User not found");
 
         const isMatch = await bcrypt.compare(
           credentials!.password,
-          user.password,
+          user.password
         );
-
         if (!isMatch) throw new Error("Wrong password");
 
         return {
@@ -46,9 +42,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
 
-  session: {
-    strategy: "jwt",
-  },
+  session: { strategy: "jwt" },
 
   callbacks: {
     async signIn({ user, account }) {
@@ -72,23 +66,23 @@ export const authOptions: NextAuthOptions = {
 
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role;
+        token.role = user.role as string;
       }
-
+       
       return token;
     },
 
     async session({ session, token }) {
+      console.log("SESSION TOKEN:", token); // ← add this
       if (session.user) {
+        session.user.id = token.sub as string;
         session.user.role = token.role as string;
       }
+       
       return session;
     },
   },
 
-  pages: {
-    signIn: "/login",
-  },
-
+  pages: { signIn: "/login" },
   secret: process.env.NEXTAUTH_SECRET,
 };
