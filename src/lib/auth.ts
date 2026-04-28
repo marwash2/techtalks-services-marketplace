@@ -2,13 +2,15 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { connectDB } from "@/lib/db";
-import {User} from "@/models/User.model";
+import { User } from "@/models/User.model";
 import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
   providers: [
+    // CREDENTIALS LOGIN
     CredentialsProvider({
       name: "Credentials",
+
       credentials: {
         email: {},
         password: {},
@@ -22,49 +24,84 @@ export const authOptions: NextAuthOptions = {
           email: credentials?.email,
         });
 
-        if (!user) throw new Error("User not found");
+        if (!user) {
+          throw new Error("User not found");
+        }
 
         const isMatch = await bcrypt.compare(
           credentials!.password,
-          user.password,
+          user.password
         );
 
-        if (!isMatch) throw new Error("Wrong password");
+        if (!isMatch) {
+          throw new Error("Wrong password");
+        }
 
+        // IMPORTANT:
+        // Return ALL custom fields you want inside JWT/session
         return {
           id: user._id.toString(),
           email: user.email,
           name: user.name,
           role: user.role,
+          providerStatus:
+            user.providerStatus || "inactive",
         };
       },
     }),
 
+    // GOOGLE LOGIN
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId:
+        process.env.GOOGLE_CLIENT_ID!,
+      clientSecret:
+        process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
 
+  // USE JWT SESSION
   session: {
     strategy: "jwt",
   },
 
   callbacks: {
-    async signIn({ user, account }) {
+    // GOOGLE SIGN-IN DB SAVE
+    async signIn({
+      user,
+      account,
+    }) {
       await connectDB();
 
-      if (account?.provider !== "credentials") {
-        const existingUser = await User.findOne({ email: user.email });
+      if (
+        account?.provider !==
+        "credentials"
+      ) {
+        let existingUser =
+          await User.findOne({
+            email: user.email,
+          });
 
         if (!existingUser) {
-          await User.create({
-            name: user.name,
-            email: user.email,
-            password: "",
-            role: "user",
-          });
+          existingUser =
+            await User.create({
+              name: user.name,
+              email: user.email,
+              password: "",
+              role: "user",
+              providerStatus:
+                "inactive",
+            });
         }
+
+        // VERY IMPORTANT:
+        // Ensure Google users also have id + role
+        user.id =
+          existingUser._id.toString();
+
+        user.role =
+          existingUser.role;
+
+        
       }
 
       return true;
@@ -90,11 +127,16 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
 
-    async session({ session, token }) {
+    // SESSION CALLBACK
+    async session({
+      session,
+      token,
+    }) {
       if (session.user) {
         session.user.role = (token.role as string) || "user";
         session.user.id = token.sub || session.user.id;
       }
+
       return session;
     },
   },
@@ -103,5 +145,6 @@ export const authOptions: NextAuthOptions = {
     signIn: "/login",
   },
 
-  secret: process.env.NEXTAUTH_SECRET,
+  secret:
+    process.env.NEXTAUTH_SECRET,
 };

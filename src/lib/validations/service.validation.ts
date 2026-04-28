@@ -12,6 +12,13 @@ export const createServiceSchema = z.object({
   duration: z.number()
     .min(SERVICE_CONFIG.MIN_DURATION, "Duration too short")
     .max(SERVICE_CONFIG.MAX_DURATION, "Duration too long"),
+  availability: z
+  .string()
+  .min(
+    1,
+    "Availability is required"
+  ),
+  location: z.string().optional(),
   image: z.string().url("Invalid image URL").nullable().optional(),
   isActive: z.boolean().optional(),
 });
