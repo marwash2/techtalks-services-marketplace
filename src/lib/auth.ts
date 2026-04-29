@@ -20,22 +20,14 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         await connectDB();
 
-        const user = await User.findOne({
-          email: credentials?.email,
-        });
-
-        if (!user) {
-          throw new Error("User not found");
-        }
+        const user = await User.findOne({ email: credentials?.email });
+        if (!user) throw new Error("User not found");
 
         const isMatch = await bcrypt.compare(
           credentials!.password,
           user.password
         );
-
-        if (!isMatch) {
-          throw new Error("Wrong password");
-        }
+        if (!isMatch) throw new Error("Wrong password");
 
         // IMPORTANT:
         // Return ALL custom fields you want inside JWT/session
@@ -59,10 +51,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
 
-  // USE JWT SESSION
-  session: {
-    strategy: "jwt",
-  },
+  session: { strategy: "jwt" },
 
   callbacks: {
     // GOOGLE SIGN-IN DB SAVE
