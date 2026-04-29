@@ -46,6 +46,7 @@ export default function RegisterPage() {
         email: form.email,
         password: form.password,
         redirect: false,
+        callbackUrl: "/auth/redirect",
       });
       if (loginResult?.error) {
         setError(
@@ -55,9 +56,12 @@ export default function RegisterPage() {
         return;
       }
 
-      // redirect to login
-      router.push("/user/dashboard");
-    } catch (err) {
+      if (loginResult?.url) {
+        router.replace(loginResult.url);
+      } else {
+        router.replace("/auth/redirect");
+      }
+    } catch {
       setError("Something went wrong");
     }
 
@@ -81,7 +85,7 @@ export default function RegisterPage() {
 
           {/* GOOGLE LOGIN */}
           <button
-            onClick={() => signIn("google")}
+            onClick={() => signIn("google", { callbackUrl: "/auth/redirect" })}
             className="w-full border border-gray-200 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-50 cursor-pointer transition mb-4"
           >
             <GoogleIcon />

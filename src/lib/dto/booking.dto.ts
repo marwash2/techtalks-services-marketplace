@@ -10,6 +10,7 @@ interface BookingDocument {
   price: number;
   notes?: string;
   createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export function toBookingDTO(booking: BookingDocument) {
@@ -23,6 +24,7 @@ export function toBookingDTO(booking: BookingDocument) {
     price: booking.price,
     notes: booking.notes,
     createdAt: booking.createdAt,
+    updatedAt: booking.updatedAt,
   };
 }
 
