@@ -93,7 +93,6 @@ export default function ServiceDetailPage() {
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-8">
-
       {/* HEADER */}
       <div className="space-y-2">
         <h1 className="text-4xl font-bold text-gray-900">
@@ -152,6 +151,7 @@ export default function ServiceDetailPage() {
           )}
         </div>
 
+        {/* PROTECTED BUTTON */}
         {service.providerId?._id && (
           <button
             onClick={() =>
