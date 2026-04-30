@@ -5,7 +5,8 @@ interface BookingDocument {
   userId: any;
   providerId: any;
   serviceId: any;
-  date: Date;
+  date: string;
+  time: string;
   status: string;
   price: number;
   notes?: string;
@@ -13,15 +14,39 @@ interface BookingDocument {
 }
 
 export function toBookingDTO(booking: BookingDocument) {
+  const serviceId = booking.serviceId;
+  const providerId = booking.providerId;
+
   return {
     id: booking._id.toString(),
+
+    // ── service ──────────────────────────────────────────────────────────────
+    service: serviceId && typeof serviceId === "object" && serviceId._id
+      ? {
+          id:       serviceId._id.toString(),
+          title:    serviceId.title,
+          price:    serviceId.price,
+          duration: serviceId.duration,
+        }
+      : serviceId, // fallback if not populated
+
+    // ── provider ─────────────────────────────────────────────────────────────
+    provider: providerId && typeof providerId === "object" && providerId._id
+      ? {
+          id:           providerId._id.toString(),
+          businessName: providerId.businessName,
+          location:     providerId.location,
+        }
+      : providerId, // fallback if not populated
+
+    // ── user ──────────────────────────────────────────────────────────────────
     userId: booking.userId,
-    providerId: booking.providerId,
-    serviceId: booking.serviceId,
-    date: booking.date,
-    status: booking.status,
-    price: booking.price,
-    notes: booking.notes,
+
+    date:      booking.date,
+    time:      booking.time,
+    status:    booking.status,
+    price:     booking.price,
+    notes:     booking.notes,
     createdAt: booking.createdAt,
   };
 }

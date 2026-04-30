@@ -1,54 +1,54 @@
-/**
- * @file app/api/bookings/[id]/route.ts
- * GET /api/bookings/[id]
- */
-
 import "@/models";
-import { NextRequest, NextResponse } from "next/server";
-import { ZodError } from "zod";
-import { getBookingById } from "@/services/booking.service";
+import { withApiHandler } from "@/lib/api-handler";
+import { successResponse } from "@/lib/api-response";
 import { ApiError } from "@/lib/api-error";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import {
+  getBookingById,
+  updateBooking,
+  deleteBooking,
+} from "@/services/booking.service";
+import { updateBookingSchema } from "@/lib/validations/booking.validation";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-// ─── GET /api/bookings/[id] ───────────────────────────────────────────────────
+// ── GET /api/bookings/[id] ────────────────────────────────────────────────────
 
-export async function GET(
-  _req: NextRequest,
-  { params }: RouteContext
-) {
-  const { id } = await params;
+export const GET = withApiHandler(async (req: Request, context: RouteContext) => {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) throw new ApiError("Unauthorized", 401);
 
-  try {
-    const booking = await getBookingById(id);
+  const { id } = await context.params;
+  const booking = await getBookingById(id);
 
-    return NextResponse.json(
-      { success: true, data: booking },
-      { status: 200 }
-    );
-  } catch (error) {
-    return handleError(error, id);
-  }
-}
+  return Response.json(successResponse(booking));
+});
 
-// ─── Error Handler ────────────────────────────────────────────────────────────
+// ── PATCH /api/bookings/[id] ──────────────────────────────────────────────────
 
-function handleError(error: unknown, id: string): NextResponse {
-  if (error instanceof ZodError) {
-    return NextResponse.json(
-      { success: false, message: "Validation failed", errors: error.flatten().fieldErrors },
-      { status: 400 }
-    );
-  }
-  if (error instanceof ApiError) {
-    return NextResponse.json(
-      { success: false, message: error.message },
-      { status: error.statusCode }
-    );
-  }
-  console.error(`[GET /api/bookings/${id}]`, error);
-  return NextResponse.json(
-    { success: false, message: "Internal server error" },
-    { status: 500 }
-  );
-}
+export const PATCH = withApiHandler(async (req: Request, context: RouteContext) => {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) throw new ApiError("Unauthorized", 401);
+
+  const { id } = await context.params;
+  const body = await req.json();
+  const input = updateBookingSchema.parse(body);
+
+  const booking = await updateBooking(id, input);
+
+  return Response.json(successResponse(booking, "Booking updated successfully"));
+});
+
+// ── DELETE /api/bookings/[id] ─────────────────────────────────────────────────
+
+export const DELETE = withApiHandler(async (req: Request, context: RouteContext) => {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) throw new ApiError("Unauthorized", 401);
+
+  const { id } = await context.params;
+  await deleteBooking(id);
+
+  return Response.json(successResponse(null, "Booking deleted successfully"));
+});
+
