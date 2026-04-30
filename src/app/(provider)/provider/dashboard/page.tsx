@@ -9,6 +9,7 @@ import StatsCard from "@/components/provider/StatsCard";
 import RecentBookings from "@/components/provider/RecentBookings";
 import ServicesPreview from "@/components/provider/ServicesPreview";
 import QuickActions from "@/components/provider/QuickActions";
+import PendingRequests from "@/components/provider/PendingRequests";
 import {
   Star,
   Calendar,
@@ -44,7 +45,8 @@ interface DashboardStats {
 interface RecentBookingItem {
   _id: string;
   userId?: { name?: string } | string;
-  createdAt: string;
+  serviceTitle: string;
+  date: string;
   price: number;
   status: string;
 }
@@ -53,6 +55,15 @@ interface ActiveServiceItem {
   _id: string;
   title: string;
   price: number;
+}
+
+interface PendingRequestItem {
+  _id: string;
+  userName: string;
+  serviceTitle: string;
+  date: string;
+  price: number;
+  status: string;
 }
 
 interface LeanProvider {
@@ -76,7 +87,9 @@ interface LeanProvider {
 interface LeanBooking {
   _id: { toString(): string };
   userId?: { name?: string } | string;
+  serviceId?: { title?: string } | string;
   createdAt: Date | string;
+  date?: Date | string;
   price?: number;
   status?: string;
 }
@@ -98,35 +111,46 @@ async function getDashboardData(userId: string): Promise<{
   provider: DashboardProvider | null;
   stats: DashboardStats;
   recentBookings: RecentBookingItem[];
+  pendingRequests: PendingRequestItem[];
   activeServices: ActiveServiceItem[];
 }> {
   await connectDB();
 
-  const [providerDoc, services, bookings] = await Promise.all([
-    Provider.findOne({ userId }).lean(),
-    Service.find({ providerId: userId }).lean(),
-    Booking.find({ providerId: userId })
-      .populate("userId", "name")
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .lean(),
-  ]);
-
-  const leanProvider = providerDoc as LeanProvider | null;
+  const providerDoc = await Provider.findOne({ userId }).lean();
+  const leanProvider = providerDoc as unknown as LeanProvider | null;
+  const services = providerDoc
+    ? await Service.find({ providerId: leanProvider?._id }).lean()
+    : [];
+  const bookings = providerDoc
+    ? await Booking.find({ providerId: leanProvider?._id })
+        .populate("userId", "name")
+        .populate("serviceId", "title")
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .lean()
+    : [];
+  const pendingBookings = providerDoc
+    ? await Booking.find({ providerId: leanProvider?._id, status: "pending" })
+        .populate("userId", "name")
+        .populate("serviceId", "title")
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .lean()
+    : [];
 
   const provider: DashboardProvider | null = leanProvider
     ? {
         _id: leanProvider._id.toString(),
         userId: leanProvider.userId.toString(),
-        businessName: leanProvider.businessName,
-        description: leanProvider.description,
-        location: leanProvider.location,
-        rating: leanProvider.rating,
-        totalReviews: leanProvider.totalReviews,
-        isVerified: leanProvider.isVerified,
+        businessName: leanProvider.businessName || "",
+        description: leanProvider.description || "",
+        location: leanProvider.location || "",
+        rating: leanProvider.rating || 0,
+        totalReviews: leanProvider.totalReviews || 0,
+        isVerified: leanProvider.isVerified || false,
         reviews: leanProvider.reviews.map((r) => ({
-          rating: r.rating,
-          comment: r.comment,
+          rating: r.rating || 0,
+          comment: r.comment || "",
           createdAt: toISOString(r.createdAt),
         })),
         createdAt: toISOString(leanProvider.createdAt),
@@ -134,8 +158,8 @@ async function getDashboardData(userId: string): Promise<{
       }
     : null;
 
-  const leanBookings = (bookings ?? []) as LeanBooking[];
-  const leanServices = (services ?? []) as LeanService[];
+  const leanBookings = bookings as unknown as LeanBooking[];
+  const leanServices = services as unknown as LeanService[];
 
   const totalEarnings = leanBookings
     .filter((b) => b.status === "completed")
@@ -146,6 +170,8 @@ async function getDashboardData(userId: string): Promise<{
     reviews.length > 0
       ? reviews.reduce((sum, r) => sum + (r.rating ?? 0), 0) / reviews.length
       : 0;
+
+  const leanPendingBookings = pendingBookings as unknown as LeanBooking[];
 
   return {
     provider,
@@ -159,7 +185,25 @@ async function getDashboardData(userId: string): Promise<{
     recentBookings: leanBookings.slice(0, 3).map((b) => ({
       _id: b._id.toString(),
       userId: b.userId,
-      createdAt: toISOString(b.createdAt),
+      date: toISOString(b.date ?? b.createdAt),
+      price: b.price ?? 0,
+      status: b.status ?? "pending",
+      serviceTitle:
+        typeof b.serviceId === "object" && b.serviceId?.title
+          ? b.serviceId.title
+          : "Service request",
+    })),
+    pendingRequests: leanPendingBookings.map((b) => ({
+      _id: b._id.toString(),
+      userName:
+        typeof b.userId === "object" && b.userId?.name
+          ? b.userId.name
+          : "Customer",
+      serviceTitle:
+        typeof b.serviceId === "object" && b.serviceId?.title
+          ? b.serviceId.title
+          : "Service request",
+      date: toISOString(b.date ?? b.createdAt),
       price: b.price ?? 0,
       status: b.status ?? "pending",
     })),
@@ -203,7 +247,7 @@ export default async function ProviderDashboard() {
     );
   }
 
-  const { stats, recentBookings, activeServices } = data;
+  const { stats, recentBookings, pendingRequests, activeServices } = data;
 
   return (
     <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8">
@@ -215,10 +259,10 @@ export default async function ProviderDashboard() {
               Provider dashboard
             </p>
             <h1 className="mt-2 text-3xl font-semibold text-slate-950 sm:text-4xl">
-              Welcome back, {data.provider.businessName}
+              Welcome back,
             </h1>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Here is what is happening with your services today.
+              {data.provider.businessName} - Manage your services and bookings.
             </p>
           </div>
           <div className="flex gap-3">
@@ -264,7 +308,7 @@ export default async function ProviderDashboard() {
           />
           <StatsCard
             title="Total Earnings"
-            value={`$${stats.totalEarnings}`}
+            value={`$${stats.totalEarnings.toFixed(2)}`}
             icon={DollarSign}
             iconColor="text-yellow-600"
             bgColor="bg-yellow-50"
@@ -280,12 +324,11 @@ export default async function ProviderDashboard() {
 
         {/* Main Content Grid */}
         <div className="grid gap-8 lg:grid-cols-3">
-          {/* Recent Bookings */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
+            <PendingRequests requests={pendingRequests} />
             <RecentBookings bookings={recentBookings} />
           </div>
 
-          {/* Quick Actions & Services */}
           <div className="space-y-6">
             <QuickActions />
             <ServicesPreview services={activeServices} />

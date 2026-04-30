@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Provider } from "@/models/Provider.model";
 import ProviderSidebar from "@/components/provider/ProviderSidebar";
+import ProviderContentWrapper from "@/components/provider/ProviderContentWrapper";
 import ProviderOnboardingForm from "@/components/provider/ProviderOnboardingForm";
 
 export default async function ProviderLayout({
@@ -41,11 +42,13 @@ export default async function ProviderLayout({
   }
 
   return (
-    <div className="mx-auto max-w-7xl py-8">
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-        <ProviderSidebar />
-        <div className="min-w-0 flex-1">{children}</div>
-      </div>
-    </div>
+    <>
+      <ProviderSidebar />
+      <ProviderContentWrapper>
+        <div className="mx-auto max-w-7xl py-8">
+          <div className="min-w-0">{children}</div>
+        </div>
+      </ProviderContentWrapper>
+    </>
   );
 }

@@ -1,4 +1,5 @@
 "use client";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -12,10 +13,18 @@ import {
   faInstagram,
   faLinkedin,
 } from "@fortawesome/free-brands-svg-icons";
+import { useSidebar } from "@/components/layout/SidebarContext";
 
 export default function Footer() {
+  const pathname = usePathname();
+  const { isOpen } = useSidebar();
+  const isProviderRoute = pathname.startsWith("/provider");
+  const marginClass = isProviderRoute ? (isOpen ? "lg:ml-64" : "lg:ml-16") : "";
+
   return (
-    <footer className=" bg-gray-50 border-t border-gray-100 mt-16 border-t-2 border-gray-200">
+    <footer
+      className={`bg-gray-50 border-t border-gray-100 mt-16 border-t-2 border-gray-200 z-60 transition-all duration-300 ${marginClass}`}
+    >
       <div className="max-w-6xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-16">
           {/* Brand */}
