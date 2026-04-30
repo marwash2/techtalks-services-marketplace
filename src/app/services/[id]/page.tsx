@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Button from "@/components/ui/Button";
 import EmptyState from "@/components/shared/EmptyState";
 
 interface ServiceDetail {
@@ -52,7 +51,7 @@ export default function ServiceDetailPage() {
         if (!res.ok) throw new Error("Service not found");
 
         const data = await res.json();
-        setService(data.data);
+        setService(data.data.service); // ✅ FIXED: was data.data
       } catch {
         setError("Service not found");
       } finally {
@@ -151,7 +150,6 @@ export default function ServiceDetailPage() {
           )}
         </div>
 
-        {/* PROTECTED BUTTON */}
         {service.providerId?._id && (
           <button
             onClick={() =>
