@@ -1,11 +1,15 @@
-import Link from "next/link";
-import { ArrowUpRight, Clock3, MapPin, Tag } from "lucide-react";
+"use client";
 
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { ArrowUpRight, Clock3, Heart, MapPin, Tag } from "lucide-react";
+import toast from "react-hot-toast";
 import { Routes } from "@/constants/routes";
 
 type ServiceCardProps = {
   service: {
-    _id: string;
+    _id?: string;
+    id?: string;
     title: string;
     description?: string;
     price: number;
@@ -21,6 +25,7 @@ type ServiceCardProps = {
       businessName?: string;
     } | null;
   };
+  showFavorite?: boolean;
 };
 
 function formatCurrency(value: number) {
@@ -31,10 +36,77 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
-export default function ServiceCard({ service }: ServiceCardProps) {
+export default function ServiceCard({
+  service,
+  showFavorite = false,
+}: ServiceCardProps) {
+  const serviceId = service._id || service.id || "";
   const categoryName = service.categoryId?.name || "Service";
-
   const location = service.providerId?.location || "Location not available";
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [favoriteBusy, setFavoriteBusy] = useState(false);
+  
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function checkFavorite() {
+      if (!showFavorite || !serviceId) return;
+      try {
+        const res = await fetch(`/api/favorites/${serviceId}`, {
+          cache: "no-store",
+        });
+        const data = await res.json();
+
+        if (!mounted || !res.ok || data?.success === false) return;
+        setIsFavorited(Boolean(data?.data?.favorited));
+      } catch {
+        // Keep non-favorited state when unauthenticated or on request error.
+      }
+    }
+
+    checkFavorite();
+    return () => {
+      mounted = false;
+    };
+  }, [serviceId, showFavorite]);
+
+ async function toggleFavorite() {
+  if (!serviceId || favoriteBusy) return;
+  setFavoriteBusy(true);
+
+  try {
+    if (isFavorited) {
+      const res = await fetch(`/api/favorites/${serviceId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+
+      if (res.ok && data?.success !== false) {
+        setIsFavorited(false);
+        toast.success("Removed from favorites 💔");
+      }
+      return;
+    }
+
+    const res = await fetch("/api/favorites", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ serviceId }),
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data?.success !== false) {
+      setIsFavorited(true);
+      toast.success("Added to favorites ❤️");
+    }
+  } catch {
+    toast.error("Something went wrong ❌");
+  } finally {
+    setFavoriteBusy(false);
+  }
+}
 
   return (
     <article
@@ -45,7 +117,7 @@ export default function ServiceCard({ service }: ServiceCardProps) {
       "
     >
       {/* IMAGE */}
-      <div className="h-44 w-full overflow=hidden rounded-t-2xl bg-slate-100">
+      <div className="relative h-44 w-full overflow-hidden rounded-t-2xl bg-slate-100">
         {service.image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -59,6 +131,24 @@ export default function ServiceCard({ service }: ServiceCardProps) {
               {service.title}
             </p>
           </div>
+        )}
+
+        {showFavorite && (
+          <button
+            type="button"
+            onClick={toggleFavorite}
+            disabled={favoriteBusy}
+            aria-label={
+              isFavorited ? "Remove from favorites" : "Add to favorites"
+            }
+            className="absolute right-3 top-3 rounded-xl bg-white/95 p-2 shadow-sm transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <Heart
+              className={`h-5 w-5 cursor-pointer ${
+                isFavorited ? "fill-rose-500 text-rose-500 " : "text-slate-500"
+              }`}
+            />
+          </button>
         )}
       </div>
 
@@ -112,7 +202,7 @@ export default function ServiceCard({ service }: ServiceCardProps) {
           </p>
 
           <Link
-            href={Routes.SERVICE_DETAILS(service._id)}
+            href={Routes.SERVICE_DETAILS(serviceId)}
             className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-blue-600 transition hover:text-blue-700"
           >
             View details

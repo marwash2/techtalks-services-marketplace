@@ -14,7 +14,7 @@ import { useSidebar } from "@/components/layout/SidebarContext";
 const providerLinks = [
   {
     name: "Home",
-    path: "/",
+    path: "/provider/dashboard",
     icon: House,
   },
   {

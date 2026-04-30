@@ -1,17 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   BriefcaseBusiness,
   CalendarDays,
   CircleUserRound,
+  Heart,
   House,
   Sparkles,
 } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import Image from "next/image";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 
 const userLinks = [
   {
@@ -35,6 +36,11 @@ const userLinks = [
     icon: CalendarDays,
   },
   {
+    name: "Favorites",
+    path: "/user/favorites",
+    icon: Heart,
+  },
+  {
     name: "Profile",
     path: "/user/profile",
     icon: CircleUserRound,
@@ -43,6 +49,7 @@ const userLinks = [
 
 export default function UserSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isOpen, close } = useSidebar();
 
 
@@ -106,7 +113,16 @@ export default function UserSidebar() {
               <Link
                 key={link.path}
                 href={link.path}
-                onClick={close}
+                onClick={(event) => {
+                  if (link.name === "Home") {
+                    event.preventDefault();
+                    router.push("/user/dashboard");
+                    router.refresh();
+                    close();
+                    return;
+                  }
+                  close();
+                }}
                 className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
                   isActive
                     ? "bg-slate-950 text-white shadow-sm"
