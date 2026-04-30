@@ -10,6 +10,7 @@ import { SlidersHorizontal, X } from "lucide-react";
 
 type Service = {
   _id: string;
+  id: string;
   title: string;
   description?: string;
   price: number;
@@ -40,6 +41,7 @@ function ServicesContent() {
       const data = await res.json();
 
       const servicesData = data.data?.services || data.services || [];
+      console.log("SERVICES:", servicesData);
       setServices(servicesData);
     } catch (err) {
       console.error("Error fetching services:", err);
@@ -66,11 +68,11 @@ function ServicesContent() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-      {services.map((service) => (
+      {services.map((service, index) => (
         <ServiceCard
-          key={service._id}
+          key={service._id || service.id || index }
           service={{
-            id: service._id,
+            _id: service._id || service.id,
             title: service.title,
             description: service.description,
             price: service.price,

@@ -5,7 +5,7 @@ import { Routes } from "@/constants/routes";
 
 type ServiceCardProps = {
   service: {
-    id: string;
+    _id: string;
     title: string;
     description?: string;
     price: number;
@@ -112,7 +112,7 @@ export default function ServiceCard({ service }: ServiceCardProps) {
           </p>
 
           <Link
-            href={Routes.SERVICE_DETAILS(service.id)}
+            href={Routes.SERVICE_DETAILS(service._id)}
             className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-blue-600 transition hover:text-blue-700"
           >
             View details
