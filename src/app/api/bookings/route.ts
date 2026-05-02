@@ -6,10 +6,12 @@ import { ApiError } from "@/lib/api-error";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createBooking, getAllBookings } from "@/services/booking.service";
+import { createNotification } from "@/services/notification.service";
 import {
   createBookingSchema,
   getBookingsQuerySchema,
 } from "@/lib/validations/booking.validation";
+import { NextResponse } from "next/server";
 
 export const POST = withApiHandler(async (req: Request) => {
   const session = await getServerSession(authOptions);
@@ -22,17 +24,36 @@ export const POST = withApiHandler(async (req: Request) => {
   if (!service) throw new ApiError("Service not found", 404);
 
   const booking = await createBooking({
-    userId:     session.user.id,
+    userId: session.user.id,
     providerId: input.providerId,
-    serviceId:  input.serviceId,
-    date:       input.date,
-    time:       input.time,
-    price:      (service as any).price,
-    notes:      input.notes,
+    serviceId: input.serviceId,
+    date: input.date,
+    time: input.time,
+    price: (service as any).price,
+    notes: input.notes,
   });
 
-  return Response.json(
-    successResponse(booking, "Booking created successfully"),
+  const bookingId = String(booking.id);
+
+  await Promise.all([
+    createNotification({
+      userId: session.user.id,
+      title: "Booking Requested",
+      message: "Your booking request has been sent to the provider.",
+      type: "booking",
+      link: `/user/bookings/${bookingId}`,
+    }),
+    createNotification({
+      userId: input.providerId,
+      title: "New Booking Received",
+      message: "You received a new booking request that needs your response.",
+      type: "booking",
+      link: `/provider/bookings`,
+    }),
+  ]);
+
+  return NextResponse.json(
+    { success: true, message: "Booking created successfully", data: booking },
     { status: 201 }
   );
 });

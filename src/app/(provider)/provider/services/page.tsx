@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 type Service = {
-  _id: string;
+  id: string;
   title: string;
   price: number;
   duration: number;
@@ -61,7 +61,7 @@ export default function ProviderServicesPage() {
 
       // Remove deleted service from UI instantly
       setServices((prev) =>
-        prev.filter((service) => service._id !== selectedServiceId)
+        prev.filter((service) => service.id !== selectedServiceId)
       );
 
       // Close modal
@@ -73,7 +73,7 @@ export default function ProviderServicesPage() {
       alert(err.message || "Failed to delete service");
     }
   };
-
+console.log(services);
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -162,7 +162,7 @@ export default function ProviderServicesPage() {
                 ) : (
                   services.map((service) => (
                     <tr
-                      key={service._id}
+                      key={service.id}
                       className="border-t hover:bg-gray-50 transition"
                     >
                       {/* Service Name */}
@@ -191,7 +191,7 @@ export default function ProviderServicesPage() {
 
                           {/* Edit Button */}
                           <Link
-                            href={`/provider/services/edit_page/${service._id}`}
+                            href={`/provider/services/edit_page/${service.id}`}
                             className="px-4 py-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition cursor-pointer"
                           >
                             Edit
@@ -200,7 +200,7 @@ export default function ProviderServicesPage() {
                           {/* Delete Button */}
                           <button
                             onClick={() => {
-                              setSelectedServiceId(service._id);
+                              setSelectedServiceId(service.id);
                               setShowDeleteModal(true);
                             }}
                             className="bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200 transition cursor-pointer  "

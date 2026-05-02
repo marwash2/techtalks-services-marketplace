@@ -71,13 +71,18 @@ export default function ProviderBookingsPage() {
     status: BookingStatus
   ) {
     try {
-      
-      setBookings(prev =>
-        prev.map(b =>
-          b._id === bookingId
-            ? { ...b, status }
-            : b
-        )
+      const res = await fetch(`/api/bookings/${bookingId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to update booking status");
+      }
+
+      setBookings((prev) =>
+        prev.map((b) => (b._id === bookingId ? { ...b, status } : b))
       );
     } catch (error) {
       console.error(error);

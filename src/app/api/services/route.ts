@@ -10,6 +10,7 @@ import * as serviceService from "@/services/service.service";
 import { createServiceSchema } from "@/lib/validations/service.validation";
 
 import { requireAuth } from "@/lib/auth-utils";
+import { createNotification } from "@/services/notification.service";
 
 /* =========================================================
   *   TYPES
@@ -171,6 +172,18 @@ export const POST = withApiHandler(
         await serviceService.createService(
           validated
         );
+
+      try {
+        await createNotification({
+          userId: session.user.id,
+          title: "Service Added",
+          message: `You published "${service.title}" for $${service.price} (${service.duration} min). It is now visible in your services list.`,
+          type: "other",
+          link: "/provider/services",
+        });
+      } catch (notificationError) {
+        console.error("CREATE SERVICE notification error:", notificationError);
+      }
 
       return Response.json(
         successResponse(

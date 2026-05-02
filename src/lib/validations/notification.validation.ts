@@ -5,7 +5,13 @@ export const createNotificationSchema = z.object({
   title: z.string().min(1, "Title is required"),
   message: z.string().min(1, "Message is required"),
   type: z.enum(["booking", "review", "system", "other"]).optional(),
-  link: z.string().url("Invalid URL").optional(),
+  link: z
+    .string()
+    .refine(
+      (value) => value.startsWith("/") || /^https?:\/\//.test(value),
+      "Link must be a relative path or absolute URL"
+    )
+    .optional(),
 });
 
 export const updateNotificationSchema = z.object({
