@@ -30,7 +30,7 @@ export default async function UserLayout({
         <Toaster position="top-center" reverseOrder={false} />
         <UserSidebar />
         <div className="min-w-0 flex-1">
-
+       
           {children}
         </div>
       </div>
