@@ -1,69 +1,58 @@
 import "@/models";
-import { NextRequest, NextResponse } from "next/server";
-import { ZodError } from "zod";
+import { Service } from "@/models/Service.model";
+import { withApiHandler } from "@/lib/api-handler";
+import { successResponse } from "@/lib/api-response";
+import { ApiError } from "@/lib/api-error";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { createBooking, getAllBookings } from "@/services/booking.service";
 import {
   createBookingSchema,
   getBookingsQuerySchema,
 } from "@/lib/validations/booking.validation";
-import { ApiError } from "@/lib/api-error";
 
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json();
-    const input = createBookingSchema.parse(body);
+export const POST = withApiHandler(async (req: Request) => {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) throw new ApiError("Unauthorized", 401);
 
-    const booking = await createBooking(input);
+  const body = await req.json();
+  const input = createBookingSchema.parse(body);
 
-    return NextResponse.json(
-      { success: true, message: "Booking created successfully", data: booking },
-      { status: 201 }
-    );
-  } catch (error) {
-    return handleError(error, "POST /api/bookings");
-  }
-}
+  const service = await Service.findById(input.serviceId).lean();
+  if (!service) throw new ApiError("Service not found", 404);
 
-export async function GET(req: NextRequest) {
-  try {
-    const { searchParams } = req.nextUrl;
+  const booking = await createBooking({
+    userId:     session.user.id,
+    providerId: input.providerId,
+    serviceId:  input.serviceId,
+    date:       input.date,
+    time:       input.time,
+    price:      (service as any).price,
+    notes:      input.notes,
+  });
 
-    const query = getBookingsQuerySchema.parse({
-      page:       searchParams.get("page")       ?? undefined,
-      limit:      searchParams.get("limit")      ?? undefined,
-      userId:     searchParams.get("userId")     ?? undefined,
-      providerId: searchParams.get("providerId") ?? undefined,
-      status:     searchParams.get("status")     ?? undefined,
-    });
-
-    const { page, limit, ...filters } = query;
-    const result = await getAllBookings(page, limit, filters);
-
-    return NextResponse.json(
-      { success: true, ...result },
-      { status: 200 }
-    );
-  } catch (error) {
-    return handleError(error, "GET /api/bookings");
-  }
-}
-
-function handleError(error: unknown, context: string): NextResponse {
-  if (error instanceof ZodError) {
-    return NextResponse.json(
-      { success: false, message: "Validation failed", errors: error.flatten().fieldErrors },
-      { status: 400 }
-    );
-  }
-  if (error instanceof ApiError) {
-    return NextResponse.json(
-      { success: false, message: error.message },
-      { status: error.statusCode }
-    );
-  }
-  console.error(`[${context}]`, error);
-  return NextResponse.json(
-    { success: false, message: "Internal server error" },
-    { status: 500 }
+  return Response.json(
+    successResponse(booking, "Booking created successfully"),
+    { status: 201 }
   );
-}
+});
+
+export const GET = withApiHandler(async (req: Request) => {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) throw new ApiError("Unauthorized", 401);
+
+  const { searchParams } = new URL(req.url);
+
+  const query = getBookingsQuerySchema.parse({
+    page:       searchParams.get("page")       ?? undefined,
+    limit:      searchParams.get("limit")      ?? undefined,
+    userId:     searchParams.get("userId")     ?? undefined,
+    providerId: searchParams.get("providerId") ?? undefined,
+    status:     searchParams.get("status")     ?? undefined,
+  });
+
+  const { page, limit, ...filters } = query;
+  const result = await getAllBookings(page, limit, filters);
+
+  return Response.json(successResponse(result));
+});

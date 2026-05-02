@@ -11,17 +11,18 @@ type BookingFilters = {
 };
 
 type CreateBookingInput = {
-  userId: string;
+  userId:     string;
   providerId: string;
-  serviceId: string;
-  date: string;
-  price: number;
-  notes?: string;
+  serviceId:  string;
+  date:       string;
+  time:       string;  // ← added
+  price:      number;
+  notes?:     string;
 };
 
 type UpdateBookingInput = {
   status?: string;
-  notes?: string;
+  notes?:  string;
 };
 
 export async function getAllBookings(
@@ -34,17 +35,19 @@ export async function getAllBookings(
   const skip = (page - 1) * limit;
   const query: Record<string, string> = {};
 
-  if (filters.userId) query.userId = filters.userId;
+  if (filters.userId)     query.userId     = filters.userId;
   if (filters.providerId) query.providerId = filters.providerId;
-  if (filters.status) query.status = filters.status;
+  if (filters.status)     query.status     = filters.status;
 
   const bookings = await Booking.find(query)
-    .populate("userId", "name email")
+    .populate("userId",     "name email")
     .populate("providerId", "businessName location")
-    .populate("serviceId", "title price duration")
+    .populate("serviceId",  "title price duration")
+    .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
     .exec();
+
   const total = await Booking.countDocuments(query);
 
   return {
@@ -56,16 +59,17 @@ export async function getAllBookings(
 export async function createBooking(bookingData: CreateBookingInput) {
   await connectDB();
 
-  const { userId, providerId, serviceId, date } = bookingData;
+  const { userId, providerId, serviceId, date, time } = bookingData;
 
-  if (!userId || !providerId || !serviceId || !date) {
-    throw new ApiError(MESSAGES.ERROR.INVALID_INPUT, 400);
+  if (!userId || !providerId || !serviceId || !date || !time) {
+    throw new ApiError("Missing required booking fields", 400);
   }
 
   const booking = new Booking({
     ...bookingData,
     status: BOOKING_STATUS.PENDING,
   });
+
   await booking.save();
 
   return toBookingDTO(booking);
@@ -75,9 +79,9 @@ export async function getBookingById(id: string) {
   await connectDB();
 
   const booking = await Booking.findById(id)
-    .populate("userId", "name email")
+    .populate("userId",     "name email")
     .populate("providerId", "businessName location")
-    .populate("serviceId", "title price duration");
+    .populate("serviceId",  "title price duration");
 
   if (!booking) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
 
@@ -91,6 +95,7 @@ export async function updateBooking(id: string, bookingData: UpdateBookingInput)
     new: true,
     runValidators: true,
   });
+
   if (!booking) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
 
   return toBookingDTO(booking);

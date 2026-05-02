@@ -2,7 +2,7 @@ import { z } from "zod";
 import { BOOKING_STATUS, PAGINATION } from "@/constants/config";
 
 // ─── Status Tuple ─────────────────────────────────────────────────────────────
-
+//fixed list of allowed values
 const BOOKING_STATUS_VALUES = [
   BOOKING_STATUS.PENDING,
   BOOKING_STATUS.CONFIRMED,
@@ -22,21 +22,26 @@ export const ALLOWED_TRANSITIONS: Record<BookingStatusValue, BookingStatusValue[
 };
 
 // ─── Create Booking ───────────────────────────────────────────────────────────
-// Your existing schema — untouched
+// userId  → from session on server, NOT from frontend
+// price   → looked up from DB on server, NOT from frontend
 
 export const createBookingSchema = z.object({
-  userId:     z.string().min(1, "User ID is required"),
-  providerId: z.string().min(1, "Provider ID is required"),
   serviceId:  z.string().min(1, "Service ID is required"),
-  date:       z.string().datetime("Invalid date format"),
-  price:      z.number().positive("Price must be a positive number"),
-  notes:      z.string().optional(),
+  providerId: z.string().min(1, "Provider ID is required"),
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
+    .refine((val) => {
+      const today = new Date().toISOString().split("T")[0];
+      return val >= today;
+    }, "Booking date must be today or in the future"),
+  time:  z.string().min(1, "Time slot is required"),
+  notes: z.string().max(500).optional(),
 });
 
 export type CreateBookingInput = z.infer<typeof createBookingSchema>;
 
 // ─── Update Booking ───────────────────────────────────────────────────────────
-// Your existing schema — untouched
 
 export const updateBookingSchema = z.object({
   status: z.enum(BOOKING_STATUS_VALUES).optional(),
@@ -45,8 +50,7 @@ export const updateBookingSchema = z.object({
 
 export type UpdateBookingInput = z.infer<typeof updateBookingSchema>;
 
-// ─── Status Update (strict — only for PATCH /[id]/status) ────────────────────
-// Uses .refine() + .transform() to avoid z.enum() + .pipe() typing issues
+// ─── Status Update ────────────────────────────────────────────────────────────
 
 export const updateStatusSchema = z.object({
   status: z
@@ -54,9 +58,7 @@ export const updateStatusSchema = z.object({
     .min(1, "status is required")
     .refine(
       (s) => (BOOKING_STATUS_VALUES as readonly string[]).includes(s.toLowerCase()),
-      {
-        message: `status must be one of: ${BOOKING_STATUS_VALUES.join(", ")}`,
-      }
+      { message: `status must be one of: ${BOOKING_STATUS_VALUES.join(", ")}` }
     )
     .transform((s) => s.toLowerCase() as BookingStatusValue),
 });
