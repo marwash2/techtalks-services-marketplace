@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title: "Khidmati | Services Marketplace",
   description: "Find trusted service providers using AI-powered matching.",
   icons: {
-    icon: "/Khidmati.png",
+    icon: "/background_removal.png",
   },
 };
 

@@ -7,6 +7,7 @@ import "@/models";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { getBookingById, updateBooking } from "@/services/booking.service";
+import { createNotification } from "@/services/notification.service";
 import {
   updateStatusSchema,
   ALLOWED_TRANSITIONS,
@@ -16,6 +17,53 @@ import { ApiError } from "@/lib/api-error";
 import { MESSAGES } from "@/constants/config";
 
 type RouteContext = { params: Promise<{ id: string }> };
+
+function resolveRefId(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object") {
+    const ref = value as { _id?: unknown; id?: unknown };
+    if (typeof ref._id === "string") return ref._id;
+    if (typeof ref.id === "string") return ref.id;
+    if (ref._id) return String(ref._id);
+    if (ref.id) return String(ref.id);
+  }
+  return String(value ?? "");
+}
+
+const STATUS_NOTIFICATION_COPY: Record<
+  BookingStatusValue,
+  {
+    userTitle: string;
+    userMessage: string;
+    providerTitle: string;
+    providerMessage: string;
+  }
+> = {
+  pending: {
+    userTitle: "Booking Pending",
+    userMessage: "Your booking is pending provider response.",
+    providerTitle: "Booking Pending",
+    providerMessage: "This booking is currently pending.",
+  },
+  confirmed: {
+    userTitle: "Booking Confirmed",
+    userMessage: "Your booking has been confirmed by the provider.",
+    providerTitle: "Booking Accepted",
+    providerMessage: "You accepted this booking request.",
+  },
+  cancelled: {
+    userTitle: "Booking Cancelled",
+    userMessage: "Your booking has been cancelled.",
+    providerTitle: "Booking Cancelled",
+    providerMessage: "This booking has been cancelled.",
+  },
+  completed: {
+    userTitle: "Service Completed",
+    userMessage: "Your booking was marked as completed.",
+    providerTitle: "Service Completed",
+    providerMessage: "You marked this booking as completed.",
+  },
+};
 
 // ─── PATCH /api/bookings/[id]/status ─────────────────────────────────────────
 
@@ -62,6 +110,34 @@ export async function PATCH(
 
     // 5. Apply
     const updated = await updateBooking(id, { status: newStatus });
+
+    const copy = STATUS_NOTIFICATION_COPY[newStatus];
+    const userId = resolveRefId(booking.userId);
+    const providerId = resolveRefId(booking.providerId);
+
+    if (!userId || !providerId) {
+      return NextResponse.json(
+        { success: false, message: "Booking references are invalid" },
+        { status: 400 }
+      );
+    }
+
+    await Promise.all([
+      createNotification({
+        userId,
+        title: copy.userTitle,
+        message: copy.userMessage,
+        type: "booking",
+        link: `/user/bookings/${id}`,
+      }),
+      createNotification({
+        userId: providerId,
+        title: copy.providerTitle,
+        message: copy.providerMessage,
+        type: "booking",
+        link: "/provider/bookings",
+      }),
+    ]);
 
     return NextResponse.json(
       { success: true, message: MESSAGES.SUCCESS.UPDATE, data: updated },

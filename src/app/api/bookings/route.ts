@@ -2,6 +2,7 @@ import "@/models";
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { createBooking, getAllBookings } from "@/services/booking.service";
+import { createNotification } from "@/services/notification.service";
 import {
   createBookingSchema,
   getBookingsQuerySchema,
@@ -14,6 +15,24 @@ export async function POST(req: NextRequest) {
     const input = createBookingSchema.parse(body);
 
     const booking = await createBooking(input);
+    const bookingId = String(booking.id);
+
+    await Promise.all([
+      createNotification({
+        userId: input.userId,
+        title: "Booking Requested",
+        message: "Your booking request has been sent to the provider.",
+        type: "booking",
+        link: `/user/bookings/${bookingId}`,
+      }),
+      createNotification({
+        userId: input.providerId,
+        title: "New Booking Received",
+        message: "You received a new booking request that needs your response.",
+        type: "booking",
+        link: `/provider/bookings`,
+      }),
+    ]);
 
     return NextResponse.json(
       { success: true, message: "Booking created successfully", data: booking },

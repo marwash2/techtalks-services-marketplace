@@ -25,6 +25,11 @@ export default function ServiceForm({
 
   const [loading, setLoading] =
     useState(false);
+  const [toast, setToast] =
+    useState<{
+      type: "success" | "error";
+      message: string;
+    } | null>(null);
 
   /* ---------------- FORM STATE ---------------- */
   const [form, setForm] = useState({
@@ -322,21 +327,38 @@ export default function ServiceForm({
         "Service saved successfully:",
         result
       );
-
-      router.push(
-        "/provider/services"
+      window.dispatchEvent(
+        new Event(
+          "notifications-updated"
+        )
       );
+
+      setToast({
+        type: "success",
+        message:
+          mode === "edit"
+            ? "Service updated successfully"
+            : "Service created successfully",
+      });
+
+      setTimeout(() => {
+        router.push(
+          "/provider/services"
+        );
+      }, 700);
     } catch (err) {
       console.error(
         "Submit error:",
         err
       );
 
-      alert(
-        err instanceof Error
-          ? err.message
-          : "Something went wrong while saving"
-      );
+      setToast({
+        type: "error",
+        message:
+          err instanceof Error
+            ? err.message
+            : "Something went wrong while saving",
+      });
     } finally {
       setLoading(false);
     }
@@ -345,6 +367,17 @@ export default function ServiceForm({
   /* ---------------- UI ---------------- */
   return (
     <div className="max-w-3xl mx-auto bg-white p-8 rounded-2xl shadow border">
+      {toast && (
+        <div
+          className={`mb-4 rounded-lg px-4 py-3 text-sm font-medium ${
+            toast.type === "success"
+              ? "bg-green-50 text-green-700 border border-green-200"
+              : "bg-red-50 text-red-700 border border-red-200"
+          }`}
+        >
+          {toast.message}
+        </div>
+      )}
       <h1 className="text-3xl font-bold mb-6">
         {mode === "create"
           ? "Add New Service"
