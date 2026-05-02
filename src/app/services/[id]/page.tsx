@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import Link from "next/link";
+import Button from "@/components/ui/Button";
 import EmptyState from "@/components/shared/EmptyState";
 
 interface ServiceDetail {
-  id: string;
-  _id?: string;
+  _id: string;
+  id:string;
   title: string;
   description: string;
   price: number;
@@ -29,20 +30,24 @@ export default function ServiceDetailPage() {
   const router = useRouter();
   const id = params?.id as string;
 
+  // Main service states
   const [service, setService] = useState<ServiceDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const { data: session } = useSession();
 
+  // Fetch service details
   useEffect(() => {
     async function fetchService() {
       setLoading(true);
+
       try {
         const res = await fetch(`/api/services/${id}`);
         if (!res.ok) throw new Error("Service not found");
         const data = await res.json();
-        setService(data.data.service);
+
+        setService(data.data.service || data.service);
       } catch {
         setError("Service not found");
       } finally {
@@ -52,21 +57,29 @@ export default function ServiceDetailPage() {
     if (id) fetchService();
   }, [id]);
 
-  const handleProtectedAction = (action: () => void) => {
+  // Protected actions handler
+  // Shows custom login modal instead of ugly browser alert
+  const handleProtectedAction = (
+    action: () => void,
+    actionName: string
+  ) => {
     if (!session) {
-      alert("You must be logged in");
-      router.push("/login");
+      setLoginAction(actionName);
+      setShowLoginModal(true);
       return;
     }
+
     action();
   };
 
+  // Loading state
   if (loading) {
     return (
       <div className="text-center py-10 text-gray-400">Loading service...</div>
     );
   }
 
+  // Error / Empty state
   if (error || !service) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -89,7 +102,7 @@ export default function ServiceDetailPage() {
         </p>
       </div>
 
-      {/* INFO CARD */}
+      {/* SERVICE INFO CARD */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white p-6 rounded-2xl shadow-sm border">
         <div>
           <p className="text-sm text-gray-400">Category</p>
@@ -151,6 +164,60 @@ export default function ServiceDetailPage() {
           Book Now
         </button>
       </div>
+
+      {/* CUSTOM LOGIN REQUIRED MODAL */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 text-center border border-gray-100">
+            
+            {/* Cute lock icon */}
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-3xl">
+                🔐
+              </div>
+            </div>
+
+            {/* Modal title */}
+            <h2 className="text-2xl font-bold text-gray-800 mb-3">
+              Login Required
+            </h2>
+
+            {/* Modal description */}
+            <p className="text-gray-600 leading-relaxed mb-6">
+              Please log in or create an account to continue and{" "}
+              {loginAction}.
+            </p>
+
+            {/* Modal buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              
+              {/* Close button */}
+              <button
+                onClick={() => setShowLoginModal(false)}
+                className="px-5 py-3 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
+              >
+                Maybe Later
+              </button>
+
+              {/* Login button */}
+              <Link
+                href="/login"
+                className="px-5 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition"
+              >
+                Log In
+              </Link>
+
+              {/* Signup button */}
+              <Link
+                href="/register"
+                className="px-5 py-3 rounded-xl bg-green-600 text-white hover:bg-green-700 transition"
+              >
+                Sign Up
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

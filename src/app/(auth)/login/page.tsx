@@ -39,8 +39,14 @@ export default function LoginPage() {
         return;
       }
 
-      if (res?.url) {
-        router.replace(res.url);
+      // Get session to determine role and redirect directly to dashboard
+      const session = await getSession();
+      const role = session?.user?.role;
+
+      if (role === "provider") {
+        window.location.href = "/provider/dashboard";
+      } else if (role === "admin") {
+        window.location.href = "/admin/dashboard";
       } else {
         router.replace("/auth/redirect");
       }

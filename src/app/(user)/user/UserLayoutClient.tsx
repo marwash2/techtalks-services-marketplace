@@ -1,7 +1,6 @@
 "use client";
 
 import UserSidebar from "@/components/user/UserSidebar";
-import UserDashboardSummary from "@/components/user/UserDashboardSummary";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { Menu } from "lucide-react";
 
@@ -28,7 +27,6 @@ export default function UserLayoutClient({
         <UserSidebar />
 
         <div className="min-w-0 flex-1">
-          <UserDashboardSummary name={name} />
           {children}
         </div>
       </div>

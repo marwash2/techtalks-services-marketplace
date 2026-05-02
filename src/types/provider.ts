@@ -3,11 +3,14 @@ import { IReview } from "./review";
 
 export interface IProvider extends Document {
   userId: Types.ObjectId;
-  bio: string;
+  businessName: string;
+  description: string;
   location: string;
   rating: number;
+  totalReviews: number;
+  isVerified: boolean;
   services: Types.ObjectId[];
-  reviews: IReview[];       // embedded — loaded with provider in one query
+  reviews: IReview[]; // embedded — loaded with provider in one query
   createdAt: Date;
   updatedAt: Date;
 }

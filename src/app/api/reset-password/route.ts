@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import User from "@/models/User.model";
+import { User } from "@/models/User.model";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 

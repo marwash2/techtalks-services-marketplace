@@ -1,5 +1,6 @@
 "use client";
-
+import { usePathname } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -9,14 +10,21 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import {
   faFacebook,
-  faTwitter,
   faInstagram,
   faLinkedin,
 } from "@fortawesome/free-brands-svg-icons";
+import { useSidebar } from "@/components/layout/SidebarContext";
 
 export default function Footer() {
+  const pathname = usePathname();
+  const { isOpen } = useSidebar();
+  const isProviderRoute = pathname.startsWith("/provider");
+  const marginClass = isProviderRoute ? (isOpen ? "lg:ml-64" : "lg:ml-16") : "";
+
   return (
-    <footer className=" bg-gray-50 border-t border-gray-100 mt-16">
+    <footer
+      className={`bg-gray-50 border-t border-gray-100 mt-16 border-t-2 border-gray-200 z-60 transition-all duration-300 ${marginClass}`}
+    >
       <div className="max-w-6xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-16">
           {/* Brand */}
@@ -26,7 +34,14 @@ export default function Footer() {
                 
               </div> */}
               <span className="text-xl font-bold text-white">
-                <span className="text-gray-900">Matchify</span>
+                <span className="text-gray-900">
+                  <Image
+                    src="/logo-icon.png"
+                    alt="Logo"
+                    width={150}
+                    height={80}
+                  />
+                </span>
               </span>
             </Link>
 
@@ -38,19 +53,16 @@ export default function Footer() {
             <div className="flex space-x-4 mt-4 text-lg">
               <FontAwesomeIcon
                 icon={faFacebook}
-                className="hover:text-blue-600 cursor-pointer"
+                className="text-blue-700 cursor-pointer"
               />
-              <FontAwesomeIcon
-                icon={faTwitter}
-                className="hover:text-blue-600 cursor-pointer"
-              />
+
               <FontAwesomeIcon
                 icon={faInstagram}
-                className="hover:text-orange-600 cursor-pointer"
+                className="text-orange-600 cursor-pointer"
               />
               <FontAwesomeIcon
                 icon={faLinkedin}
-                className="hover:text-blue-600 cursor-pointer"
+                className="text-blue-700 cursor-pointer"
               />
             </div>
           </div>
@@ -119,18 +131,21 @@ export default function Footer() {
 
             <div className="space-y-3 text-sm">
               <div className="flex items-center space-x-2">
-                <FontAwesomeIcon icon={faMapMarkerAlt} />
+                <FontAwesomeIcon
+                  icon={faMapMarkerAlt}
+                  className="text-blue-600"
+                />
                 <span>Beirut, Lebanon</span>
               </div>
 
               <div className="flex items-center space-x-2">
-                <FontAwesomeIcon icon={faPhone} />
+                <FontAwesomeIcon icon={faPhone} className="text-blue-600" />
                 <span>+961 70 123 456</span>
               </div>
 
               <div className="flex items-center space-x-2">
-                <FontAwesomeIcon icon={faEnvelope} />
-                <span>support@matchify.com</span>
+                <FontAwesomeIcon icon={faEnvelope} className="text-blue-600" />
+                <span>support@khidmati.com</span>
               </div>
             </div>
           </div>
