@@ -15,9 +15,7 @@ const providerSchema = new mongoose.Schema(
     isVerified: { type: Boolean, default: false },
     totalReviews: { type: Number, default: 0 },
     avatar: { type: String, default: null },
-    services: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "Service" }
-    ],
+    services: [{ type: mongoose.Schema.Types.ObjectId, ref: "Service" }],
 
     reviews: [
       {
@@ -25,10 +23,10 @@ const providerSchema = new mongoose.Schema(
         rating: { type: Number },
         comment: { type: String },
         createdAt: { type: Date, default: Date.now },
-      }
+      },
     ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default providerSchema;

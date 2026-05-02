@@ -1,13 +1,22 @@
 import { Search, MapPin, Star, Users, Heart } from "lucide-react";
-
+import Image from "next/image";
 export default function HeroSection() {
   return (
-    <section className="relative w-full overflow-hidden bg-gray-100 py-10">
+    <section className="relative w-full overflow-hidden bg-gray-100 py-4">
       <div className="w-full">
         <div className="md:hidden w-full h-[220px] mb-6">
           {/* IMAGE */}
-          <img
+          {/*} <img
             src="https://images.unsplash.com/photo-1581578731548-c64695cc6952"
+            className="w-full h-full object-cover rounded-xl
+            [clip-path:ellipse(100%_60%_at_100%_35%)]"
+          />*/}
+
+          <Image
+            src="/hero.jpg"
+            alt="Hero Background"
+            width={1200}
+            height={800}
             className="w-full h-full object-cover rounded-xl
             [clip-path:ellipse(100%_60%_at_100%_35%)]"
           />
@@ -68,7 +77,9 @@ export default function HeroSection() {
                   <div className="flex flex-col items-center">
                     <Heart className="h-5 w-5 text-blue-600" />
                     <span className="font-semibold mt-1">5K+</span>
-                    <span className="text-xs text-slate-400">Happy Customers</span>
+                    <span className="text-xs text-slate-400">
+                      Happy Customers
+                    </span>
                   </div>
 
                   <div className="flex flex-col items-center">
@@ -79,7 +90,7 @@ export default function HeroSection() {
                 </div>
 
                 {/* SERVICE CARD */}
-                <div className="bg-white rounded-xl shadow-md p-4 w-[200px] md:mr-2">
+                <div className="bg-white translate-x-30 translate-y-2 shadow-md rounded-xl shadow-md p-4 w-[150px] md:mr-2">
                   <p className="text-sm font-semibold text-slate-700">
                     House Cleaning
                   </p>
@@ -87,7 +98,9 @@ export default function HeroSection() {
                     <Star className="h-3.5 w-3.5 text-yellow-400 mr-1" />
                     4.8 (120)
                   </div>
-                  <p className="text-xs text-slate-400 mt-1">From $50 / session</p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    From $50 / session
+                  </p>
                 </div>
               </div>
             </div>

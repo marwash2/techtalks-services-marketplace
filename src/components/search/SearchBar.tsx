@@ -40,7 +40,7 @@ export default function SearchBar() {
       </div>
       <button
         onClick={handleSearch}
-        className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-sm font-medium transition"
+        className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl text-sm font-medium transition cursor-pointer"
       >
         Search
       </button>

@@ -18,7 +18,10 @@ type CreateProviderInput = {
 
 type UpdateProviderInput = Partial<CreateProviderInput>;
 
-export async function getAllProviders(page = 1, limit = PAGINATION.DEFAULT_LIMIT) {
+export async function getAllProviders(
+  page = 1,
+  limit = PAGINATION.DEFAULT_LIMIT,
+) {
   await connectDB();
 
   const skip = (page - 1) * limit;
@@ -47,8 +50,18 @@ export async function createProvider(providerData: CreateProviderInput) {
   const user = await User.findById(userId);
   if (!user) throw new ApiError("User not found", 404);
 
+  if (user.role === "admin") {
+    throw new ApiError("Admin accounts cannot be converted to provider", 400);
+  }
+
+  if (user.role !== "provider") {
+    user.role = "provider";
+    await user.save();
+  }
+
   const existingProvider = await Provider.findOne({ userId });
-  if (existingProvider) throw new ApiError("User already has a provider account", 409);
+  if (existingProvider)
+    throw new ApiError("User already has a provider account", 409);
 
   const provider = new Provider(providerData);
   await provider.save();
@@ -65,7 +78,10 @@ export async function getProviderById(id: string) {
   return toProviderDTO(provider);
 }
 
-export async function updateProvider(id: string, providerData: UpdateProviderInput) {
+export async function updateProvider(
+  id: string,
+  providerData: UpdateProviderInput,
+) {
   await connectDB();
 
   const provider = await Provider.findByIdAndUpdate(id, providerData, {

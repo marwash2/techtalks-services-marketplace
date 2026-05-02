@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import UserSidebar from "@/components/user/UserSidebar";
 import { authOptions } from "@/lib/auth";
 import UserLayoutClient from "@/app/(user)/user/UserLayoutClient";
+import { Toaster } from "react-hot-toast";
 export default async function UserLayout({
   children,
 }: {
@@ -26,6 +27,7 @@ export default async function UserLayout({
   return (
     <div className="mx-auto max-w-7xl py-8">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+        <Toaster position="top-center" reverseOrder={false} />
         <UserSidebar />
         <div className="min-w-0 flex-1">
           {children}

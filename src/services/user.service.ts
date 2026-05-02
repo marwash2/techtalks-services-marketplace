@@ -5,12 +5,18 @@ import { ApiError } from "@/lib/api-error";
 import { toUserDTO, toUserListDTO } from "@/lib/dto/user.dto";
 import bcrypt from "bcryptjs";
 
-export async function getAllUsers(page = 1, limit = PAGINATION.DEFAULT_LIMIT) {
+async function fetchUsers(
+  page = 1,
+  limit = PAGINATION.DEFAULT_LIMIT,
+  role?: string,
+) {
   await connectDB();
 
   const skip = (page - 1) * limit;
-  const users = await User.find().skip(skip).limit(limit).exec();
-  const total = await User.countDocuments();
+  const query = role ? { role } : {};
+
+  const users = await User.find(query).skip(skip).limit(limit).exec();
+  const total = await User.countDocuments(query);
 
   return {
     users: toUserListDTO(users),
@@ -21,6 +27,18 @@ export async function getAllUsers(page = 1, limit = PAGINATION.DEFAULT_LIMIT) {
       pages: Math.ceil(total / limit),
     },
   };
+}
+
+export async function getAllUsers(page = 1, limit = PAGINATION.DEFAULT_LIMIT) {
+  return fetchUsers(page, limit);
+}
+
+export async function getUsersByRole(
+  role: "user" | "provider" | "admin",
+  page = 1,
+  limit = PAGINATION.DEFAULT_LIMIT,
+) {
+  return fetchUsers(page, limit, role);
 }
 
 export async function createUser(userData: {
@@ -42,7 +60,12 @@ export async function createUser(userData: {
 
   const hashedPassword = await bcrypt.hash(password, 12);
 
-  const user = new User({ name, email, password: hashedPassword, role: role || "user" });
+  const user = new User({
+    name,
+    email,
+    password: hashedPassword,
+    role: role || "user",
+  });
   await user.save();
 
   return toUserDTO(user);
@@ -75,7 +98,7 @@ export async function getUserById(id: string) {
 
 export async function updateUser(
   id: string,
-  userData: Partial<{ name: string; email: string; role: string }>
+  userData: Partial<{ name: string; email: string; role: string }>,
 ) {
   await connectDB();
 

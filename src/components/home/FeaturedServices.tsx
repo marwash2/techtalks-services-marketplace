@@ -60,7 +60,7 @@ export default function FeaturedServices() {
         <ServiceCard
           key={service._id || service.id || index}
           service={{
-            id: service._id || service.id || "",
+            _id: service._id || service.id || "",
             title: service.title,
             description: service.description,
             price: service.price,

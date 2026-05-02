@@ -226,7 +226,7 @@ export default function BookingsPage() {
             setPage(1);
             setStatusFilter(e.target.value);
           }}
-          className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700"
+          className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 cursor-pointer"
         >
           <option value="">All Status</option>
           <option value="pending">Pending</option>
@@ -333,7 +333,7 @@ export default function BookingsPage() {
               type="button"
               onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
               disabled={page <= 1}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
             >
               Previous
             </button>
@@ -344,7 +344,7 @@ export default function BookingsPage() {
               type="button"
               onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
               disabled={page >= totalPages}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
             >
               Next
             </button>
