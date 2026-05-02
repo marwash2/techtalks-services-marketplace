@@ -14,49 +14,23 @@ export const POST = withApiHandler(async (req) => {
 }
 
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import {User} from "@/models/User.model";
-import bcrypt from "bcryptjs";
+import { createUserSchema } from "@/lib/validations/user.validation";
+import * as userService from "@/services/user.service";
 
 export async function POST(req: Request) {
   try {
-    const { name, email, password, role } = await req.json();
+    const body = await req.json();
+    const validated = createUserSchema.parse(body);
 
-    if (!name || !email || !password) {
-      return NextResponse.json(
-        { message: "All fields are required" },
-        { status: 400 },
-      );
-    }
-
-    await connectDB();
-
-    const existingUser = await User.findOne({ email });
-
-    if (existingUser) {
-      return NextResponse.json(
-        { message: "User already exists" },
-        { status: 400 },
-      );
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await User.create({
-      name,
-      email,
-      password: hashedPassword,
-      role: role || "user",
-    });
+    const user = await userService.createUser(validated);
 
     return NextResponse.json(
-      { message: "User created successfully", user },
+      { message: "User created successfully", data: user },
       { status: 201 },
     );
-  } catch (error) {
-    return NextResponse.json(
-      { message: "Error creating user", error },
-      { status: 500 },
-    );
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Error creating user";
+    return NextResponse.json({ message }, { status: 500 });
   }
 }

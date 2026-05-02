@@ -96,9 +96,19 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
 
-    async jwt({ token, user }) {
-      if (user?.role) {
+    async jwt({ token, user, trigger }) {
+      if (user) {
         token.role = user.role;
+        token.id = user.id;
+      }
+
+      if (trigger === "update" && token.id) {
+        await connectDB();
+
+        const userFromDb = await User.findById(token.id).select("role");
+        if (userFromDb) {
+          token.role = userFromDb.role;
+        }
       }
 
       // For OAuth logins, fetch role from DB when provider user object has no role.
@@ -122,8 +132,8 @@ export const authOptions: NextAuthOptions = {
       token,
     }) {
       if (session.user) {
-        session.user.role = (token.role as string) || "user";
-        session.user.id = token.sub || session.user.id;
+        session.user.role = token.role as string;
+        session.user.id = token.id as string;
       }
 
       return session;

@@ -68,10 +68,20 @@ export function toServiceDTO(
   service: ServiceDocument,
 ) {
   return {
-    /* PRIMARY SERVICE ID */
-    _id: service._id.toString(),
-
-    /* BASIC INFO */
+    id: service._id.toString(),
+    providerId: isPopulatedProvider(service.providerId)
+      ? {
+          _id: service.providerId._id.toString(),
+          businessName: service.providerId.businessName,
+          location: service.providerId.location,
+        }
+      : service.providerId.toString(),
+    categoryId: isPopulatedCategory(service.categoryId)
+      ? {
+          _id: service.categoryId._id.toString(),
+          name: service.categoryId.name,
+        }
+      : service.categoryId.toString(),
     title: service.title,
 
     description:

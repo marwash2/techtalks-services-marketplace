@@ -10,12 +10,13 @@ export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const roleFromUrl = searchParams.get("role");
+  const selectedRole = roleFromUrl === "provider" ? "provider" : "user";
 
   const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
-    role: roleFromUrl === "provider" ? "provider" : "user",
+    role: selectedRole,
   });
   const [error, setError] = useState(""); // error message display
   const [loading, setLoading] = useState(false); // loading state for submit button
@@ -56,11 +57,9 @@ export default function RegisterPage() {
         return;
       }
 
-      if (loginResult?.url) {
-        router.replace(loginResult.url);
-      } else {
-        router.replace("/auth/redirect");
-      }
+      router.push(
+        form.role === "provider" ? "/provider/dashboard" : "/user/dashboard",
+      );
     } catch {
       setError("Something went wrong");
     }
@@ -80,24 +79,30 @@ export default function RegisterPage() {
           </h2>
 
           <p className="text-sm text-gray-500 text-center mb-6">
-            Join and find the best services
+            {selectedRole === "provider"
+              ? "Create a provider account and start offering services"
+              : "Join and find the best services"}
           </p>
 
           {/* GOOGLE LOGIN */}
-          <button
-            onClick={() => signIn("google", { callbackUrl: "/auth/redirect" })}
-            className="w-full border border-gray-200 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-50 cursor-pointer transition mb-4"
-          >
-            <GoogleIcon />
-            <span>Sign up with Google</span>
-          </button>
+          {selectedRole !== "provider" && (
+            <>
+              <button
+                onClick={() => signIn("google")}
+                className="w-full border border-gray-200 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-50 cursor-pointer transition mb-4"
+              >
+                <GoogleIcon />
+                <span>Sign up with Google</span>
+              </button>
 
-          {/* Divider */}
-          <div className="flex items-center gap-2 mb-4">
-            <div className="flex-1 h-px bg-gray-200"></div>
-            <span className="text-xs text-gray-400">or</span>
-            <div className="flex-1 h-px bg-gray-200"></div>
-          </div>
+              {/* Divider */}
+              <div className="flex items-center gap-2 mb-4">
+                <div className="flex-1 h-px bg-gray-200"></div>
+                <span className="text-xs text-gray-400">or</span>
+                <div className="flex-1 h-px bg-gray-200"></div>
+              </div>
+            </>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Name */}

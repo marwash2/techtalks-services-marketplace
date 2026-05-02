@@ -10,7 +10,7 @@ import { SlidersHorizontal, X } from "lucide-react";
 
 type Service = {
   _id: string;
-  id: string;
+  id?: string;
   title: string;
   description?: string;
   price: number;
@@ -70,9 +70,9 @@ function ServicesContent() {
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
       {services.map((service, index) => (
         <ServiceCard
-          key={service._id || service.id || index }
+          key={service._id || service.id || index}
           service={{
-            _id: service._id || service.id,
+            _id: service._id || service.id || "",
             title: service.title,
             description: service.description,
             price: service.price,

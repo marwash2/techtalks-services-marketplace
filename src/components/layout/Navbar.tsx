@@ -5,16 +5,16 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Bell } from "lucide-react";
-import { useSidebar } from "@/components/layout/SidebarContext";
+import Image from "next/image";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const { data: session } = useSession();
-  const { toggle } = useSidebar();
 
   const user = session?.user;
   const role = user?.role;
+  const notificationsPath = role ? `/${role}/notifications` : "/notifications";
 
   const isActive = (path: string) => pathname === path;
 
@@ -24,10 +24,11 @@ export default function Navbar() {
         { name: "Home", path: "/" },
         { name: "Services", path: "/services" },
         { name: "Providers", path: "/providers" },
+        { name: "About", path: "/about" },
       ]
     : role === "admin"
       ? [
-          { name: "Dashboard", path: "/admin" },
+          { name: "Dashboard", path: "/admin/dashboard" },
           { name: "Users", path: "/admin/users" },
           { name: "Providers", path: "/admin/providers" },
           { name: "Reports", path: "/admin/reports" },
@@ -39,53 +40,13 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {/* HAMBURGER (only for sidebar users) */}
-          {hasSidebar && (
-            <button
-              onClick={toggle}
-              className="lg:hidden p-2 text-gray-700 bg-white rounded-md shadow cursor-pointer"
-              aria-label="Toggle sidebar"
-            >
-              ☰
-            </button>
-          )}
+        {/* LEFT: Notification + Logo */}
+        <div className="flex items-center gap-4 ">
+          {/* Notification bell for logged-in users */}
 
-          {/* Notification bell */}
-          {session && (
-            <Link
-              href="/notifications"
-              className="relative p-2 text-gray-600 hover:text-blue-600 transition"
-              aria-label="Notifications"
-            >
-              <Bell className="h-5 w-5" />
-            </Link>
-          )}
-
-          {/* LOGO */}
-          {hasSidebar ? (
-            <button
-              onClick={toggle}
-              className="flex items-center cursor-pointer"
-              aria-label="Toggle sidebar"
-            >
-              <img
-                src="/logo-removebg-preview.png"
-                alt="Logo"
-                width={50}
-                height={30}
-              />
-            </button>
-          ) : (
-            <Link href="/" className="flex items-center">
-              <img
-                src="/logo-removebg-preview.png"
-                alt="Logo"
-                width={50}
-                height={30}
-              />
-            </Link>
-          )}
+          <Link href="/" className="flex items-center">
+            <Image src="/logo-icon.png" alt="Logo" width={150} height={80} />
+          </Link>
         </div>
 
         {/* DESKTOP NAV: only for guest / admin */}
@@ -135,24 +96,20 @@ export default function Navbar() {
           ) : (
             <>
               {user?.role === "provider" && (
-                <Link
-                  href="/provider/services/new"
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700"
-                >
-                  + Add Service
-                </Link>
+                <span className="text-sm text-gray-500">Provider Panel</span>
               )}
 
               {user?.role === "admin" && (
                 <span className="text-sm text-gray-500">Admin Panel</span>
               )}
-
-              <button
-                onClick={() => signOut({ callbackUrl: "/" })}
-                className="text-sm bg-red-500 hover:bg-red-700 text-white px-3 py-1 rounded-md transition cursor-pointer"
+              <Link
+                href={notificationsPath}
+                className="relative p-2 text-gray-600 hover:text-blue-600 transition"
+                aria-label="Notifications"
               >
-                Logout
-              </button>
+                <Bell className="h-5 w-5" />
+                {/* Optional: notification badge can be added here */}
+              </Link>
             </>
           )}
         </div>

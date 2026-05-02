@@ -202,7 +202,7 @@ export default function ServiceCard({
           </p>
 
           <Link
-            href={Routes.SERVICE_DETAILS(serviceId)}
+            href={Routes.SERVICE_DETAILS(service._id)}
             className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-blue-600 transition hover:text-blue-700"
           >
             View details
