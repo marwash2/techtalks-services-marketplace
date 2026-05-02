@@ -1,7 +1,5 @@
 "use client";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
 import HowItWorks from "@/components/home/HowItWorks";
 import WhychooseUs from "@/components/home/WhyChooseUs";
@@ -13,8 +11,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 export default function Home() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+  const { status } = useSession();
 
   useEffect(() => {
     if (status !== "authenticated" || !session) return;

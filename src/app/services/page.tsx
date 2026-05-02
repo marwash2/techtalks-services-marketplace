@@ -41,6 +41,7 @@ function ServicesContent() {
       const data = await res.json();
 
       const servicesData = data.data?.services || data.services || [];
+      console.log("SERVICES:", servicesData);
       setServices(servicesData);
     } catch (err) {
       console.error("Error fetching services:", err);

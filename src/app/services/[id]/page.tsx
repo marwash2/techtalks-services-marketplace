@@ -2,69 +2,100 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import Link from "next/link";
+import Button from "@/components/ui/Button";
 import EmptyState from "@/components/shared/EmptyState";
 
 interface ServiceDetail {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   price: number;
   duration: number;
-  image?: string | null;
-  categoryId?: {
+  image?: string;
+
+  categoryId: {
     name: string;
-  } | null;
-  providerId?: {
+  };
+
+  providerId: {
     _id: string;
     businessName: string;
     location: string;
-  } | null;
+    phone?: string;
+  };
+
+  reviews?: Array<{
+    rating: number;
+    comment: string;
+  }>;
 }
 
 export default function ServiceDetailPage() {
   const params = useParams();
-  const id = params.id as string;
   const router = useRouter();
-  const { data: session } = useSession();
 
+  const id = params?.id as string;
+
+  // Main service states
   const [service, setService] = useState<ServiceDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Login modal states
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginAction, setLoginAction] = useState("");
+
+  // TEMP AUTH PLACEHOLDER
+  // Replace this later with NextAuth session
+  const session = null;
+
+  // Fetch service details
   useEffect(() => {
     async function fetchService() {
       setLoading(true);
+
       try {
         const res = await fetch(`/api/services/${id}`);
-        if (!res.ok) {
-          throw new Error("Service not found");
-        }
+
+        if (!res.ok) throw new Error("Service not found");
+
         const data = await res.json();
-        setService(data.data.service);
-      } catch (err) {
+
+        setService(data.data.service || data.service);
+      } catch {
         setError("Service not found");
       } finally {
         setLoading(false);
       }
     }
+
     if (id) fetchService();
   }, [id]);
 
-  const handleProtectedAction = (action: () => void) => {
+  // Protected actions handler
+  // Shows custom login modal instead of ugly browser alert
+  const handleProtectedAction = (
+    action: () => void,
+    actionName: string
+  ) => {
     if (!session) {
-      router.push("/login");
+      setLoginAction(actionName);
+      setShowLoginModal(true);
       return;
     }
+
     action();
   };
 
+  // Loading state
   if (loading) {
     return (
       <div className="text-center py-10 text-gray-400">Loading service...</div>
     );
   }
 
+  // Error / Empty state
   if (error || !service) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -78,7 +109,7 @@ export default function ServiceDetailPage() {
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-8">
-      {/* 🔷 HEADER */}
+      {/* HEADER */}
       <div className="space-y-2">
         <h1 className="text-4xl font-bold text-gray-900">{service.title}</h1>
 
@@ -87,7 +118,7 @@ export default function ServiceDetailPage() {
         </p>
       </div>
 
-      {/* 🔷 INFO CARD */}
+      {/* SERVICE INFO CARD */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white p-6 rounded-2xl shadow-sm border">
         <div>
           <p className="text-sm text-gray-400">Category</p>
@@ -112,7 +143,7 @@ export default function ServiceDetailPage() {
         </div>
       </div>
 
-      {/* 🔷 PROVIDER CARD */}
+      {/* PROVIDER CARD */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border flex items-center justify-between">
         <div>
           <p className="text-sm text-gray-400">Provider</p>
@@ -128,12 +159,14 @@ export default function ServiceDetailPage() {
           )}
         </div>
 
-        {/* 🔐 PROTECTED BUTTON */}
+        {/* VIEW PROFILE BUTTON */}
         {service.providerId?._id && (
           <button
             onClick={() =>
-              handleProtectedAction(() =>
-                router.push(`/providers/${service.providerId?._id}`),
+              handleProtectedAction(
+                () =>
+                  router.push(`/providers/${service.providerId._id}`),
+                "view provider profiles"
               )
             }
             className="px-5 py-2 rounded-lg bg-gray-900 text-white hover:bg-black transition"
@@ -143,7 +176,7 @@ export default function ServiceDetailPage() {
         )}
       </div>
 
-      {/* 🔷 BOOKING SECTION */}
+      {/* BOOKING SECTION */}
       <div className="bg-blue-50 p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
           <h3 className="text-lg font-semibold text-gray-800">
@@ -155,17 +188,76 @@ export default function ServiceDetailPage() {
           )}
         </div>
 
+        {/* BOOK NOW BUTTON */}
         <button
           onClick={() =>
-            handleProtectedAction(() => {
-              alert("Booking flow coming soon");
-            })
+            handleProtectedAction(
+              () => {
+                // Replace later with actual booking page
+                router.push(`/booking/${id}`);
+              },
+              "book this service"
+            )
           }
           className="px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition font-medium"
         >
           Book Now
         </button>
       </div>
+
+      {/* CUSTOM LOGIN REQUIRED MODAL */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 text-center border border-gray-100">
+            
+            {/* Cute lock icon */}
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-3xl">
+                🔐
+              </div>
+            </div>
+
+            {/* Modal title */}
+            <h2 className="text-2xl font-bold text-gray-800 mb-3">
+              Login Required
+            </h2>
+
+            {/* Modal description */}
+            <p className="text-gray-600 leading-relaxed mb-6">
+              Please log in or create an account to continue and{" "}
+              {loginAction}.
+            </p>
+
+            {/* Modal buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              
+              {/* Close button */}
+              <button
+                onClick={() => setShowLoginModal(false)}
+                className="px-5 py-3 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
+              >
+                Maybe Later
+              </button>
+
+              {/* Login button */}
+              <Link
+                href="/login"
+                className="px-5 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition"
+              >
+                Log In
+              </Link>
+
+              {/* Signup button */}
+              <Link
+                href="/register"
+                className="px-5 py-3 rounded-xl bg-green-600 text-white hover:bg-green-700 transition"
+              >
+                Sign Up
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

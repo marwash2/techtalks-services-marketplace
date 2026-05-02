@@ -47,6 +47,7 @@ export default function RegisterPage() {
         email: form.email,
         password: form.password,
         redirect: false,
+        callbackUrl: "/auth/redirect",
       });
       if (loginResult?.error) {
         setError(
