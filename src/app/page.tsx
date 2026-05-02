@@ -1,7 +1,5 @@
 "use client";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
 import HowItWorks from "@/components/home/HowItWorks";
 import WhychooseUs from "@/components/home/WhyChooseUs";
@@ -12,25 +10,10 @@ import FeaturedCategories from "@/components/home/FeaturedCategories";
 import FeaturedServices from "@/components/home/FeaturedServices";
 
 export default function Home() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+  const { status } = useSession();
 
-  useEffect(() => {
-    if (status !== "authenticated" || !session) return;
-
-    // Redirect non-admin authenticated users to their dashboard
-    if (session.user.role === "provider") {
-      router.replace("/provider/dashboard");
-    } else if (session.user.role !== "admin") {
-      router.replace("/user/dashboard");
-    }
-  }, [status, session, router]);
-
-  // Show loading spinner while session is loading or redirecting
-  if (
-    status === "loading" ||
-    (status === "authenticated" && session?.user?.role !== "admin")
-  ) {
+  // Show loading spinner while session state is resolving
+  if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600" />
