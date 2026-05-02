@@ -1,5 +1,5 @@
 import "@/models";
-import {Service} from "@/models/Service.model";
+import { Service } from "@/models/Service.model";
 import { withApiHandler } from "@/lib/api-handler";
 import { successResponse } from "@/lib/api-response";
 import { ApiError } from "@/lib/api-error";
@@ -11,10 +11,7 @@ import {
   getBookingsQuerySchema,
 } from "@/lib/validations/booking.validation";
 
-// ── POST /api/bookings ────────────────────────────────────────────────────────
-
 export const POST = withApiHandler(async (req: Request) => {
-  // App Router: getServerSession only needs authOptions, no req needed
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) throw new ApiError("Unauthorized", 401);
 
@@ -39,8 +36,6 @@ export const POST = withApiHandler(async (req: Request) => {
     { status: 201 }
   );
 });
-
-// ── GET /api/bookings ─────────────────────────────────────────────────────────
 
 export const GET = withApiHandler(async (req: Request) => {
   const session = await getServerSession(authOptions);

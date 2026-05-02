@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 
-type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled";
+type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled" | "done";
 
 interface Booking {
   id: string;
@@ -17,18 +17,19 @@ interface Booking {
   createdAt: string;
 }
 
-const STATUS_CONFIG: Record<BookingStatus, {
+const STATUS_CONFIG: Record<string, {
   label: string; bg: string; text: string; dot: string; border: string;
 }> = {
   pending:   { label: "Pending",   bg: "bg-yellow-50", text: "text-yellow-700", dot: "bg-yellow-400", border: "border-yellow-200" },
   confirmed: { label: "Confirmed", bg: "bg-green-50",  text: "text-green-700",  dot: "bg-green-500",  border: "border-green-200"  },
   completed: { label: "Completed", bg: "bg-blue-50",   text: "text-blue-700",   dot: "bg-blue-500",   border: "border-blue-200"   },
+  done:      { label: "Completed", bg: "bg-blue-50",   text: "text-blue-700",   dot: "bg-blue-500",   border: "border-blue-200"   },
   cancelled: { label: "Cancelled", bg: "bg-gray-100",  text: "text-gray-500",   dot: "bg-gray-400",   border: "border-gray-200"   },
 };
 
 const FILTERS: { label: string; value: "all" | BookingStatus }[] = [
-  { label: "All", value: "all" },
-  { label: "Pending", value: "pending" },
+  { label: "All",       value: "all"       },
+  { label: "Pending",   value: "pending"   },
   { label: "Confirmed", value: "confirmed" },
   { label: "Completed", value: "completed" },
   { label: "Cancelled", value: "cancelled" },
@@ -44,13 +45,18 @@ function formatDate(dateStr: string): string {
 }
 
 function StatusBadge({ status }: { status: BookingStatus }) {
-  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
+  const cfg = STATUS_CONFIG[status.toLowerCase()] ?? STATUS_CONFIG.pending;
   return (
     <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
       {cfg.label}
     </span>
   );
+}
+
+function canCancel(status: BookingStatus): boolean {
+  const v = status.toLowerCase();
+  return v === "pending" || v === "confirmed";
 }
 
 export default function UserBookingsPage() {
@@ -63,6 +69,7 @@ export default function UserBookingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<"all" | BookingStatus>("all");
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   const showSuccess = searchParams.get("success") === "true";
 
@@ -89,8 +96,6 @@ export default function UserBookingsPage() {
   }, [session?.user?.id]);
 
   const handleCancel = async (bookingId: string) => {
-    if (!confirm("Are you sure you want to cancel this booking?")) return;
-
     setCancellingId(bookingId);
     try {
       const res = await fetch(`/api/bookings/${bookingId}`, {
@@ -99,13 +104,15 @@ export default function UserBookingsPage() {
         body: JSON.stringify({ status: "cancelled" }),
       });
 
-      if (!res.ok) throw new Error("Failed to cancel booking");
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.message || "Failed to cancel booking");
 
       setBookings((prev) =>
-        prev.map((b) => (b.id === bookingId ? { ...b, status: "cancelled" as BookingStatus } : b))
+        prev.map((b) => b.id === bookingId ? { ...b, status: "cancelled" as BookingStatus } : b)
       );
+      setConfirmId(null);
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Failed to cancel booking");
+      setError(err instanceof Error ? err.message : "Failed to cancel booking");
     } finally {
       setCancellingId(null);
     }
@@ -231,7 +238,8 @@ export default function UserBookingsPage() {
         <div className="space-y-4">
           {filtered.map((booking) => {
             const isCancelling = cancellingId === booking.id;
-            const canCancel = booking.status === "pending" || booking.status === "confirmed";
+            const isConfirming = confirmId === booking.id;
+            const cancellable = canCancel(booking.status);
 
             return (
               <div
@@ -303,26 +311,34 @@ export default function UserBookingsPage() {
                     })}
                   </p>
                   <div className="flex items-center gap-2">
-                    {canCancel && (
-                      <button
-                        onClick={() => handleCancel(booking.id)}
-                        disabled={isCancelling}
-                        className="text-sm text-red-600 font-medium hover:underline cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                      >
-                        {isCancelling ? (
-                          <>
-                            <div className="w-3 h-3 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-                            Cancelling…
-                          </>
-                        ) : (
-                          <>
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                            Cancel
-                          </>
-                        )}
-                      </button>
+                    {cancellable && (
+                      isConfirming ? (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleCancel(booking.id)}
+                            disabled={isCancelling}
+                            className="text-xs bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded cursor-pointer disabled:opacity-50"
+                          >
+                            {isCancelling ? "Cancelling…" : "Confirm"}
+                          </button>
+                          <button
+                            onClick={() => setConfirmId(null)}
+                            className="text-xs border px-2 py-1 rounded text-gray-600 hover:bg-gray-50 cursor-pointer"
+                          >
+                            Keep
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmId(booking.id)}
+                          className="text-sm text-red-600 font-medium hover:underline cursor-pointer flex items-center gap-1"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          Cancel
+                        </button>
+                      )
                     )}
                     <button
                       onClick={() => router.push(`/services/${booking.service?.id}`)}

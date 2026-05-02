@@ -13,9 +13,7 @@ interface ServiceDetail {
   price: number;
   duration: number;
   image?: string;
-  categoryId: {
-    name: string;
-  };
+  categoryId: { name: string };
   providerId: {
     id: string;
     _id?: string;
@@ -23,16 +21,12 @@ interface ServiceDetail {
     location: string;
     phone?: string;
   };
-  reviews?: Array<{
-    rating: number;
-    comment: string;
-  }>;
+  reviews?: Array<{ rating: number; comment: string }>;
 }
 
 export default function ServiceDetailPage() {
   const params = useParams();
   const router = useRouter();
-
   const id = params?.id as string;
 
   const [service, setService] = useState<ServiceDetail | null>(null);
@@ -47,7 +41,6 @@ export default function ServiceDetailPage() {
       try {
         const res = await fetch(`/api/services/${id}`);
         if (!res.ok) throw new Error("Service not found");
-
         const data = await res.json();
         setService(data.data.service);
       } catch {
@@ -56,7 +49,6 @@ export default function ServiceDetailPage() {
         setLoading(false);
       }
     }
-
     if (id) fetchService();
   }, [id]);
 
@@ -71,9 +63,7 @@ export default function ServiceDetailPage() {
 
   if (loading) {
     return (
-      <div className="text-center py-10 text-gray-400">
-        Loading service...
-      </div>
+      <div className="text-center py-10 text-gray-400">Loading service...</div>
     );
   }
 
@@ -93,9 +83,7 @@ export default function ServiceDetailPage() {
 
       {/* HEADER */}
       <div className="space-y-2">
-        <h1 className="text-4xl font-bold text-gray-900">
-          {service.title}
-        </h1>
+        <h1 className="text-4xl font-bold text-gray-900">{service.title}</h1>
         <p className="text-gray-500 text-lg">
           {service.description || "No description available"}
         </p>
@@ -129,12 +117,9 @@ export default function ServiceDetailPage() {
             {service.providerId?.businessName || "Unknown provider"}
           </h3>
           {!session && (
-            <p className="text-sm text-gray-400 mt-1">
-              Login to view provider profile
-            </p>
+            <p className="text-sm text-gray-400 mt-1">Login to view provider profile</p>
           )}
         </div>
-
         <button
           onClick={() =>
             handleProtectedAction(() =>
@@ -150,20 +135,15 @@ export default function ServiceDetailPage() {
       {/* BOOKING */}
       <div className="bg-blue-50 p-6 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-800">
-            Ready to book this service?
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-800">Ready to book this service?</h3>
           {!session && (
-            <p className="text-sm text-gray-500">
-              Please log in to continue
-            </p>
+            <p className="text-sm text-gray-500">Please log in to continue</p>
           )}
         </div>
-
         <button
           onClick={() =>
             handleProtectedAction(() => {
-              router.push(`/bookings/${service.id ?? service._id}`); // ✅ fixed
+              router.push(`/bookings/${service.id ?? service._id}`);
             })
           }
           className="px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition font-medium"

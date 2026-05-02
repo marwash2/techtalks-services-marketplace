@@ -1,28 +1,5 @@
 import mongoose, { Document, Types } from "mongoose";
-
-export interface IService extends Document {
-  providerId: Types.ObjectId;
-
-  categoryId: Types.ObjectId;
-
-  title: string;
-  
-  description?: string;
-
-  price: number;
-
-  duration: number;
-
-  image?: string | null;
-  tags: string[];
-  availability: string;
-  location?: string;
-  isActive: boolean;
-
-  createdAt: Date;
-
-  updatedAt: Date;
-}
+import {IService } from "@/types/service";
 
 const serviceSchema = new mongoose.Schema<IService>(
   {
@@ -45,7 +22,11 @@ const serviceSchema = new mongoose.Schema<IService>(
     tags: { type: [String], default: [] },
     availability: { type: String, required: true },
     location: { type: String },
+    averageRating: { type: Number, default: 0, min: 0, max: 5 },
+    reviewCount:   { type: Number, default: 0, min: 0 },
+    favoritesCount: { type: Number, default: 0, min: 0 },
   },
+  
   { timestamps: true },
 );
 
