@@ -2,7 +2,6 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import UserSidebar from "@/components/user/UserSidebar";
 import { authOptions } from "@/lib/auth";
-import UserDashboardSummary from "@/components/user/UserDashboardSummary";
 import UserLayoutClient from "@/app/(user)/user/UserLayoutClient";
 import { Toaster } from "react-hot-toast";
 export default async function UserLayout({
@@ -31,7 +30,7 @@ export default async function UserLayout({
         <Toaster position="top-center" reverseOrder={false} />
         <UserSidebar />
         <div className="min-w-0 flex-1">
-          <UserDashboardSummary name={session.user.name} />
+       
           {children}
         </div>
       </div>
