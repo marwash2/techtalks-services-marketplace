@@ -98,7 +98,7 @@ export default function UserBookingsPage() {
   const handleCancel = async (bookingId: string) => {
     setCancellingId(bookingId);
     try {
-      const res = await fetch(`/api/bookings/${bookingId}`, {
+      const res = await fetch(`/api/bookings/${bookingId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "cancelled" }),

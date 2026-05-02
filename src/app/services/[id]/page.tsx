@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/shared/EmptyState";
+import { useSession } from "next-auth/react";
 
 interface ServiceDetail {
   _id: string;
@@ -34,6 +35,8 @@ export default function ServiceDetailPage() {
   const [service, setService] = useState<ServiceDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginAction, setLoginAction] = useState("");
 
   const { data: session } = useSession();
 
@@ -137,7 +140,7 @@ export default function ServiceDetailPage() {
           onClick={() =>
             handleProtectedAction(() =>
               router.push(`/providers/${service.providerId.id ?? service.providerId._id}`)
-            )
+            , "view provider profile")
           }
           className="px-5 py-2 rounded-lg bg-gray-900 text-white hover:bg-black transition"
         >
@@ -157,7 +160,7 @@ export default function ServiceDetailPage() {
           onClick={() =>
             handleProtectedAction(() => {
               router.push(`/bookings/${service.id ?? service._id}`);
-            })
+            }, "book this service")
           }
           className="px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition font-medium"
         >
@@ -221,3 +224,4 @@ export default function ServiceDetailPage() {
     </div>
   );
 }
+

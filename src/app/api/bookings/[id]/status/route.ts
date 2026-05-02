@@ -112,8 +112,16 @@ export async function PATCH(
     const updated = await updateBooking(id, { status: newStatus });
 
     const copy = STATUS_NOTIFICATION_COPY[newStatus];
-    const userId = resolveRefId(booking.userId);
-    const providerId = resolveRefId(booking.providerId);
+    const userId = resolveRefId(
+      (booking as { userId?: unknown; user?: { id?: unknown; _id?: unknown } }).userId
+      ?? (booking as { user?: { id?: unknown; _id?: unknown } }).user?.id
+      ?? (booking as { user?: { id?: unknown; _id?: unknown } }).user?._id
+    );
+    const providerId = resolveRefId(
+      (booking as { providerId?: unknown; provider?: { id?: unknown; _id?: unknown } }).providerId
+      ?? (booking as { provider?: { id?: unknown; _id?: unknown } }).provider?.id
+      ?? (booking as { provider?: { id?: unknown; _id?: unknown } }).provider?._id
+    );
 
     if (!userId || !providerId) {
       return NextResponse.json(
