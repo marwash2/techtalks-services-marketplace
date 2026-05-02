@@ -7,7 +7,7 @@ import Button from "@/components/ui/Button";
 import EmptyState from "@/components/shared/EmptyState";
 
 interface ServiceDetail {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   price: number;
@@ -91,9 +91,7 @@ export default function ServiceDetailPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="text-center py-10 text-gray-400">
-        Loading service...
-      </div>
+      <div className="text-center py-10 text-gray-400">Loading service...</div>
     );
   }
 
@@ -113,9 +111,7 @@ export default function ServiceDetailPage() {
     <div className="max-w-5xl mx-auto p-6 space-y-8">
       {/* HEADER */}
       <div className="space-y-2">
-        <h1 className="text-4xl font-bold text-gray-900">
-          {service.title}
-        </h1>
+        <h1 className="text-4xl font-bold text-gray-900">{service.title}</h1>
 
         <p className="text-gray-500 text-lg">
           {service.description || "No description available"}
@@ -126,16 +122,12 @@ export default function ServiceDetailPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white p-6 rounded-2xl shadow-sm border">
         <div>
           <p className="text-sm text-gray-400">Category</p>
-          <p className="font-semibold">
-            {service.categoryId?.name || "N/A"}
-          </p>
+          <p className="font-semibold">{service.categoryId?.name || "N/A"}</p>
         </div>
 
         <div>
           <p className="text-sm text-gray-400">Price</p>
-          <p className="font-semibold text-blue-600">
-            ${service.price}
-          </p>
+          <p className="font-semibold text-blue-600">${service.price}</p>
         </div>
 
         <div>
@@ -147,9 +139,7 @@ export default function ServiceDetailPage() {
 
         <div>
           <p className="text-sm text-gray-400">Duration</p>
-          <p className="font-semibold">
-            {service.duration || "N/A"} mins
-          </p>
+          <p className="font-semibold">{service.duration || "N/A"} mins</p>
         </div>
       </div>
 
@@ -194,9 +184,7 @@ export default function ServiceDetailPage() {
           </h3>
 
           {!session && (
-            <p className="text-sm text-gray-500">
-              Please log in to continue
-            </p>
+            <p className="text-sm text-gray-500">Please log in to continue</p>
           )}
         </div>
 

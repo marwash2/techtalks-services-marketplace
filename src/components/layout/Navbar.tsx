@@ -39,55 +39,54 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-<div className="flex items-center gap-3">
-  
-  {/* HAMBURGER (only for sidebar users) */}
-  {hasSidebar && (
-    <button
-      onClick={toggle}
-      className="lg:hidden p-2 text-gray-700 bg-white rounded-md shadow cursor-pointer"
-      aria-label="Toggle sidebar"
-    >
-      ☰
-    </button>
-  )}
+        <div className="flex items-center gap-3">
+          {/* HAMBURGER (only for sidebar users) */}
+          {hasSidebar && (
+            <button
+              onClick={toggle}
+              className="lg:hidden p-2 text-gray-700 bg-white rounded-md shadow cursor-pointer"
+              aria-label="Toggle sidebar"
+            >
+              ☰
+            </button>
+          )}
 
-  {/* Notification bell */}
-  {session && (
-    <Link
-      href="/notifications"
-      className="relative p-2 text-gray-600 hover:text-blue-600 transition"
-      aria-label="Notifications"
-    >
-      <Bell className="h-5 w-5" />
-    </Link>
-  )}
+          {/* Notification bell */}
+          {session && (
+            <Link
+              href="/notifications"
+              className="relative p-2 text-gray-600 hover:text-blue-600 transition"
+              aria-label="Notifications"
+            >
+              <Bell className="h-5 w-5" />
+            </Link>
+          )}
 
-  {/* LOGO */}
-  {hasSidebar ? (
-    <button
-      onClick={toggle}
-      className="flex items-center cursor-pointer"
-      aria-label="Toggle sidebar"
-    >
-      <img
-        src="/logo-removebg-preview.png"
-        alt="Logo"
-        width={50}
-        height={30}
-      />
-    </button>
-  ) : (
-    <Link href="/" className="flex items-center">
-      <img
-        src="/logo-removebg-preview.png"
-        alt="Logo"
-        width={50}
-        height={30}
-      />
-    </Link>
-  )}
-</div>
+          {/* LOGO */}
+          {hasSidebar ? (
+            <button
+              onClick={toggle}
+              className="flex items-center cursor-pointer"
+              aria-label="Toggle sidebar"
+            >
+              <img
+                src="/logo-removebg-preview.png"
+                alt="Logo"
+                width={50}
+                height={30}
+              />
+            </button>
+          ) : (
+            <Link href="/" className="flex items-center">
+              <img
+                src="/logo-removebg-preview.png"
+                alt="Logo"
+                width={50}
+                height={30}
+              />
+            </Link>
+          )}
+        </div>
 
         {/* DESKTOP NAV: only for guest / admin */}
         {navLinks.length > 0 && (
@@ -150,7 +149,7 @@ export default function Navbar() {
 
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="text-sm bg-red-500 hover:bg-red-700 text-white px-3 py-1 rounded-md transition"
+                className="text-sm bg-red-500 hover:bg-red-700 text-white px-3 py-1 rounded-md transition cursor-pointer"
               >
                 Logout
               </button>
