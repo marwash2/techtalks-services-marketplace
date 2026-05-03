@@ -3,7 +3,17 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Bell, CalendarCheck2, CircleCheckBig, Clock3 } from "lucide-react";
+import {
+  Bell,
+  CalendarCheck2,
+  CircleCheckBig,
+  Clock3,
+  CircleX,
+  RefreshCcw,
+  Trash2,
+  CircleDashed,
+  BadgeCheck,
+} from "lucide-react";
 
 type NotificationItem = {
   id: string;
@@ -27,10 +37,38 @@ function getRelativeTime(dateValue?: string) {
   return `${day} day${day > 1 ? "s" : ""} ago`;
 }
 
+function getNotificationStyle(type?: string) {
+  switch (type) {
+    case "booking_created":
+      return { icon: CalendarCheck2, iconColor: "text-green-600", bg: "bg-green-50", unreadDot: "bg-green-500" };
+    case "booking_pending":
+      return { icon: CircleDashed, iconColor: "text-amber-600", bg: "bg-amber-50", unreadDot: "bg-amber-500" };
+    case "booking_confirmed":
+      return { icon: BadgeCheck, iconColor: "text-emerald-600", bg: "bg-emerald-50", unreadDot: "bg-emerald-500" };
+    case "booking_cancelled":
+      return { icon: CircleX, iconColor: "text-red-600", bg: "bg-red-50", unreadDot: "bg-red-500" };
+    case "booking_completed":
+      return { icon: CalendarCheck2, iconColor: "text-blue-600", bg: "bg-blue-50", unreadDot: "bg-blue-500" };
+    case "service_updated":
+    case "booking_updated":
+      return { icon: RefreshCcw, iconColor: "text-orange-600", bg: "bg-orange-50", unreadDot: "bg-orange-500" };
+    case "service_deleted":
+      return { icon: Trash2, iconColor: "text-rose-600", bg: "bg-rose-50", unreadDot: "bg-rose-500" };
+    case "service_added":
+      return { icon: BadgeCheck, iconColor: "text-green-600", bg: "bg-green-50", unreadDot: "bg-green-500" };
+    case "system":
+      return { icon: Bell, iconColor: "text-indigo-600", bg: "bg-indigo-50", unreadDot: "bg-indigo-500" };
+    case "booking":
+      return { icon: CalendarCheck2, iconColor: "text-green-600", bg: "bg-green-50", unreadDot: "bg-green-500" };
+    default:
+      return { icon: Clock3, iconColor: "text-gray-600", bg: "bg-gray-50", unreadDot: "bg-gray-500" };
+  }
+}
+
 function NotificationIcon({ type }: { type?: string }) {
-  if (type === "booking") return <CalendarCheck2 className="h-5 w-5 text-green-600" />;
-  if (type === "system") return <Bell className="h-5 w-5 text-blue-600" />;
-  return <Clock3 className="h-5 w-5 text-orange-500" />;
+  const style = getNotificationStyle(type);
+  const Icon = style.icon;
+  return <Icon className={`h-5 w-5 ${style.iconColor}`} />;
 }
 
 export default function NotificationsView() {
@@ -116,7 +154,7 @@ export default function NotificationsView() {
           <ul>
             {items.map((item, index) => (
               <li key={item.id} className={`flex items-start gap-3 p-4 ${index > 0 ? "border-t border-gray-100" : ""}`}>
-                <div className="mt-1 rounded-full bg-gray-50 p-2">
+                <div className={`mt-1 rounded-full p-2 ${getNotificationStyle(item.type).bg}`}>
                   <NotificationIcon type={item.type} />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -126,7 +164,7 @@ export default function NotificationsView() {
                       <p className="mt-1 text-sm text-gray-700">{item.message}</p>
                       <p className="mt-1 text-xs text-gray-500">{getRelativeTime(item.createdAt)}</p>
                     </div>
-                    {!item.isRead && <span className="mt-2 h-2.5 w-2.5 rounded-full bg-green-500" />}
+                    {!item.isRead && <span className={`mt-2 h-2.5 w-2.5 rounded-full ${getNotificationStyle(item.type).unreadDot}`} />}
                   </div>
                   <div className="mt-3 flex gap-3">
                     {item.link && (

@@ -172,7 +172,7 @@ export default function Navbar() {
                 >
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
-                    <span className="absolute -right-1 -top-1 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full border border-gray-300 bg-white px-1 text-[10px] font-semibold text-gray-700 shadow-sm">
+                    <span className="absolute -right-1 -top-1 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full border border-gray-300 bg-red-500 px-1 text-[10px] font-semibold text-white shadow-sm">
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                   )}

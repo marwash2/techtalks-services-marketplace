@@ -178,7 +178,7 @@ export const POST = withApiHandler(
           userId: session.user.id,
           title: "Service Added",
           message: `You published "${service.title}" for $${service.price} (${service.duration} min). It is now visible in your services list.`,
-          type: "other",
+          type: "service_added",
           link: "/provider/services",
         });
       } catch (notificationError) {
