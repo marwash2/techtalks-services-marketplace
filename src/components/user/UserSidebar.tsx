@@ -7,6 +7,7 @@ import {
   CalendarDays,
   CircleUserRound,
   House,
+  Bot,
   Sparkles,
 } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
@@ -21,6 +22,11 @@ const userLinks = [
     name: "Dashboard",
     path: "/user/dashboard",
     icon: Sparkles,
+  },
+  {
+    name: "AI Assistant", // ← add this block
+    path: "/user/ai-assistant",
+    icon: Bot,
   },
   {
     name: "Services",
