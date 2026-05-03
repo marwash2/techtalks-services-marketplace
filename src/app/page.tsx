@@ -30,10 +30,7 @@ export default function Home() {
   }, [status, session, router]);
 
   // Show loading spinner while session is loading or redirecting
-  if (
-    status === "loading" ||
-    status === "authenticated"
-  ) {
+  if (status === "loading" || status === "authenticated") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600" />
@@ -42,11 +39,11 @@ export default function Home() {
   }
 
   return (
-    <div className="w-full overflow-hidden">
+    <div className="w-full overflow-hidden ">
       {/* Hero Section */}
       <HeroSection />
 
-      <div className="max-w-6xl mx-auto px-4 py-6 flex flex-col gap-16">
+      <div className="max-w-6xl mx-auto px-4 py-16 flex flex-col gap-6">
         {/* Short App Description */}
         <section className="  relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 to-blue-700 text-white p-10 md:p-16 text-center">
           <p className="text-white-700 text-lg">
@@ -56,7 +53,7 @@ export default function Home() {
           </p>
 
           {/* CTA Button */}
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-6">
             <Link
               href="/services"
               className="inline-flex items-center gap-2 bg-white text-blue-600 hover:bg-blue-50 px-8 py-3.5 rounded-xl font-semibold transition shadow-lg"
@@ -72,35 +69,44 @@ export default function Home() {
             </Link>
           </div>
         </section>
-        <HowItWorks />
+        <section className="py-12">
+          <HowItWorks />
+        </section>
         {/*how it's work  */}
         <WhychooseUs />
         {/* Featured Categories */}
         <section className="py-12">
-          <h2 className="text-xl md:text-4xl font-bold text-slate-900">
+          <h2 className="text-xl md:text-4xl font-bold min-h-[1.5rem] text-slate-900">
             Popular Categories
           </h2>
 
-          <p className="text-sm text-slate-500 mt-2">
+          <p className="text-sm text-slate-500 min-h-[2.5rem] mt-2">
             Explore the most popular services trusted by thousands of users
           </p>
           <FeaturedCategories />
         </section>
 
         {/* Featured Services */}
-        <section className="py-12">
-          <h2 className="text-xl md:text-4xl font-bold text-slate-900">
-            Featured Services
-          </h2>
-          <p className="text-sm text-slate-500 mt-2">
-            Handpicked services <span className="text-blue-500">from</span>{" "}
-            top-rated professionals
-          </p>
+        <section className="py-8">
+          <div className="flex items-end justify-between mb-10">
+            <div>
+              <h2 className="text-xl md:text-4xl font-bold text-slate-900 min-h-[1.5rem]">
+                Featured Services
+              </h2>
+              <p className="text-sm text-slate-500 mt-2">
+                Handpicked services <span className="text-blue-500">from</span>{" "}
+                top-rated professionals
+              </p>
+            </div>
+            <Link href="/services">
+              <div className="hidden md:flex items-center gap-1 text-blue-500 text-sm font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer group">
+                View all{" "}
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </Link>
+          </div>
           <FeaturedServices />
         </section>
-        {/*HERO SECTION: title+search*/}
-        {/*Categories */}
-        {/*featured Services */}
       </div>
 
       <BecomeProviderSection />

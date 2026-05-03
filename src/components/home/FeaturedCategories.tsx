@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -8,6 +9,7 @@ interface CategoryDTO {
   id: string;
   slug: string;
   name: string;
+  icon: string;
   description?: string;
 }
 
@@ -40,25 +42,34 @@ export default function FeaturedCategories() {
     );
 
   return (
-    <div className="bg-gray-50 py-6 px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 shadow-gray-200 shadow-md">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 xl:grid-cols-6 gap-4">
       {categories.map((category) => (
         <Link
           key={category._id || category.id}
           href={`/services/category/${category.slug}`}
-          className="group block p-5 border border-slate-200 rounded-2xl flex flex-col item center text center hover:shadow-md hover:-translate-y-1 transition-all duration-300 bg-white"
+          className="group-block p-4 border border-gray-300 shadow-sm bg-white rounded-2xl flex flex-col justify-center item-center text-center hover:shadow-md hover:bg-blue-50 hover:-translate-y-1 transition-all duration-300 "
         >
-          <div className="w-14 h-14 bg-blue-50  text-blue-600  rounded-xl mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <span className=" font-semibold text-lg">
-              {category.name.charAt(0)}
-            </span>
+          <div className=" text-blue-500 rounded-xl  flex items-center justify-center gap-2 group-hover:scale-110 transition-transform ">
+            {category.icon ? (
+              <Image
+                src={`/${category.icon}`}
+                alt={`${category.name}`}
+                width={50}
+                height={50}
+                className="object-contain"
+              />
+            ) : (
+              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-400">
+                <span className="text-sm font-semibold text-blue-400 item-center">
+                  {category.icon}
+                </span>
+              </div>
+            )}
+
+            <h3 className="text-sm font-semibold text-slate-800  group-hover:text-blue-600 transition-colors">
+              {category.name}
+            </h3>
           </div>
-          <h3 className="text-sm font-semibold text-slate-800  group-hover:text-blue-600 transition-colors">
-            {category.name}
-          </h3>
-          <p className="text-slate-500 mt-1 leading-relaxed line-clamp-2">
-            {category.description ||
-              `Discover top rated ${category.name.toLowerCase()} services near you.`}
-          </p>
         </Link>
       ))}
     </div>

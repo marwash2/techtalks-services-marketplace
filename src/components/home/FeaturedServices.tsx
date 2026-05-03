@@ -33,7 +33,7 @@ export default function FeaturedServices() {
   useEffect(() => {
     async function fetchServices() {
       try {
-        const res = await fetch("/api/services?page=1&limit=3");
+        const res = await fetch("/api/services?page=1&limit=4");
         const json = await res.json();
         console.log(json);
         setServices(json.data.services || []);
@@ -55,7 +55,7 @@ export default function FeaturedServices() {
     );
 
   return (
-    <div className="grid gap-6 grid-cols-1 md:grid-cols-3 shadow-gray-200 shadow-md py-6 px-6">
+    <div className="grid gap-4 grid-cols-1 md:grid-cols-4 shadow-gray-200 shadow-md py-1 px-1">
       {services.map((service, index) => (
         <ServiceCard
           key={service._id || service.id || index}
