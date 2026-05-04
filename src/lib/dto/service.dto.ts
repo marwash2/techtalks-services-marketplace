@@ -116,39 +116,39 @@ export function toServiceDTO(
       service.updatedAt ||
       null,
 
-    /* PROVIDER */
-    providerId:
-      isPopulatedProvider(
-        service.providerId,
-      )
-        ? {
-            _id:
-              service.providerId._id.toString(),
+    // /* PROVIDER */
+    // providerId:
+    //   isPopulatedProvider(
+    //     service.providerId,
+    //   )
+    //     ? {
+    //         _id:
+    //           service.providerId._id.toString(),
 
-            businessName:
-              service.providerId
-                .businessName,
+    //         businessName:
+    //           service.providerId
+    //             .businessName,
 
-            location:
-              service.providerId
-                .location,
-          }
-        : service.providerId.toString(),
+    //         location:
+    //           service.providerId
+    //             .location,
+    //       }
+    //     : service.providerId.toString(),
 
-    /* CATEGORY */
-    categoryId:
-      isPopulatedCategory(
-        service.categoryId,
-      )
-        ? {
-            _id:
-              service.categoryId._id.toString(),
+    // /* CATEGORY */
+    // categoryId:
+    //   isPopulatedCategory(
+    //     service.categoryId,
+    //   )
+    //     ? {
+    //         _id:
+    //           service.categoryId._id.toString(),
 
-            name:
-              service.categoryId
-                .name,
-          }
-        : service.categoryId.toString(),
+    //         name:
+    //           service.categoryId
+    //             .name,
+    //       }
+    //     : service.categoryId.toString(),
 
     /* PROVIDER POPULATED */
     provider:

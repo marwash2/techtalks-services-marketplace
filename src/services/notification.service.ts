@@ -3,6 +3,9 @@ import { Notification } from "@/lib/schemas/Notification.schema";
 import { MESSAGES, PAGINATION } from "@/constants/config";
 import { ApiError } from "@/lib/api-error";
 import { toNotificationDTO, toNotificationListDTO } from "@/lib/dto/notification.dto";
+import { Types } from "mongoose";
+import { Provider } from "@/models/Provider.model";
+import { User } from "@/models/User.model";
 
 type NotificationFilters = {
   userId?: string;
@@ -18,6 +21,22 @@ type CreateNotificationInput = {
 };
 
 type UpdateNotificationInput = Partial<{ isRead: boolean; title: string; message: string }>;
+
+async function resolveNotificationRecipientId(rawUserId: string) {
+  const candidate = String(rawUserId || "").trim();
+  if (!candidate || !Types.ObjectId.isValid(candidate)) return "";
+
+  const user = await User.findById(candidate).select("_id").lean();
+  if (!user || Array.isArray(user)) return "";
+  if (user._id) return String(user._id);
+
+  const provider = await Provider.findById(candidate).select("userId").lean();
+  const providerUserId = (provider as { userId?: unknown } | null)?.userId;
+  if (!providerUserId) return "";
+
+  const resolved = String(providerUserId);
+  return Types.ObjectId.isValid(resolved) ? resolved : "";
+}
 
 export async function getAllNotifications(
   page = 1,
@@ -55,8 +74,14 @@ export async function createNotification(notificationData: CreateNotificationInp
     throw new ApiError(MESSAGES.ERROR.INVALID_INPUT, 400);
   }
 
+  const resolvedUserId = await resolveNotificationRecipientId(userId);
+  if (!resolvedUserId) {
+    throw new ApiError("Invalid notification recipient", 400);
+  }
+
   const notification = new Notification({
     ...notificationData,
+    userId: resolvedUserId,
     type: notificationData.type || "other",
   });
   await notification.save();

@@ -4,7 +4,25 @@ export const createNotificationSchema = z.object({
   userId: z.string().min(1, "User ID is required"),
   title: z.string().min(1, "Title is required"),
   message: z.string().min(1, "Message is required"),
-  type: z.enum(["booking", "review", "system", "other"]).optional(),
+  type: z
+    .enum([
+      "booking",
+      "booking_created",
+      "booking_pending",
+      "booking_confirmed",
+      "booking_cancelled",
+      "booking_completed",
+      "booking_updated",
+      "service_updated",
+      "service_deleted",
+      "service_added",
+      "review",
+      "message",
+      "promotion",
+      "system",
+      "other",
+    ])
+    .optional(),
   link: z
     .string()
     .refine(

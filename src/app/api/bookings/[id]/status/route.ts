@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { getBookingById, updateBooking } from "@/services/booking.service";
 import { createNotification } from "@/services/notification.service";
+import { Provider } from "@/models/Provider.model";
 import {
   updateStatusSchema,
   ALLOWED_TRANSITIONS,
@@ -37,6 +38,7 @@ const STATUS_NOTIFICATION_COPY: Record<
     userMessage: string;
     providerTitle: string;
     providerMessage: string;
+    notificationType: string;
   }
 > = {
   pending: {
@@ -44,24 +46,28 @@ const STATUS_NOTIFICATION_COPY: Record<
     userMessage: "Your booking is pending provider response.",
     providerTitle: "Booking Pending",
     providerMessage: "This booking is currently pending.",
+    notificationType: "booking_pending",
   },
   confirmed: {
     userTitle: "Booking Confirmed",
     userMessage: "Your booking has been confirmed by the provider.",
     providerTitle: "Booking Accepted",
     providerMessage: "You accepted this booking request.",
+    notificationType: "booking_confirmed",
   },
   cancelled: {
     userTitle: "Booking Cancelled",
     userMessage: "Your booking has been cancelled.",
     providerTitle: "Booking Cancelled",
     providerMessage: "This booking has been cancelled.",
+    notificationType: "booking_cancelled",
   },
   completed: {
     userTitle: "Service Completed",
     userMessage: "Your booking was marked as completed.",
     providerTitle: "Service Completed",
     providerMessage: "You marked this booking as completed.",
+    notificationType: "booking_completed",
   },
 };
 
@@ -117,35 +123,50 @@ export async function PATCH(
       ?? (booking as { user?: { id?: unknown; _id?: unknown } }).user?.id
       ?? (booking as { user?: { id?: unknown; _id?: unknown } }).user?._id
     );
-    const providerId = resolveRefId(
+    const providerProfileId = resolveRefId(
       (booking as { providerId?: unknown; provider?: { id?: unknown; _id?: unknown } }).providerId
       ?? (booking as { provider?: { id?: unknown; _id?: unknown } }).provider?.id
       ?? (booking as { provider?: { id?: unknown; _id?: unknown } }).provider?._id
     );
+    const providerDoc = providerProfileId
+      ? await Provider.findById(providerProfileId).select("userId").lean()
+      : null;
+    const providerUserId = resolveRefId((providerDoc as { userId?: unknown } | null)?.userId);
 
-    if (!userId || !providerId) {
+    if (!userId) {
       return NextResponse.json(
         { success: false, message: "Booking references are invalid" },
         { status: 400 }
       );
     }
 
-    await Promise.all([
-      createNotification({
-        userId,
-        title: copy.userTitle,
-        message: copy.userMessage,
-        type: "booking",
-        link: `/user/bookings/${id}`,
-      }),
-      createNotification({
-        userId: providerId,
-        title: copy.providerTitle,
-        message: copy.providerMessage,
-        type: "booking",
-        link: "/provider/bookings",
-      }),
-    ]);
+    try {
+      const tasks = [
+        createNotification({
+          userId,
+          title: copy.userTitle,
+          message: copy.userMessage,
+          type: copy.notificationType,
+          link: `/user/bookings/${id}`,
+        }),
+      ];
+
+      if (providerUserId) {
+        tasks.push(
+          createNotification({
+            userId: providerUserId,
+            title: copy.providerTitle,
+            message: copy.providerMessage,
+            type: copy.notificationType,
+            link: "/provider/bookings",
+          })
+        );
+      }
+
+      await Promise.all(tasks);
+    } catch (notificationError) {
+      console.error(`[PATCH /api/bookings/${id}/status] notification error:`, notificationError);
+    }
 
     return NextResponse.json(
       { success: true, message: MESSAGES.SUCCESS.UPDATE, data: updated },

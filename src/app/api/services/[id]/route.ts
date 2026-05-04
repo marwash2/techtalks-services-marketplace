@@ -6,6 +6,7 @@ import { updateServiceSchema } from "@/lib/validations/service.validation";
 import { requireAuth } from "@/lib/auth-utils";
 import { createNotification } from "@/services/notification.service";
 import Category from "@/models/Category.model";
+import Booking from "@/models/Booking.model";
 
 function describeChanges(
   beforeService: Record<string, unknown>,
@@ -36,6 +37,16 @@ function describeChanges(
   }
 
   return changes;
+}
+
+async function getAffectedUserIds(serviceId: string) {
+  const userIds = await Booking.distinct("userId", {
+    serviceId,
+    status: { $ne: "cancelled" },
+  });
+  return userIds
+    .map((value) => String(value))
+    .filter(Boolean);
 }
 
 // GET SINGLE SERVICE BY ID
@@ -122,11 +133,32 @@ export const PUT = withApiHandler(
         userId: session.user.id,
         title: "Service Updated",
         message: `Your service "${(before as { title?: string }).title || "Untitled Service"}" was updated successfully. ${details}`,
-        type: "other",
+        type: "service_updated",
         link: `/provider/services/edit_page/${id}`,
       });
     } catch (notificationError) {
       console.error("[PUT /api/services/[id]] notification error:", notificationError);
+    }
+
+    try {
+      const affectedUserIds = await getAffectedUserIds(id);
+      const userMessage = changes.length > 0
+        ? `The provider updated "${service.title}". Changes: ${details}`
+        : `The provider updated "${service.title}".`;
+
+      await Promise.all(
+        affectedUserIds.map((userId) =>
+          createNotification({
+            userId,
+            title: "Service Updated",
+            message: userMessage,
+            type: "service_updated",
+            link: "/user/bookings",
+          })
+        )
+      );
+    } catch (notificationError) {
+      console.error("[PUT /api/services/[id]] user notification error:", notificationError);
     }
 
     return Response.json(
@@ -158,6 +190,15 @@ export const DELETE =
         await serviceService.getServiceById(
           id
         );
+      const affectedUserIds = await getAffectedUserIds(id);
+
+      await Booking.updateMany(
+        {
+          serviceId: id,
+          status: { $in: ["pending", "confirmed"] },
+        },
+        { $set: { status: "cancelled" } }
+      );
 
       await serviceService.deleteService(
         id,
@@ -174,11 +215,28 @@ export const DELETE =
           userId: session.user.id,
           title: "Service Deleted",
           message: `You deleted "${(existing as { title?: string }).title || "a service"}" (Price: $${String((existing as { price?: number }).price ?? "-")}, Duration: ${String((existing as { duration?: number }).duration ?? "-")} min).`,
-          type: "other",
+          type: "service_deleted",
           link: "/provider/services",
         });
       } catch (notificationError) {
         console.error("[DELETE /api/services/[id]] notification error:", notificationError);
+      }
+
+      try {
+        const deletedTitle = (existing as { title?: string }).title || "a service";
+        await Promise.all(
+          affectedUserIds.map((userId) =>
+            createNotification({
+              userId,
+              title: "Service Removed",
+              message: `The provider deleted "${deletedTitle}". If you had a future booking, please choose another service.`,
+              type: "service_deleted",
+              link: "/user/bookings",
+            })
+          )
+        );
+      } catch (notificationError) {
+        console.error("[DELETE /api/services/[id]] user notification error:", notificationError);
       }
 
       return Response.json(
