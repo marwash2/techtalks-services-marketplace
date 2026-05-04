@@ -7,7 +7,7 @@ import { ApiError } from "@/lib/api-error";
 import { toServiceDTO } from "@/lib/dto/service.dto";
 
 import { FilterQuery } from "mongoose";
-import { IService } from "@/lib/schemas/Service.schema";
+import type { IService } from "@/types/service";
 
 /* =========================================================
    TYPES
