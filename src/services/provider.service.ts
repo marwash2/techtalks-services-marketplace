@@ -12,6 +12,7 @@ type CreateProviderInput = {
   location: string;
   rating?: number;
   isVerified?: boolean;
+  providerStatus?: "pending" | "approved" | "rejected"; // add this
   totalReviews?: number;
   avatar?: string | null;
 };
