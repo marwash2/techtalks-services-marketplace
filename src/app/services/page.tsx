@@ -36,8 +36,17 @@ function ServicesContent() {
     setLoading(true);
 
     try {
-      const query = searchParams.toString();
-      const res = await fetch(`/api/services?${query}`);
+      const params = new URLSearchParams();
+      const search = searchParams.get("search");
+      const category = searchParams.get("category");
+      const location = searchParams.get("location");
+      const maxPrice = searchParams.get("maxPrice");
+      if (search) params.set("search", search);
+      if (category) params.set("category", category);
+      if (location) params.set("location", location);
+      if (maxPrice) params.set("maxPrice", maxPrice);
+      const query = params.toString();
+      const res = await fetch(`/api/services${query ? `?${query}` : ""}`);
       const data = await res.json();
 
       const servicesData = data.data?.services || data.services || [];

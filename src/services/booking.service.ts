@@ -1,5 +1,6 @@
 import { connectDB } from "@/lib/db";
 import Booking from "@/models/Booking.model";
+import { Provider } from "@/models/Provider.model";
 import { MESSAGES, PAGINATION, BOOKING_STATUS } from "@/constants/config";
 import { ApiError } from "@/lib/api-error";
 import { toBookingDTO, toBookingListDTO } from "@/lib/dto/booking.dto";
@@ -9,7 +10,9 @@ type BookingFilters = {
   providerId?: string;
   status?: string;
 };
-
+type ProviderLean = {
+  _id: string;
+};
 type CreateBookingInput = {
   userId:     string;
   providerId: string;
@@ -36,7 +39,19 @@ export async function getAllBookings(
   const query: Record<string, string> = {};
 
   if (filters.userId)     query.userId     = filters.userId;
-  if (filters.providerId) query.providerId = filters.providerId;
+  if (filters.providerId) {
+    let provider = await Provider.findOne({ userId: filters.providerId }).select("_id").lean();
+    if (!provider) {
+      provider = await Provider.findById(filters.providerId).select("_id").lean();
+    }
+    if (!provider?._id) {
+      return {
+        bookings: [],
+        pagination: { page, limit, total: 0, pages: 0 },
+      };
+    }
+    query.providerId = String(provider._id);
+  }
   if (filters.status)     query.status     = filters.status;
 
   const bookings = await Booking.find(query)

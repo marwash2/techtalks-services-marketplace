@@ -49,6 +49,10 @@ function getNotificationStyle(type?: string) {
       return { icon: CircleX, iconColor: "text-red-600", bg: "bg-red-50", unreadDot: "bg-red-500" };
     case "booking_completed":
       return { icon: CalendarCheck2, iconColor: "text-blue-600", bg: "bg-blue-50", unreadDot: "bg-blue-500" };
+    case "booking_reminder_24h":
+    case "booking_reminder_6h":
+    case "booking_reminder_3h":
+      return { icon: Clock3, iconColor: "text-cyan-700", bg: "bg-cyan-50", unreadDot: "bg-cyan-500" };
     case "service_updated":
     case "booking_updated":
       return { icon: RefreshCcw, iconColor: "text-orange-600", bg: "bg-orange-50", unreadDot: "bg-orange-500" };

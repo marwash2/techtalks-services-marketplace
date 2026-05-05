@@ -71,6 +71,31 @@ const STATUS_NOTIFICATION_COPY: Record<
   },
 };
 
+function resolveCopyForActor(
+  status: BookingStatusValue,
+  actor?: "provider" | "user"
+) {
+  if (status === "cancelled" && actor === "provider") {
+    return {
+      userTitle: "Booking Cancelled by Provider",
+      userMessage: "Your provider cancelled this booking request.",
+      providerTitle: "Booking Cancelled",
+      providerMessage: "You cancelled this booking request.",
+      notificationType: "booking_cancelled",
+    };
+  }
+  if (status === "cancelled" && actor === "user") {
+    return {
+      userTitle: "Booking Cancelled",
+      userMessage: "You cancelled your booking request.",
+      providerTitle: "Booking Cancelled by User",
+      providerMessage: "The customer cancelled this booking request.",
+      notificationType: "booking_cancelled",
+    };
+  }
+  return STATUS_NOTIFICATION_COPY[status];
+}
+
 // ─── PATCH /api/bookings/[id]/status ─────────────────────────────────────────
 
 export async function PATCH(
@@ -81,7 +106,7 @@ export async function PATCH(
 
   try {
     const body = await req.json();
-    const { status: newStatus } = updateStatusSchema.parse(body);
+    const { status: newStatus, actor } = updateStatusSchema.parse(body);
 
     // 1. Fetch current booking
     const booking = await getBookingById(id);
@@ -117,7 +142,7 @@ export async function PATCH(
     // 5. Apply
     const updated = await updateBooking(id, { status: newStatus });
 
-    const copy = STATUS_NOTIFICATION_COPY[newStatus];
+    const copy = resolveCopyForActor(newStatus, actor);
     const userId = resolveRefId(
       (booking as { userId?: unknown; user?: { id?: unknown; _id?: unknown } }).userId
       ?? (booking as { user?: { id?: unknown; _id?: unknown } }).user?.id
