@@ -1,11 +1,10 @@
 "use client";
 
+import State from "@/components/home/State";
 import {
-  Heart,
   ShieldCheck,
   Clock,
   Star,
-  Zap,
   Users,
   Award,
   Headphones,
@@ -14,13 +13,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-
-const stats = [
-  { label: "Services Offered", value: "500+", icon: Zap },
-  { label: "Verified Providers", value: "200+", icon: Users },
-  { label: "Happy Customers", value: "5K+", icon: Heart },
-  { label: "Average Rating", value: "4.8", icon: Star },
-];
 
 const values = [
   {
@@ -90,8 +82,8 @@ export default function AboutPage() {
       {/* ─── Hero Section ─── */}
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 text-white">
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-500 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+          <div className="absolute top-0 left-0 w-95 h-80 bg-blue-500 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute bottom-0 right-0 w-96 h-80 bg-purple-500 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
         </div>
 
         <div className="relative max-w-6xl mx-auto px-4 py-20 md:py-28 text-center">
@@ -127,23 +119,7 @@ export default function AboutPage() {
       </section>
 
       {/* ─── Stats Bar ─── */}
-      <section className="border-y border-slate-100 bg-gray-50/50">
-        <div className="max-w-6xl mx-auto px-4 py-10 md:py-14">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-50 mb-3">
-                  <stat.icon className="w-6 h-6 text-blue-600" />
-                </div>
-                <div className="text-3xl md:text-4xl font-bold text-slate-900">
-                  {stat.value}
-                </div>
-                <div className="text-sm text-slate-500 mt-1">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <State />
 
       {/* ─── Mission & Story ─── */}
       <section className="max-w-6xl mx-auto px-4 py-16 md:py-24">
@@ -160,21 +136,7 @@ export default function AboutPage() {
                   priority
                 />
               </div>
-              <div className="absolute -bottom-6 -right-6 hidden md:block bg-white rounded-xl shadow-lg p-5 border border-slate-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
-                    <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">
-                      4.8/5 Rating
-                    </p>
-                    <p className="text-xs text-slate-500">
-                      From 2,000+ reviews
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <div className="rounded-full py-2"></div>
             </div>
           </div>
 
@@ -202,7 +164,7 @@ export default function AboutPage() {
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-blue-600" />
                 <span className="text-sm text-slate-700 font-medium">
-                  Founded in 2023
+                  Founded in 2026
                 </span>
               </div>
               <div className="flex items-center gap-2">

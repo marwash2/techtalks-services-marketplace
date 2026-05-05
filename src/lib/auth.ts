@@ -25,7 +25,7 @@ export const authOptions: NextAuthOptions = {
 
         const isMatch = await bcrypt.compare(
           credentials!.password,
-          user.password
+          user.password,
         );
         if (!isMatch) throw new Error("Wrong password");
 
@@ -36,18 +36,15 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role,
-          providerStatus:
-            user.providerStatus || "inactive",
+          providerStatus: user.providerStatus || "inactive",
         };
       },
     }),
 
     // GOOGLE LOGIN
     GoogleProvider({
-      clientId:
-        process.env.GOOGLE_CLIENT_ID!,
-      clientSecret:
-        process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
 
@@ -55,42 +52,29 @@ export const authOptions: NextAuthOptions = {
 
   callbacks: {
     // GOOGLE SIGN-IN DB SAVE
-    async signIn({
-      user,
-      account,
-    }) {
+    async signIn({ user, account }) {
       await connectDB();
 
-      if (
-        account?.provider !==
-        "credentials"
-      ) {
-        let existingUser =
-          await User.findOne({
-            email: user.email,
-          });
+      if (account?.provider !== "credentials") {
+        let existingUser = await User.findOne({
+          email: user.email,
+        });
 
         if (!existingUser) {
-          existingUser =
-            await User.create({
-              name: user.name,
-              email: user.email,
-              password: "",
-              role: "user",
-              providerStatus:
-                "inactive",
-            });
+          existingUser = await User.create({
+            name: user.name,
+            email: user.email,
+            password: "",
+            role: "user",
+            providerStatus: "inactive",
+          });
         }
 
         // VERY IMPORTANT:
         // Ensure Google users also have id + role
-        user.id =
-          existingUser._id.toString();
+        user.id = existingUser._id.toString();
 
-        user.role =
-          existingUser.role;
-
-
+        user.role = existingUser.role;
       }
 
       return true;

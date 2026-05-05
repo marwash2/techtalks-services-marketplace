@@ -33,7 +33,7 @@ export default function RootLayout({
           <SidebarProvider>
             <Navbar />
 
-            <main className="bg-white ">{children}</main>
+            <main className="bg-white">{children}</main>
 
             <Footer />
           </SidebarProvider>

@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Bell, LogOut, Menu, X } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
+import BecomeProviderButtons from "./BecomeProviderButtons";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -58,7 +59,6 @@ export default function Navbar() {
   useEffect(() => {
     const userId = session?.user?.id;
     if (!userId) {
-      setUnreadCount(0);
       previousUnreadRef.current = 0;
       initializedRef.current = false;
       return;
@@ -68,14 +68,19 @@ export default function Navbar() {
 
     const loadNotifications = async () => {
       try {
-        const res = await fetch(`/api/notifications?userId=${userId}&page=1&limit=50`, {
-          cache: "no-store",
-        });
+        const res = await fetch(
+          `/api/notifications?userId=${userId}&page=1&limit=50`,
+          {
+            cache: "no-store",
+          },
+        );
         if (!res.ok) return;
 
         const data = await res.json();
         const items = data?.data?.notifications ?? [];
-        const unread = items.filter((item: { isRead?: boolean }) => !item.isRead).length;
+        const unread = items.filter(
+          (item: { isRead?: boolean }) => !item.isRead,
+        ).length;
         if (!isMounted) return;
 
         setUnreadCount(unread);
@@ -95,13 +100,19 @@ export default function Navbar() {
       void loadNotifications();
     };
 
-    window.addEventListener("notifications-updated", handleNotificationsUpdated);
+    window.addEventListener(
+      "notifications-updated",
+      handleNotificationsUpdated,
+    );
     void loadNotifications();
     const interval = window.setInterval(loadNotifications, 5000);
 
     return () => {
       isMounted = false;
-      window.removeEventListener("notifications-updated", handleNotificationsUpdated);
+      window.removeEventListener(
+        "notifications-updated",
+        handleNotificationsUpdated,
+      );
       window.clearInterval(interval);
     };
   }, [session?.user?.id]);
@@ -142,18 +153,19 @@ export default function Navbar() {
 
         {hasSidebar && <div className="hidden md:block flex-1" />}
 
-        <div className="hidden md:flex items-center gap-3 space-x-4">
+        <div className="hidden md:flex items-center gap-2 space-x-2">
           {!session ? (
             <>
-              <Link href="/login" className="text-sm text-gray-600 hover:text-blue-600 transition">
-                Log in
-              </Link>
+              <BecomeProviderButtons
+                value="become a provider"
+                classes="text-sm text-slate-600 hover:text-blue-600 bg-gray-50 transition border border-gray-200 px-4 py-2 rounded-full  "
+              />
 
               <Link
-                href="/register"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+                href="/login"
+                className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-blue-700 transition"
               >
-                Sign Up
+                Log in
               </Link>
             </>
           ) : (
@@ -162,7 +174,9 @@ export default function Navbar() {
                 <span className="text-sm text-gray-500">Provider Panel</span>
               )}
 
-              {user?.role === "admin" && <span className="text-sm text-gray-500">Admin Panel</span>}
+              {user?.role === "admin" && (
+                <span className="text-sm text-gray-500">Admin Panel</span>
+              )}
 
               {user?.role !== "provider" && (
                 <Link
@@ -198,7 +212,11 @@ export default function Navbar() {
             onClick={() => setMenuOpen((prev) => !prev)}
             aria-label="Toggle menu"
           >
-            {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {menuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
           </button>
         )}
 
@@ -245,7 +263,10 @@ export default function Navbar() {
                   </Link>
                 </>
               ) : (
-                <button onClick={() => signOut({ callbackUrl: "/" })} className="text-red-500">
+                <button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="text-red-500"
+                >
                   Logout
                 </button>
               )}

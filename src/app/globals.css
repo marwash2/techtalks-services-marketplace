@@ -25,6 +25,15 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-button, a {
+button,
+a {
   @apply cursor-pointer;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
