@@ -55,7 +55,7 @@ export default function FeaturedServices() {
     );
 
   return (
-    <div className="grid gap-4 grid-cols-1 md:grid-cols-4 shadow-gray-200 shadow-md py-1 px-1">
+    <div className="grid gap-4 grid-cols-1 md:grid-cols-4 ">
       {services.map((service, index) => (
         <ServiceCard
           key={service._id || service.id || index}

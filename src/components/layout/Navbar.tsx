@@ -1,16 +1,23 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { Bell } from "lucide-react";
-import Image from "next/image";
+import { Bell, LogOut, Menu, X } from "lucide-react";
+import { useSidebar } from "@/components/layout/SidebarContext";
+import BecomeProviderButtons from "./BecomeProviderButtons";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const { data: session } = useSession();
+  const { toggle } = useSidebar();
+  const previousUnreadRef = useRef(0);
+  const initializedRef = useRef(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const user = session?.user;
   const role = user?.role;
@@ -18,7 +25,6 @@ export default function Navbar() {
 
   const isActive = (path: string) => pathname === path;
 
-  // Links for guest / admin (no sidebar)
   const navLinks = !session
     ? [
         { name: "Home", path: "/" },
@@ -37,6 +43,80 @@ export default function Navbar() {
 
   const hasSidebar = role === "user" || role === "provider";
 
+  const playTone = () => {
+    try {
+      if (!audioRef.current) {
+        audioRef.current = new Audio("/sounds/notification.mp3");
+        audioRef.current.volume = 0.5;
+      }
+      audioRef.current.currentTime = 0;
+      void audioRef.current.play();
+    } catch {
+      // Ignore autoplay/audio failures.
+    }
+  };
+
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (!userId) {
+      previousUnreadRef.current = 0;
+      initializedRef.current = false;
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadNotifications = async () => {
+      try {
+        const res = await fetch(
+          `/api/notifications?userId=${userId}&page=1&limit=50`,
+          {
+            cache: "no-store",
+          },
+        );
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const items = data?.data?.notifications ?? [];
+        const unread = items.filter(
+          (item: { isRead?: boolean }) => !item.isRead,
+        ).length;
+        if (!isMounted) return;
+
+        setUnreadCount(unread);
+
+        if (initializedRef.current && unread > previousUnreadRef.current) {
+          playTone();
+        }
+
+        previousUnreadRef.current = unread;
+        initializedRef.current = true;
+      } catch {
+        // Keep navbar resilient if notifications are unavailable.
+      }
+    };
+
+    const handleNotificationsUpdated = () => {
+      void loadNotifications();
+    };
+
+    window.addEventListener(
+      "notifications-updated",
+      handleNotificationsUpdated,
+    );
+    void loadNotifications();
+    const interval = window.setInterval(loadNotifications, 5000);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener(
+        "notifications-updated",
+        handleNotificationsUpdated,
+      );
+      window.clearInterval(interval);
+    };
+  }, [session?.user?.id]);
+
   return (
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
@@ -49,7 +129,6 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* DESKTOP NAV: only for guest / admin */}
         {navLinks.length > 0 && (
           <nav className="hidden md:flex items-center gap-8 text-sm">
             {navLinks.map((link) => (
@@ -72,25 +151,21 @@ export default function Navbar() {
           </nav>
         )}
 
-        {/* Placeholder for layout balance when sidebar role has no center nav */}
         {hasSidebar && <div className="hidden md:block flex-1" />}
 
-        {/* RIGHT SIDE */}
-        <div className="hidden md:flex items-center gap-3 space-x-4">
+        <div className="hidden md:flex items-center gap-2 space-x-2">
           {!session ? (
             <>
-              <Link
-                href="/login"
-                className="text-sm text-gray-600 hover:text-blue-600 transition"
-              >
-                Log in
-              </Link>
+              <BecomeProviderButtons
+                value="become a provider"
+                classes="text-sm text-slate-600 hover:text-blue-600 bg-gray-50 transition border border-gray-200 px-4 py-2 rounded-full  "
+              />
 
               <Link
-                href="/register"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+                href="/login"
+                className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-blue-700 transition"
               >
-                Sign Up
+                Log in
               </Link>
             </>
           ) : (
@@ -102,38 +177,56 @@ export default function Navbar() {
               {user?.role === "admin" && (
                 <span className="text-sm text-gray-500">Admin Panel</span>
               )}
-              <Link
-                href={notificationsPath}
-                className="relative p-2 text-gray-600 hover:text-blue-600 transition"
-                aria-label="Notifications"
-              >
-                <Bell className="h-5 w-5" />
-                {/* Optional: notification badge can be added here */}
-              </Link>
+
+              {user?.role !== "provider" && (
+                <Link
+                  href={notificationsPath}
+                  className="relative p-2 text-gray-600 hover:text-blue-600 transition"
+                  aria-label="Notifications"
+                >
+                  <Bell className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -right-1 -top-1 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full border border-gray-300 bg-red-500 px-1 text-[10px] font-semibold text-white shadow-sm">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </Link>
+              )}
+
+              {user?.role !== "provider" && (
+                <button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="text-sm bg-red-500 hover:bg-red-700 text-white px-3 py-1 rounded-md transition cursor-pointer"
+                  aria-label="Logout"
+                >
+                  <LogOut className="h-5 w-5" />
+                </button>
+              )}
             </>
           )}
         </div>
 
-        {/* MOBILE BUTTON: only for guest / admin */}
         {!hasSidebar && (
           <button
             className="md:hidden text-2xl text-gray-700 cursor-pointer"
             onClick={() => setMenuOpen((prev) => !prev)}
             aria-label="Toggle menu"
           >
-            {menuOpen ? "✕" : "☰"}
+            {menuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
           </button>
         )}
 
-        {/* Mobile placeholder when sidebar role */}
         {hasSidebar && <div className="md:hidden w-8" />}
       </div>
 
-      {/* MOBILE MENU: only for guest / admin */}
       {!hasSidebar && (
         <div
           className={`
-            md:hidden overflow-hidden transition-all duration-300 border-t bg-white 
+            md:hidden overflow-hidden transition-all duration-300 border-t bg-white
             ${menuOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}
           `}
         >
@@ -144,7 +237,7 @@ export default function Navbar() {
                 href={link.path}
                 onClick={() => setMenuOpen(false)}
                 className={`
-                  w-full block font-medium transition 
+                  w-full block font-medium transition
                   text-gray-700 hover:text-blue-600
                   hover:underline underline-offset-4 decoration-2 decoration-blue-600
                   ${isActive(link.path) ? "text-blue-600 underline underline-offset-4 decoration-blue-600" : ""}

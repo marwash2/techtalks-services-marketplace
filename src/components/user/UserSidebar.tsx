@@ -1,16 +1,19 @@
 "use client";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   BriefcaseBusiness,
   CalendarDays,
   CircleUserRound,
+  Heart,
   House,
   Bot,
   Sparkles,
 } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
+import Image from "next/image";
+import { useEffect } from "react";
 
 const userLinks = [
   {
@@ -39,6 +42,11 @@ const userLinks = [
     icon: CalendarDays,
   },
   {
+    name: "Favorites",
+    path: "/user/favorites",
+    icon: Heart,
+  },
+  {
     name: "Profile",
     path: "/user/profile",
     icon: CircleUserRound,
@@ -47,7 +55,15 @@ const userLinks = [
 
 export default function UserSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isOpen, close } = useSidebar();
+
+
+  useEffect(() => {
+    if (window.innerWidth >= 1024) return;
+    close();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   return (
     <>
@@ -55,21 +71,31 @@ export default function UserSidebar() {
       {isOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/40 lg:hidden"
-          onClick={close}
+          onClick={() => {
+            if (window.innerWidth < 1024) close();
+          }}
           aria-hidden="true"
         />
       )}
 
       <aside
         className={`
-          fixed top-0 left-0 z-50 h-full border-r border-slate-200 bg-white p-5 shadow-lg transition-transform duration-300 lg:static lg:top-24 lg:h-auto lg:rounded-[28px] lg:border lg:shadow-sm lg:w-[260px] lg:self-start
-          ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0 lg:w-0 lg:opacity-0 lg:overflow-hidden lg:p-0"}
-        `}
+  fixed top-0 left-0 z-50 h-full border-r border-slate-200 bg-white p-5 shadow-lg transition-transform duration-300
+  lg:static lg:h-auto lg:rounded-[28px] lg:border lg:shadow-sm lg:w-[260px]
+  ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+`}
       >
         <div className="flex items-center gap-3 px-3 py-2">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
-            <Sparkles className="h-5 w-5" />
+          <div className="h-11 w-11 overflow-hidden rounded-2xl bg-white">
+            <Image
+              src="/dashboard-logo.jpg"
+              alt="Khidmati Logo"
+              width={44}
+              height={44}
+              className="object-contain"
+            />
           </div>
+
           <div>
             <p className="text-xl font-semibold tracking-tight text-slate-900">
               Khidmati
@@ -83,13 +109,26 @@ export default function UserSidebar() {
         <nav className="mt-6 space-y-2">
           {userLinks.map((link) => {
             const Icon = link.icon;
-            const isActive = pathname === link.path;
+            const isActive =
+              link.path === "/"
+                ? pathname === "/"
+                : pathname === link.path ||
+                  pathname.startsWith(`${link.path}/`);
 
             return (
               <Link
                 key={link.path}
                 href={link.path}
-                onClick={close}
+                onClick={(event) => {
+                  if (link.name === "Home") {
+                    event.preventDefault();
+                    router.push("/user/dashboard");
+                    router.refresh();
+                    close();
+                    return;
+                  }
+                  close();
+                }}
                 className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
                   isActive
                     ? "bg-slate-950 text-white shadow-sm"

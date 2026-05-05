@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title: "Khidmati | Services Marketplace",
   description: "Find trusted service providers using AI-powered matching.",
   icons: {
-    icon: "/Khidmati.png",
+    icon: "/background_removal.png",
   },
 };
 
@@ -33,7 +33,7 @@ export default function RootLayout({
           <SidebarProvider>
             <Navbar />
 
-            <main className="bg-white ">{children}</main>
+            <main className="bg-white">{children}</main>
 
             <Footer />
           </SidebarProvider>

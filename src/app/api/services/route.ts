@@ -1,49 +1,206 @@
 import { withApiHandler } from "@/lib/api-handler";
 import { successResponse } from "@/lib/api-response";
-import { MESSAGES, PAGINATION } from "@/constants/config";
+import {
+  MESSAGES,
+  PAGINATION,
+} from "@/constants/config";
+
 import * as serviceService from "@/services/service.service";
+
 import { createServiceSchema } from "@/lib/validations/service.validation";
+
 import { requireAuth } from "@/lib/auth-utils";
+import { createNotification } from "@/services/notification.service";
 
-export const GET = withApiHandler(async (req) => {
-  // Public endpoint for service listing
-  const { searchParams } = new URL(req.url);
+/* =========================================================
+  *   TYPES
+  * ========================================================= */
+export const GET = withApiHandler(
+  async (req) => {
+    const { searchParams } =
+      new URL(req.url);
 
-  const page = parseInt(searchParams.get("page") || "1");
-  const limit = parseInt(
-    searchParams.get("limit") || String(PAGINATION.DEFAULT_LIMIT),
-  );
+    /* ---------------- PAGINATION ---------------- */
+    const page = parseInt(
+      searchParams.get("page") ||
+        "1"
+    );
 
-  // ✅ from filters UI
-  const search = searchParams.get("search") || undefined;
-  const category = searchParams.get("category") || undefined;
-  const location = searchParams.get("location") || undefined;
-  const maxPrice = searchParams.get("maxPrice");
+    const limit = parseInt(
+      searchParams.get("limit") ||
+        String(
+          PAGINATION.DEFAULT_LIMIT
+        )
+    );
 
-  const filters: {
-    search?: string;
-    category?: string;
-    location?: string;
-    price?: number;
-  } = {};
+    /* ---------------- DASHBOARD MODE ----------------
+       If dashboard=true:
+       Show ONLY logged-in provider services
+    */
+    const dashboardOnly =
+      searchParams.get(
+        "dashboard"
+      ) === "true";
 
-  if (search) filters.search = search;
-  if (category) filters.category = category;
-  if (location) filters.location = location;
-  if (maxPrice) filters.price = Number(maxPrice);
+    const filters: any = {};
 
-  const result = await serviceService.getAllServices(page, limit, filters);
+    if (dashboardOnly) {
+      const session =
+        await requireAuth(req, [
+          "provider",
+          "admin",
+        ]);
 
-  return Response.json(successResponse(result));
-});
+      /*
+        IMPORTANT:
+        session.user.id = USER ID
+        service layer converts USER ID
+        -> Provider._id
+      */
+      filters.providerId =
+        session.user.id;
+    } else {
+      /*
+        Optional public providerId filter
+      */
+      const providerId =
+        searchParams.get(
+          "providerId"
+        ) || undefined;
 
-export const POST = withApiHandler(async (req) => {
-  const session = await requireAuth(req, ["provider", "admin"]);
-  const body = await req.json();
-  const validated = createServiceSchema.parse(body);
+      if (providerId) {
+        filters.providerId =
+          providerId;
+      }
+    }
 
-  const service = await serviceService.createService(validated);
-  return Response.json(successResponse(service, MESSAGES.SUCCESS.CREATE), {
-    status: 201,
-  });
-});
+    /* ---------------- OTHER FILTERS ---------------- */
+    const category =
+      searchParams.get(
+        "category"
+      ) || undefined;
+
+    const location =
+      searchParams.get(
+        "location"
+      ) || undefined;
+
+    const search =
+      searchParams.get(
+        "search"
+      ) || undefined;
+
+    const maxPrice =
+      searchParams.get(
+        "maxPrice"
+      );
+
+    if (category)
+      filters.category =
+        category;
+
+    if (location)
+      filters.location =
+        location;
+
+    if (search)
+      filters.search =
+        search;
+
+    if (maxPrice)
+      filters.price =
+        Number(maxPrice);
+
+    /* ---------------- FETCH SERVICES ---------------- */
+    const result =
+      await serviceService.getAllServices(
+        page,
+        limit,
+        filters
+      );
+
+    return Response.json(
+      successResponse(result)
+    );
+  }
+);
+
+/* =========================================================
+   CREATE SERVICE
+   - Provider/Admin only
+   - Session gives USER ID
+   - Service layer converts USER ID
+     -> Provider._id
+   ========================================================= */
+export const POST = withApiHandler(
+  async (req) => {
+    try {
+      const session =
+        await requireAuth(req, [
+          "provider",
+          "admin",
+        ]);
+
+      console.log(
+        "SESSION USER:",
+        session.user
+      );
+
+      const body =
+        await req.json();
+
+      console.log(
+        "REQUEST BODY:",
+        body
+      );
+
+      const validated =
+        createServiceSchema.parse(
+          {
+            ...body,
+            providerId:
+              session.user.id,
+          }
+        );
+
+      console.log(
+        "VALIDATED:",
+        validated
+      );
+
+      const service =
+        await serviceService.createService(
+          validated
+        );
+
+      try {
+        await createNotification({
+          userId: session.user.id,
+          title: "Service Added",
+          message: `You published "${service.title}" for $${service.price} (${service.duration} min). It is now visible in your services list.`,
+          type: "service_added",
+          link: "/provider/services",
+        });
+      } catch (notificationError) {
+        console.error("CREATE SERVICE notification error:", notificationError);
+      }
+
+      return Response.json(
+        successResponse(
+          service,
+          MESSAGES.SUCCESS.CREATE
+        ),
+        {
+          status: 201,
+        }
+      );
+    } catch (error) {
+      console.error(
+        "CREATE SERVICE ERROR:",
+        error
+      );
+
+      throw error;
+    }
+  }
+);

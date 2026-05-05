@@ -7,8 +7,10 @@ import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
   providers: [
+    // CREDENTIALS LOGIN
     CredentialsProvider({
       name: "Credentials",
+
       credentials: {
         email: {},
         password: {},
@@ -18,53 +20,61 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         await connectDB();
 
-        const user = await User.findOne({
-          email: credentials?.email,
-        });
-
+        const user = await User.findOne({ email: credentials?.email });
         if (!user) throw new Error("User not found");
 
         const isMatch = await bcrypt.compare(
           credentials!.password,
           user.password,
         );
-
         if (!isMatch) throw new Error("Wrong password");
 
+        // IMPORTANT:
+        // Return ALL custom fields you want inside JWT/session
         return {
           id: user._id.toString(),
           email: user.email,
           name: user.name,
           role: user.role,
+          providerStatus: user.providerStatus || "inactive",
         };
       },
     }),
 
+    // GOOGLE LOGIN
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
 
-  session: {
-    strategy: "jwt",
-  },
+  session: { strategy: "jwt" },
 
   callbacks: {
+    // GOOGLE SIGN-IN DB SAVE
     async signIn({ user, account }) {
       await connectDB();
 
       if (account?.provider !== "credentials") {
-        const existingUser = await User.findOne({ email: user.email });
+        let existingUser = await User.findOne({
+          email: user.email,
+        });
 
         if (!existingUser) {
-          await User.create({
+          existingUser = await User.create({
             name: user.name,
             email: user.email,
             password: "",
             role: "user",
+            providerStatus: "inactive",
           });
         }
+
+        // VERY IMPORTANT:
+        // Ensure Google users also have id + role
+        user.id = existingUser._id.toString();
+
+        user.role = existingUser.role;
       }
 
       return true;
@@ -85,9 +95,22 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
+      // For OAuth logins, fetch role from DB when provider user object has no role.
+      if (!token.role && token.email) {
+        await connectDB();
+        const existingUser = await User.findOne({ email: token.email })
+          .select("role")
+          .lean<{ role?: string }>();
+
+        if (existingUser?.role) {
+          token.role = existingUser.role;
+        }
+      }
+
       return token;
     },
 
+    // SESSION CALLBACK
     async session({ session, token }) {
       if (session.user) {
         session.user.role = token.role as string;
@@ -97,9 +120,6 @@ export const authOptions: NextAuthOptions = {
     },
   },
 
-  pages: {
-    signIn: "/login",
-  },
-
+  pages: { signIn: "/login" },
   secret: process.env.NEXTAUTH_SECRET,
 };

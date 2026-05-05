@@ -1,6 +1,14 @@
 "use client";
 
-import { Search, MapPin, Star, Users, Heart } from "lucide-react";
+import {
+  Search,
+  MapPin,
+  Building2,
+  Star,
+  Users,
+  Wrench,
+  Heart,
+} from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
@@ -8,7 +16,6 @@ type HomeStats = {
   totalServices: number;
   totalProviders: number;
   totalCities: number;
-  averageRating: number;
 };
 
 export default function HeroSection() {
@@ -16,7 +23,6 @@ export default function HeroSection() {
     totalServices: 0,
     totalProviders: 0,
     totalCities: 0,
-    averageRating: 0,
   });
 
   useEffect(() => {
@@ -35,7 +41,6 @@ export default function HeroSection() {
             totalServices: payload.totalServices ?? 0,
             totalProviders: payload.totalProviders ?? 0,
             totalCities: payload.totalCities ?? 0,
-            averageRating: payload.averageRating ?? 0,
           });
         }
       } catch {
@@ -55,11 +60,6 @@ export default function HeroSection() {
       <div className="w-full">
         <div className="md:hidden w-full h-[220px] mb-6">
           {/* IMAGE */}
-          {/*} <img
-            src="https://images.unsplash.com/photo-1581578731548-c64695cc6952"
-            className="w-full h-full object-cover rounded-xl
-            [clip-path:ellipse(100%_60%_at_100%_35%)]"
-          />*/}
 
           <Image
             src="/hero.jpg"
@@ -109,17 +109,16 @@ export default function HeroSection() {
               </div>
 
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
-                {/* STATS */}
                 <div className="flex flex-wrap items-end gap-6 text-sm text-slate-600">
-                  <div className="flex flex-col items-center">
-                    <Users className="h-5 w-5 text-blue-600" />
+                  <div className="flex flex-col items-center px-3">
+                    <Wrench className="h-5 w-5 text-blue-600" />
                     <span className="font-semibold mt-1">
                       {stats.totalServices}+
                     </span>
                     <span className="text-xs text-slate-400">Services</span>
                   </div>
 
-                  <div className="flex flex-col items-center">
+                  <div className="flex flex-col items-center ">
                     <Users className="h-5 w-5 text-blue-600" />
                     <span className="font-semibold mt-1">
                       {stats.totalProviders}+
@@ -138,11 +137,13 @@ export default function HeroSection() {
                   </div>
 
                   <div className="flex flex-col items-center">
-                    <Star className="h-5 w-5 text-yellow-400" />
+                    <Building2 className="h-5 w-5 text-blue-600" />
                     <span className="font-semibold mt-1">
-                      {stats.averageRating.toFixed(1)}
+                      {stats.totalCities}
                     </span>
-                    <span className="text-xs text-slate-400">Avg. Rating</span>
+                    <span className="text-xs text-slate-400">
+                      covered cities
+                    </span>
                   </div>
                 </div>
 

@@ -41,6 +41,7 @@ function ServicesContent() {
       const data = await res.json();
 
       const servicesData = data.data?.services || data.services || [];
+      console.log("SERVICES:", servicesData);
       setServices(servicesData);
     } catch (err) {
       console.error("Error fetching services:", err);
@@ -66,7 +67,7 @@ function ServicesContent() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-3 gap-4  ">
       {services.map((service, index) => (
         <ServiceCard
           key={service._id || service.id || index}
@@ -90,9 +91,9 @@ export default function Page() {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8 ">
       {/* HEADER */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between ml-64 ">
         <h1 className="text-2xl font-bold text-gray-800">Services</h1>
 
         <button
@@ -107,7 +108,7 @@ export default function Page() {
       <Suspense fallback={<div>Loading...</div>}>
         <div className="flex flex-col lg:flex-row gap-6">
           {/* DESKTOP FILTERS */}
-          <div className="hidden lg:block w-64 shrink-0">
+          <div className="hidden fixed left-0 top-0 h-screen pt-20 flex lg:block w-64 shrink-0">
             <Filters />
           </div>
 
@@ -135,7 +136,7 @@ export default function Page() {
           )}
 
           {/* MAIN */}
-          <div className="flex-1 flex flex-col gap-4">
+          <div className="flex-1 flex flex-col ml-64 gap-4 ">
             <SearchBar />
             <ServicesContent />
           </div>

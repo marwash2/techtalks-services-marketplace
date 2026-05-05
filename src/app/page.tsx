@@ -1,7 +1,6 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
 import HowItWorks from "@/components/home/HowItWorks";
 import WhychooseUs from "@/components/home/WhyChooseUs";
@@ -11,9 +10,10 @@ import FeaturedCategories from "@/components/home/FeaturedCategories";
 import FeaturedServices from "@/components/home/FeaturedServices";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { useEffect } from "react";
 
 export default function Home() {
-  const { data: session, status } = useSession();
+  const { status, data: session } = useSession();
   const router = useRouter();
 
   useEffect(() => {

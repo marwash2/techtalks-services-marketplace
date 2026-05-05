@@ -1,104 +1,221 @@
 import { connectDB } from "@/lib/db";
-import { Review } from "@/lib/schemas/Review.schema";
-import { MESSAGES, PAGINATION } from "@/constants/config";
+import { Review } from "@/models/Review.model";
+import { Service } from "@/models/Service.model";
 import { ApiError } from "@/lib/api-error";
 import { toReviewDTO, toReviewListDTO } from "@/lib/dto/review.dto";
+import { MESSAGES, PAGINATION } from "@/constants/config";
+import type {
+  CreateReviewInput,
+  UpdateReviewInput,
+} from "@/lib/validations/review.validation";
+
+// ── Stat sync ──────────────────────────────────────────────────────────────────
+
+import mongoose from "mongoose";
+
+async function syncServiceStats(serviceId: string): Promise<void> {
+  const [result] = await Review.aggregate([
+    { $match: { serviceId: new mongoose.Types.ObjectId(serviceId) } },
+    {
+      $group: {
+        _id: "$serviceId",
+        averageRating: { $avg: "$rating" },
+        reviewCount:   { $sum: 1 },
+      },
+    },
+  ]).exec();
+
+  if (result) {
+    await Service.findByIdAndUpdate(serviceId, {
+      averageRating: Math.round(result.averageRating * 10) / 10,
+      reviewCount:   result.reviewCount,
+    });
+  } else {
+    await Service.findByIdAndUpdate(serviceId, {
+      averageRating: 0,
+      reviewCount:   0,
+    });
+  }
+}
+// ── Populate helper ────────────────────────────────────────────────────────────
+
+function withPopulate(query: any) {
+  return query
+    .populate("userId", "name email")
+    .populate("providerId", "businessName")
+    .populate("serviceId", "title");
+}
+
+// ── Types ──────────────────────────────────────────────────────────────────────
 
 type ReviewFilters = {
-  providerId?: string;
   serviceId?: string;
+  providerId?: string;
 };
 
-type CreateReviewInput = {
-  userId: string;
-  providerId: string;
-  serviceId: string;
-  rating: number;
-  comment?: string;
-};
-
-type UpdateReviewInput = Partial<{ rating: number; comment: string }>;
+// ── Service functions ──────────────────────────────────────────────────────────
 
 export async function getAllReviews(
-  page = 1,
+  page = PAGINATION.DEFAULT_PAGE,
   limit = PAGINATION.DEFAULT_LIMIT,
   filters: ReviewFilters = {}
 ) {
   await connectDB();
 
-  const skip = (page - 1) * limit;
-  const query: Record<string, string> = {};
+  const query: Record<string, unknown> = {};
 
-  if (filters.providerId) query.providerId = filters.providerId;
   if (filters.serviceId) query.serviceId = filters.serviceId;
+  if (filters.providerId) query.providerId = filters.providerId;
 
-  const reviews = await Review.find(query)
-    .populate("userId", "name email")
-    .populate("providerId", "businessName")
-    .populate("serviceId", "title")
-    .skip(skip)
-    .limit(limit)
-    .exec();
-  const total = await Review.countDocuments(query);
+  const skip = (page - 1) * limit;
+
+  const [reviews, total] = await Promise.all([
+    withPopulate(
+      Review.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+    )
+      .lean()
+      .exec(),
+
+    Review.countDocuments(query),
+  ]);
 
   return {
     reviews: toReviewListDTO(reviews),
-    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit),
+    },
   };
-}
-
-export async function createReview(reviewData: CreateReviewInput) {
-  await connectDB();
-
-  const { userId, providerId, serviceId, rating } = reviewData;
-
-  if (!userId || !providerId || !serviceId || !rating) {
-    throw new ApiError(MESSAGES.ERROR.INVALID_INPUT, 400);
-  }
-
-  if (rating < 1 || rating > 5) {
-    throw new ApiError("Rating must be between 1 and 5", 400);
-  }
-
-  const review = new Review(reviewData);
-  await review.save();
-
-  return toReviewDTO(review);
 }
 
 export async function getReviewById(id: string) {
   await connectDB();
 
-  const review = await Review.findById(id)
-    .populate("userId", "name email")
-    .populate("providerId", "businessName")
-    .populate("serviceId", "title");
-  if (!review) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
+  const review = await withPopulate(Review.findById(id)).lean().exec();
 
-  return toReviewDTO(review);
-}
-
-export async function updateReview(id: string, reviewData: UpdateReviewInput) {
-  await connectDB();
-
-  if (reviewData.rating && (reviewData.rating < 1 || reviewData.rating > 5)) {
-    throw new ApiError("Rating must be between 1 and 5", 400);
+  if (!review) {
+    throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
   }
 
-  const review = await Review.findByIdAndUpdate(id, reviewData, {
-    new: true,
-    runValidators: true,
-  });
-  if (!review) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
-
   return toReviewDTO(review);
 }
 
-export async function deleteReview(id: string) {
+export async function createReview(
+  sessionUserId: string,
+  input: CreateReviewInput
+) {
   await connectDB();
 
-  const review = await Review.findByIdAndDelete(id);
-  if (!review) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
+  const serviceExists = await Service.exists({
+    _id: input.serviceId,
+  });
 
-  return toReviewDTO(review);
+  if (!serviceExists) {
+    throw new ApiError("Service not found", 404);
+  }
+
+  try {
+    const review = await Review.create({
+      userId: sessionUserId,
+      providerId: input.providerId,
+      serviceId: input.serviceId,
+      rating: input.rating,
+      comment: input.comment,
+    });
+
+    await syncServiceStats(input.serviceId);
+
+    const populated = await withPopulate(
+      Review.findById(review._id)
+    )
+      .lean()
+      .exec();
+
+    return toReviewDTO(populated);
+  } catch (err: any) {
+    if (err.code === 11000) {
+      throw new ApiError(
+        "You have already reviewed this service",
+        409
+      );
+    }
+
+    throw err;
+  }
+}
+
+export async function updateReview(
+  id: string,
+  sessionUserId: string,
+  sessionUserRole: string,
+  input: UpdateReviewInput
+) {
+  await connectDB();
+
+  const review = await Review.findById(id);
+
+  if (!review) {
+    throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
+  }
+
+  if (review.userId.toString() !== sessionUserId) {
+    throw new ApiError(MESSAGES.ERROR.FORBIDDEN, 403);
+  }
+
+  const updated = await Review.findByIdAndUpdate(
+    id,
+    { $set: input },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  await syncServiceStats(review.serviceId.toString());
+
+  const populated = await withPopulate(
+    Review.findById(updated!._id)
+  )
+    .lean()
+    .exec();
+
+  return toReviewDTO(populated);
+}
+
+export async function deleteReview(
+  id: string,
+  sessionUserId: string,
+  sessionUserRole: string
+) {
+  await connectDB();
+
+  const review = await Review.findById(id);
+
+  if (!review) {
+    throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
+  }
+
+  const isOwner =
+    review.userId.toString() === sessionUserId;
+
+  const isAdmin =
+    sessionUserRole === "admin";
+
+  if (!isOwner && !isAdmin) {
+    throw new ApiError(MESSAGES.ERROR.FORBIDDEN, 403);
+  }
+
+  const serviceId =
+    review.serviceId.toString();
+
+  await review.deleteOne();
+
+  await syncServiceStats(serviceId);
+
+  return { id };
 }

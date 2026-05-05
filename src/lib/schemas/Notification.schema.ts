@@ -11,8 +11,8 @@ const notificationSchema = new mongoose.Schema(
     message: { type: String, required: true },
     type: {
       type: String,
-      enum: ["booking", "review", "message", "promotion", "other"],
       default: "other",
+      trim: true,
     },
     isRead: { type: Boolean, default: false },
     link: { type: String, default: null },

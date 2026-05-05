@@ -4,11 +4,17 @@ import { Provider } from "@/models/Provider.model";
 import Category from "@/models/Category.model";
 import { MESSAGES, PAGINATION } from "@/constants/config";
 import { ApiError } from "@/lib/api-error";
-import { toServiceDTO, toServiceListDTO } from "@/lib/dto/service.dto";
+import { toServiceDTO } from "@/lib/dto/service.dto";
+
 import { FilterQuery } from "mongoose";
-import { IService } from "@/lib/schemas/Service.schema";
+import type { IService } from "@/types/service";
+
+/* =========================================================
+   TYPES
+   ========================================================= */
+
 type ServiceFilters = {
-  providerId?: string;
+  providerId?: string; // Can be USER ID or PROVIDER ID
   categoryId?: string;
   search?: string;
   price?: number;
@@ -17,7 +23,7 @@ type ServiceFilters = {
 };
 
 type CreateServiceInput = {
-  providerId: string;
+  providerId: string; // USER ID from session
   categoryId: string;
   title: string;
   description?: string;
@@ -27,14 +33,24 @@ type CreateServiceInput = {
 };
 
 type UpdateServiceInput = Partial<CreateServiceInput>;
+
 type PopulatedService = IService & {
   providerId?: {
+    _id?: string;
     location?: string;
+    businessName?: string;
+    userId?: string;
   };
+
   categoryId?: {
+    _id?: string;
     name?: string;
   };
 };
+
+/* =========================================================
+   GET ALL SERVICES
+   ========================================================= */
 
 export async function getAllServices(
   page: number = 1,
@@ -45,9 +61,9 @@ export async function getAllServices(
 
   const skip = (page - 1) * limit;
 
-  // 🔍 DB query (only DB filters)
   const query: FilterQuery<IService> = {};
 
+  /* ---------------- SEARCH ---------------- */
   if (filters.search) {
     query.title = {
       $regex: filters.search,
@@ -55,22 +71,54 @@ export async function getAllServices(
     };
   }
 
+  /* ---------------- PRICE ---------------- */
   if (filters.price) {
-    query.price = { $lte: filters.price };
+    query.price = {
+      $lte: filters.price,
+    };
   }
+
+  /* ---------------- CATEGORY ID ---------------- */
   if (filters.categoryId) {
     query.categoryId = filters.categoryId;
   }
+
+  /* ---------------- PROVIDER FILTER ----------------
+     Supports:
+     - USER ID
+     - PROVIDER ID
+  */
   if (filters.providerId) {
-    query.providerId = filters.providerId;
+    let provider = await Provider.findOne({
+      userId: filters.providerId,
+    });
+
+    if (!provider) {
+      provider = await Provider.findById(filters.providerId);
+    }
+
+    if (!provider) {
+      return {
+        services: [],
+        pagination: {
+          page,
+          limit,
+          total: 0,
+          pages: 0,
+        },
+      };
+    }
+
+    query.providerId = provider._id;
   }
 
-  // 📦 Fetch with populate
+  /* ---------------- FETCH ---------------- */
   let services = await Service.find(query)
-    .populate("providerId", "location businessName")
+    .sort({ createdAt: -1 })
+    .populate("providerId", "location businessName userId")
     .populate("categoryId", "name");
 
-  // 🟡 JS filtering (location + category)
+  /* ---------------- LOCATION FILTER ---------------- */
   if (filters.location) {
     services = services.filter((s) =>
       (s as PopulatedService).providerId?.location
@@ -79,6 +127,7 @@ export async function getAllServices(
     );
   }
 
+  /* ---------------- CATEGORY NAME FILTER ---------------- */
   if (filters.category) {
     services = services.filter((s) =>
       (s as PopulatedService).categoryId?.name
@@ -87,13 +136,12 @@ export async function getAllServices(
     );
   }
 
-  // 📊 IMPORTANT FIX (pagination correct)
   const total = services.length;
 
   const paginatedServices = services.slice(skip, skip + limit);
 
   return {
-    services: toServiceListDTO(paginatedServices),
+    services: paginatedServices.map((service) => toServiceDTO(service)),
     pagination: {
       page,
       limit,
@@ -103,56 +151,188 @@ export async function getAllServices(
   };
 }
 
+/* =========================================================
+   CREATE SERVICE
+   ========================================================= */
+
 export async function createService(serviceData: CreateServiceInput) {
   await connectDB();
 
-  const { providerId, categoryId, title, price, duration } = serviceData;
+  const {
+    providerId, // USER ID
+    categoryId,
+    title,
+    price,
+    duration,
+  } = serviceData;
 
   if (!providerId || !categoryId || !title || !price || !duration) {
     throw new ApiError(MESSAGES.ERROR.INVALID_INPUT, 400);
   }
 
-  const provider = await Provider.findById(providerId);
-  if (!provider) throw new ApiError("Provider not found", 404);
+  /*
+    USER ID -> PROVIDER PROFILE
+  */
+  const provider = await Provider.findOne({
+    userId: providerId,
+  });
+
+  if (!provider) {
+    throw new ApiError("Provider not found", 404);
+  }
 
   const category = await Category.findById(categoryId);
-  if (!category) throw new ApiError("Category not found", 404);
 
-  const service = new Service(serviceData);
+  if (!category) {
+    throw new ApiError("Category not found", 404);
+  }
+
+  /*
+    Save Provider._id
+  */
+  const service = new Service({
+    ...serviceData,
+    providerId: provider._id,
+  });
+
   await service.save();
 
-  return toServiceDTO(service);
+  const populatedService = await Service.findById(service._id)
+    .populate("providerId", "businessName location userId")
+    .populate("categoryId", "name");
+
+  return toServiceDTO(populatedService);
 }
+
+/* =========================================================
+   GET SINGLE SERVICE
+   ========================================================= */
 
 export async function getServiceById(id: string) {
   await connectDB();
 
-  const service = await Service.findById(id).populate("providerId categoryId");
-  if (!service) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
+  const service = await Service.findById(id)
+    .populate("providerId", "businessName location userId")
+    .populate("categoryId", "name");
+
+  if (!service) {
+    throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
+  }
 
   return toServiceDTO(service);
 }
+
+/* =========================================================
+   UPDATE SERVICE
+   ========================================================= */
 
 export async function updateService(
   id: string,
   serviceData: UpdateServiceInput,
+  currentUser?: {
+    id: string; // USER ID
+    role: string;
+  },
 ) {
   await connectDB();
 
-  const service = await Service.findByIdAndUpdate(id, serviceData, {
+  const existingService = await Service.findById(id);
+
+  if (!existingService) {
+    throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
+  }
+
+  /* ---------------- OWNERSHIP ---------------- */
+  if (currentUser) {
+    const isAdmin = currentUser.role === "admin";
+
+    const provider = await Provider.findOne({
+      userId: currentUser.id,
+    });
+
+    if (!provider && !isAdmin) {
+      throw new ApiError("Provider not found", 404);
+    }
+
+    const isOwner =
+      provider &&
+      existingService.providerId.toString() === provider._id.toString();
+
+    if (!isAdmin && !isOwner) {
+      throw new ApiError("Unauthorized", 403);
+    }
+  }
+
+  /* ---------------- CATEGORY VALIDATION ---------------- */
+  if (serviceData.categoryId) {
+    const category = await Category.findById(serviceData.categoryId);
+
+    if (!category) {
+      throw new ApiError("Category not found", 404);
+    }
+  }
+
+  /* ---------------- SECURITY ---------------- */
+  const { providerId, ...safeData } = serviceData;
+
+  /* ---------------- UPDATE ---------------- */
+  const updatedService = await Service.findByIdAndUpdate(id, safeData, {
     new: true,
     runValidators: true,
-  });
-  if (!service) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
+  })
+    .populate("providerId", "businessName location userId")
+    .populate("categoryId", "name");
 
-  return toServiceDTO(service);
+  if (!updatedService) {
+    throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
+  }
+
+  return toServiceDTO(updatedService);
 }
 
-export async function deleteService(id: string) {
+/* =========================================================
+   DELETE SERVICE
+   ========================================================= */
+
+export async function deleteService(
+  id: string,
+  currentUser?: {
+    id: string;
+    role: string;
+  },
+) {
   await connectDB();
 
-  const service = await Service.findByIdAndDelete(id);
-  if (!service) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
+  const existingService = await Service.findById(id);
 
-  return toServiceDTO(service);
+  if (!existingService) {
+    throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
+  }
+
+  /* ---------------- OWNERSHIP ---------------- */
+  if (currentUser) {
+    const isAdmin = currentUser.role === "admin";
+
+    const provider = await Provider.findOne({
+      userId: currentUser.id,
+    });
+
+    if (!provider && !isAdmin) {
+      throw new ApiError("Provider not found", 404);
+    }
+
+    const isOwner =
+      provider &&
+      existingService.providerId.toString() === provider._id.toString();
+
+    if (!isAdmin && !isOwner) {
+      throw new ApiError("Unauthorized", 403);
+    }
+  }
+
+  await Service.findByIdAndDelete(id);
+
+  return {
+    deleted: true,
+  };
 }

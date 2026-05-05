@@ -20,6 +20,7 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState(""); // error message display
   const [loading, setLoading] = useState(false); // loading state for submit button
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,6 +48,7 @@ export default function RegisterPage() {
         email: form.email,
         password: form.password,
         redirect: false,
+        callbackUrl: "/auth/redirect",
       });
       if (loginResult?.error) {
         setError(
@@ -125,14 +127,36 @@ export default function RegisterPage() {
             />
 
             {/* Password */}
-            <input
-              type="password"
-              placeholder="Password"
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              className="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                className="w-full border border-gray-200 rounded-lg px-4 py-2 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+              >
+                {showPassword ? (
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 3l18 18" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M10.6 10.6A3 3 0 0013.4 13.4" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9.9 5.1A10.8 10.8 0 0112 5c5.1 0 8.7 3.2 10 7-0.4 1.2-1.1 2.3-2 3.3" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M6.6 6.7C4.9 7.9 3.7 9.7 3 12c1.3 3.8 4.9 7 9 7 1.4 0 2.8-0.4 4-1.1" />
+                  </svg>
+                ) : (
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z" />
+                    <circle cx="12" cy="12" r="3" strokeWidth="1.8" />
+                  </svg>
+                )}
+              </button>
+            </div>
 
             {/* Error */}
             {error && <p className="text-red-500 text-sm">{error}</p>}
