@@ -4,7 +4,13 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
-export default function BecomeProviderButtons() {
+export default function BecomeProviderButtons({
+  value,
+  classes,
+}: {
+  value?: string;
+  classes?: string;
+}) {
   const { data: session, update } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -43,11 +49,8 @@ export default function BecomeProviderButtons() {
 
   if (!session) {
     return (
-      <button
-        onClick={handleRegister}
-        className="mt-6 bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold text-lg hover:bg-blue-700 transition shadow-lg"
-      >
-        Register to Become a Provider
+      <button onClick={handleRegister} className={`${classes}`}>
+        {value}
       </button>
     );
   }

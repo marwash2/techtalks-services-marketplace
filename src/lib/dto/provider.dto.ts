@@ -38,6 +38,7 @@ export function toProviderDTO(provider: ProviderDocument) {
     location: provider.location,
     rating: provider.rating,
     isVerified: provider.isVerified,
+    providerStatus: (provider as any).providerStatus ?? "pending",
     totalReviews: provider.totalReviews,
     avatar: provider.avatar ?? null,
     createdAt: provider.createdAt,

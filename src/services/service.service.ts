@@ -32,23 +32,21 @@ type CreateServiceInput = {
   image?: string | null;
 };
 
-type UpdateServiceInput =
-  Partial<CreateServiceInput>;
+type UpdateServiceInput = Partial<CreateServiceInput>;
 
-type PopulatedService =
-  IService & {
-    providerId?: {
-      _id?: string;
-      location?: string;
-      businessName?: string;
-      userId?: string;
-    };
-
-    categoryId?: {
-      _id?: string;
-      name?: string;
-    };
+type PopulatedService = IService & {
+  providerId?: {
+    _id?: string;
+    location?: string;
+    businessName?: string;
+    userId?: string;
   };
+
+  categoryId?: {
+    _id?: string;
+    name?: string;
+  };
+};
 
 /* =========================================================
    GET ALL SERVICES
@@ -56,18 +54,14 @@ type PopulatedService =
 
 export async function getAllServices(
   page: number = 1,
-  limit: number =
-    PAGINATION.DEFAULT_LIMIT,
-  filters: ServiceFilters = {}
+  limit: number = PAGINATION.DEFAULT_LIMIT,
+  filters: ServiceFilters = {},
 ) {
   await connectDB();
 
-  const skip =
-    (page - 1) * limit;
+  const skip = (page - 1) * limit;
 
-  const query:
-    FilterQuery<IService> =
-    {};
+  const query: FilterQuery<IService> = {};
 
   /* ---------------- SEARCH ---------------- */
   if (filters.search) {
@@ -86,8 +80,7 @@ export async function getAllServices(
 
   /* ---------------- CATEGORY ID ---------------- */
   if (filters.categoryId) {
-    query.categoryId =
-      filters.categoryId;
+    query.categoryId = filters.categoryId;
   }
 
   /* ---------------- PROVIDER FILTER ----------------
@@ -96,17 +89,12 @@ export async function getAllServices(
      - PROVIDER ID
   */
   if (filters.providerId) {
-    let provider =
-      await Provider.findOne({
-        userId:
-          filters.providerId,
-      });
+    let provider = await Provider.findOne({
+      userId: filters.providerId,
+    });
 
     if (!provider) {
-      provider =
-        await Provider.findById(
-          filters.providerId
-        );
+      provider = await Provider.findById(filters.providerId);
     }
 
     if (!provider) {
@@ -121,77 +109,43 @@ export async function getAllServices(
       };
     }
 
-    query.providerId =
-      provider._id;
+    query.providerId = provider._id;
   }
 
   /* ---------------- FETCH ---------------- */
-  let services =
-    await Service.find(query)
-      .sort({ createdAt: -1 })
-      .populate(
-        "providerId",
-        "location businessName userId"
-      )
-      .populate(
-        "categoryId",
-        "name"
-      );
+  let services = await Service.find(query)
+    .populate("providerId", "location businessName userId")
+    .populate("categoryId", "name");
 
   /* ---------------- LOCATION FILTER ---------------- */
   if (filters.location) {
-    services =
-      services.filter((s) =>
-        (
-          s as PopulatedService
-        ).providerId?.location
-          ?.toLowerCase()
-          .includes(
-            filters.location!.toLowerCase()
-          )
-      );
+    services = services.filter((s) =>
+      (s as PopulatedService).providerId?.location
+        ?.toLowerCase()
+        .includes(filters.location!.toLowerCase()),
+    );
   }
 
   /* ---------------- CATEGORY NAME FILTER ---------------- */
   if (filters.category) {
-    services =
-      services.filter((s) =>
-        (
-          s as PopulatedService
-        ).categoryId?.name
-          ?.toLowerCase()
-          .includes(
-            filters.category!.toLowerCase()
-          )
-      );
+    services = services.filter((s) =>
+      (s as PopulatedService).categoryId?.name
+        ?.toLowerCase()
+        .includes(filters.category!.toLowerCase()),
+    );
   }
 
-  const total =
-    services.length;
+  const total = services.length;
 
-  const paginatedServices =
-    services.slice(
-      skip,
-      skip + limit
-    );
+  const paginatedServices = services.slice(skip, skip + limit);
 
   return {
-    services:
-      paginatedServices.map(
-        (service) =>
-          toServiceDTO(
-            service
-          )
-      ),
-
+    services: paginatedServices.map((service) => toServiceDTO(service)),
     pagination: {
       page,
       limit,
       total,
-      pages:
-        Math.ceil(
-          total / limit
-        ),
+      pages: Math.ceil(total / limit),
     },
   };
 }
@@ -200,9 +154,7 @@ export async function getAllServices(
    CREATE SERVICE
    ========================================================= */
 
-export async function createService(
-  serviceData: CreateServiceInput
-) {
+export async function createService(serviceData: CreateServiceInput) {
   await connectDB();
 
   const {
@@ -213,107 +165,60 @@ export async function createService(
     duration,
   } = serviceData;
 
-  if (
-    !providerId ||
-    !categoryId ||
-    !title ||
-    !price ||
-    !duration
-  ) {
-    throw new ApiError(
-      MESSAGES.ERROR
-        .INVALID_INPUT,
-      400
-    );
+  if (!providerId || !categoryId || !title || !price || !duration) {
+    throw new ApiError(MESSAGES.ERROR.INVALID_INPUT, 400);
   }
 
   /*
     USER ID -> PROVIDER PROFILE
   */
-  const provider =
-    await Provider.findOne({
-      userId: providerId,
-    });
+  const provider = await Provider.findOne({
+    userId: providerId,
+  });
 
   if (!provider) {
-    throw new ApiError(
-      "Provider not found",
-      404
-    );
+    throw new ApiError("Provider not found", 404);
   }
 
-  const category =
-    await Category.findById(
-      categoryId
-    );
+  const category = await Category.findById(categoryId);
 
   if (!category) {
-    throw new ApiError(
-      "Category not found",
-      404
-    );
+    throw new ApiError("Category not found", 404);
   }
 
   /*
     Save Provider._id
   */
-  const service =
-    new Service({
-      ...serviceData,
-      providerId:
-        provider._id,
-    });
+  const service = new Service({
+    ...serviceData,
+    providerId: provider._id,
+  });
 
   await service.save();
 
-  const populatedService =
-    await Service.findById(
-      service._id
-    )
-      .populate(
-        "providerId",
-        "businessName location userId"
-      )
-      .populate(
-        "categoryId",
-        "name"
-      );
+  const populatedService = await Service.findById(service._id)
+    .populate("providerId", "businessName location userId")
+    .populate("categoryId", "name");
 
-  return toServiceDTO(
-    populatedService
-  );
+  return toServiceDTO(populatedService);
 }
 
 /* =========================================================
    GET SINGLE SERVICE
    ========================================================= */
 
-export async function getServiceById(
-  id: string
-) {
+export async function getServiceById(id: string) {
   await connectDB();
 
-  const service =
-    await Service.findById(id)
-      .populate(
-        "providerId",
-        "businessName location userId"
-      )
-      .populate(
-        "categoryId",
-        "name"
-      );
+  const service = await Service.findById(id)
+    .populate("providerId", "businessName location userId")
+    .populate("categoryId", "name");
 
   if (!service) {
-    throw new ApiError(
-      MESSAGES.ERROR.NOT_FOUND,
-      404
-    );
+    throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
   }
 
-  return toServiceDTO(
-    service
-  );
+  return toServiceDTO(service);
 }
 
 /* =========================================================
@@ -326,114 +231,62 @@ export async function updateService(
   currentUser?: {
     id: string; // USER ID
     role: string;
-  }
+  },
 ) {
   await connectDB();
 
-  const existingService =
-    await Service.findById(
-      id
-    );
+  const existingService = await Service.findById(id);
 
   if (!existingService) {
-    throw new ApiError(
-      MESSAGES.ERROR.NOT_FOUND,
-      404
-    );
+    throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
   }
 
   /* ---------------- OWNERSHIP ---------------- */
   if (currentUser) {
-    const isAdmin =
-      currentUser.role ===
-      "admin";
+    const isAdmin = currentUser.role === "admin";
 
-    const provider =
-      await Provider.findOne(
-        {
-          userId:
-            currentUser.id,
-        }
-      );
+    const provider = await Provider.findOne({
+      userId: currentUser.id,
+    });
 
-    if (
-      !provider &&
-      !isAdmin
-    ) {
-      throw new ApiError(
-        "Provider not found",
-        404
-      );
+    if (!provider && !isAdmin) {
+      throw new ApiError("Provider not found", 404);
     }
 
     const isOwner =
       provider &&
-      existingService.providerId.toString() ===
-        provider._id.toString();
+      existingService.providerId.toString() === provider._id.toString();
 
-    if (
-      !isAdmin &&
-      !isOwner
-    ) {
-      throw new ApiError(
-        "Unauthorized",
-        403
-      );
+    if (!isAdmin && !isOwner) {
+      throw new ApiError("Unauthorized", 403);
     }
   }
 
   /* ---------------- CATEGORY VALIDATION ---------------- */
-  if (
-    serviceData.categoryId
-  ) {
-    const category =
-      await Category.findById(
-        serviceData.categoryId
-      );
+  if (serviceData.categoryId) {
+    const category = await Category.findById(serviceData.categoryId);
 
     if (!category) {
-      throw new ApiError(
-        "Category not found",
-        404
-      );
+      throw new ApiError("Category not found", 404);
     }
   }
 
   /* ---------------- SECURITY ---------------- */
-  const {
-    providerId,
-    ...safeData
-  } = serviceData;
+  const { providerId, ...safeData } = serviceData;
 
   /* ---------------- UPDATE ---------------- */
-  const updatedService =
-    await Service.findByIdAndUpdate(
-      id,
-      safeData,
-      {
-        new: true,
-        runValidators: true,
-      }
-    )
-      .populate(
-        "providerId",
-        "businessName location userId"
-      )
-      .populate(
-        "categoryId",
-        "name"
-      );
+  const updatedService = await Service.findByIdAndUpdate(id, safeData, {
+    new: true,
+    runValidators: true,
+  })
+    .populate("providerId", "businessName location userId")
+    .populate("categoryId", "name");
 
   if (!updatedService) {
-    throw new ApiError(
-      MESSAGES.ERROR.NOT_FOUND,
-      404
-    );
+    throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
   }
 
-  return toServiceDTO(
-    updatedService
-  );
+  return toServiceDTO(updatedService);
 }
 
 /* =========================================================
@@ -445,65 +298,38 @@ export async function deleteService(
   currentUser?: {
     id: string;
     role: string;
-  }
+  },
 ) {
   await connectDB();
 
-  const existingService =
-    await Service.findById(
-      id
-    );
+  const existingService = await Service.findById(id);
 
   if (!existingService) {
-    throw new ApiError(
-      MESSAGES.ERROR.NOT_FOUND,
-      404
-    );
+    throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
   }
 
   /* ---------------- OWNERSHIP ---------------- */
   if (currentUser) {
-    const isAdmin =
-      currentUser.role ===
-      "admin";
+    const isAdmin = currentUser.role === "admin";
 
-    const provider =
-      await Provider.findOne(
-        {
-          userId:
-            currentUser.id,
-        }
-      );
+    const provider = await Provider.findOne({
+      userId: currentUser.id,
+    });
 
-    if (
-      !provider &&
-      !isAdmin
-    ) {
-      throw new ApiError(
-        "Provider not found",
-        404
-      );
+    if (!provider && !isAdmin) {
+      throw new ApiError("Provider not found", 404);
     }
 
     const isOwner =
       provider &&
-      existingService.providerId.toString() ===
-        provider._id.toString();
+      existingService.providerId.toString() === provider._id.toString();
 
-    if (
-      !isAdmin &&
-      !isOwner
-    ) {
-      throw new ApiError(
-        "Unauthorized",
-        403
-      );
+    if (!isAdmin && !isOwner) {
+      throw new ApiError("Unauthorized", 403);
     }
   }
 
-  await Service.findByIdAndDelete(
-    id
-  );
+  await Service.findByIdAndDelete(id);
 
   return {
     deleted: true,

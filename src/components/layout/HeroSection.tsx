@@ -1,16 +1,65 @@
-import { Search, MapPin, Star, Users, Heart } from "lucide-react";
+"use client";
+
+import {
+  Search,
+  MapPin,
+  Building2,
+  Star,
+  Users,
+  Wrench,
+  Heart,
+} from "lucide-react";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+
+type HomeStats = {
+  totalServices: number;
+  totalProviders: number;
+  totalCities: number;
+};
+
 export default function HeroSection() {
+  const [stats, setStats] = useState<HomeStats>({
+    totalServices: 0,
+    totalProviders: 0,
+    totalCities: 0,
+  });
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function fetchStats() {
+      try {
+        const res = await fetch("/api/stats");
+        if (!res.ok) throw new Error("Unable to load stats");
+
+        const json = await res.json();
+        const payload = json?.data ?? json;
+
+        if (mounted && payload) {
+          setStats({
+            totalServices: payload.totalServices ?? 0,
+            totalProviders: payload.totalProviders ?? 0,
+            totalCities: payload.totalCities ?? 0,
+          });
+        }
+      } catch {
+        // Keep default values on error
+      }
+    }
+
+    fetchStats();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
-    <section className="relative w-full overflow-hidden bg-gray-100 py-4">
+    <section className="relative w-full overflow-hidden bg-gray-100 py-0">
       <div className="w-full">
         <div className="md:hidden w-full h-[220px] mb-6">
           {/* IMAGE */}
-          {/*} <img
-            src="https://images.unsplash.com/photo-1581578731548-c64695cc6952"
-            className="w-full h-full object-cover rounded-xl
-            [clip-path:ellipse(100%_60%_at_100%_35%)]"
-          />*/}
 
           <Image
             src="/hero.jpg"
@@ -60,32 +109,41 @@ export default function HeroSection() {
               </div>
 
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
-                {/* STATS */}
                 <div className="flex flex-wrap items-end gap-6 text-sm text-slate-600">
-                  <div className="flex flex-col items-center">
-                    <Users className="h-5 w-5 text-blue-600" />
-                    <span className="font-semibold mt-1">500+</span>
+                  <div className="flex flex-col items-center px-3">
+                    <Wrench className="h-5 w-5 text-blue-600" />
+                    <span className="font-semibold mt-1">
+                      {stats.totalServices}+
+                    </span>
                     <span className="text-xs text-slate-400">Services</span>
                   </div>
 
-                  <div className="flex flex-col items-center">
+                  <div className="flex flex-col items-center ">
                     <Users className="h-5 w-5 text-blue-600" />
-                    <span className="font-semibold mt-1">200+</span>
+                    <span className="font-semibold mt-1">
+                      {stats.totalProviders}+
+                    </span>
                     <span className="text-xs text-slate-400">Providers</span>
                   </div>
 
                   <div className="flex flex-col items-center">
                     <Heart className="h-5 w-5 text-blue-600" />
-                    <span className="font-semibold mt-1">5K+</span>
+                    <span className="font-semibold mt-1">
+                      {(stats.totalServices * 10).toLocaleString()}+
+                    </span>
                     <span className="text-xs text-slate-400">
                       Happy Customers
                     </span>
                   </div>
 
                   <div className="flex flex-col items-center">
-                    <Star className="h-5 w-5 text-yellow-400" />
-                    <span className="font-semibold mt-1">4.8</span>
-                    <span className="text-xs text-slate-400">Avg. Rating</span>
+                    <Building2 className="h-5 w-5 text-blue-600" />
+                    <span className="font-semibold mt-1">
+                      {stats.totalCities}
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      covered cities
+                    </span>
                   </div>
                 </div>
 
@@ -107,12 +165,15 @@ export default function HeroSection() {
           </div>
 
           {/* RIGHT IMAGE */}
-          <div className="hidden md:block absolute right-0 top-0 h-full w-[55%]">
+          <div className="hidden md:block absolute right-0 top-0 h-full w-[60%]">
             {/* IMAGE */}
-            <img
-              src="https://images.unsplash.com/photo-1581578731548-c64695cc6952"
-              className="h-full w-full object-cover
-               [clip-path:ellipse(100%_60%_at_100%_35%)]"
+            <Image
+              src="/hero.jpg"
+              alt="Hero Background"
+              width={1200}
+              height={800}
+              className="w-full h-full object-cover rounded-xl
+            [clip-path:ellipse(100%_60%_at_100%_35%)]"
             />
           </div>
         </div>

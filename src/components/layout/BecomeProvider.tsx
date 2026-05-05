@@ -31,7 +31,10 @@ export default function BecomeProviderSection() {
               near you. Grow your business with our smart matching platform.
             </p>
 
-            <BecomeProviderButtons />
+            <BecomeProviderButtons
+              value="Register To Become a provider"
+              classes="mt-6 bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold text-lg hover:bg-blue-700 transition shadow-lg"
+            />
           </div>
 
           {/* RIGHT IMAGE */}

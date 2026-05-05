@@ -15,13 +15,9 @@ interface PopulatedCategory {
 interface ServiceDocument {
   _id: Types.ObjectId;
 
-  providerId:
-    | Types.ObjectId
-    | PopulatedProvider;
+  providerId: Types.ObjectId | PopulatedProvider;
 
-  categoryId:
-    | Types.ObjectId
-    | PopulatedCategory;
+  categoryId: Types.ObjectId | PopulatedCategory;
 
   title: string;
   description?: string;
@@ -41,32 +37,18 @@ interface ServiceDocument {
 }
 
 function isPopulatedProvider(
-  value:
-    | Types.ObjectId
-    | PopulatedProvider,
+  value: Types.ObjectId | PopulatedProvider,
 ): value is PopulatedProvider {
-  return (
-    !!value &&
-    typeof value === "object" &&
-    "businessName" in value
-  );
+  return !!value && typeof value === "object" && "businessName" in value;
 }
 
 function isPopulatedCategory(
-  value:
-    | Types.ObjectId
-    | PopulatedCategory,
+  value: Types.ObjectId | PopulatedCategory,
 ): value is PopulatedCategory {
-  return (
-    !!value &&
-    typeof value === "object" &&
-    "name" in value
-  );
+  return !!value && typeof value === "object" && "name" in value;
 }
 
-export function toServiceDTO(
-  service: ServiceDocument,
-) {
+export function toServiceDTO(service: ServiceDocument) {
   return {
     id: service._id.toString(),
     providerId: isPopulatedProvider(service.providerId)
@@ -84,37 +66,24 @@ export function toServiceDTO(
       : service.categoryId.toString(),
     title: service.title,
 
-    description:
-      service.description || "",
+    description: service.description || "",
 
     price: service.price,
 
-    duration:
-      service.duration,
+    duration: service.duration,
 
     /* NEW REQUIRED FIELDS */
-    availability:
-      service.availability ||
-      "",
+    availability: service.availability || "",
 
-    location:
-      service.location ||
-      "",
+    location: service.location || "",
 
-    image:
-      service.image || null,
+    image: service.image || null,
 
-    isActive:
-      service.isActive ??
-      true,
+    isActive: service.isActive ?? true,
 
-    createdAt:
-      service.createdAt ||
-      null,
+    createdAt: service.createdAt || null,
 
-    updatedAt:
-      service.updatedAt ||
-      null,
+    updatedAt: service.updatedAt || null,
 
     // /* PROVIDER */
     // providerId:
@@ -151,45 +120,27 @@ export function toServiceDTO(
     //     : service.categoryId.toString(),
 
     /* PROVIDER POPULATED */
-    provider:
-      isPopulatedProvider(
-        service.providerId,
-      )
-        ? {
-            _id:
-              service.providerId._id.toString(),
+    provider: isPopulatedProvider(service.providerId)
+      ? {
+          _id: service.providerId._id.toString(),
 
-            businessName:
-              service.providerId
-                .businessName,
+          businessName: service.providerId.businessName,
 
-            location:
-              service.providerId
-                .location,
-          }
-        : null,
+          location: service.providerId.location,
+        }
+      : null,
 
     /* CATEGORY POPULATED */
-    category:
-      isPopulatedCategory(
-        service.categoryId,
-      )
-        ? {
-            _id:
-              service.categoryId._id.toString(),
+    category: isPopulatedCategory(service.categoryId)
+      ? {
+          _id: service.categoryId._id.toString(),
 
-            name:
-              service.categoryId
-                .name,
-          }
-        : null,
+          name: service.categoryId.name,
+        }
+      : null,
   };
 }
 
-export function toServiceListDTO(
-  services: ServiceDocument[],
-) {
-  return services.map(
-    toServiceDTO,
-  );
+export function toServiceListDTO(services: ServiceDocument[]) {
+  return services.map(toServiceDTO);
 }

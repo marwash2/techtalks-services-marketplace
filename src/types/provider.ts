@@ -9,6 +9,7 @@ export interface IProvider extends Document {
   rating: number;
   totalReviews: number;
   isVerified: boolean;
+  providerStatus: "pending" | "approved" | "rejected"; // add this
   services: Types.ObjectId[];
   reviews: IReview[]; // embedded — loaded with provider in one query
   createdAt: Date;

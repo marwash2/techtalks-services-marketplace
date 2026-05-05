@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Star,
   Bell,
+  Bot,
   LogOut,
   User,
   Settings,
@@ -21,13 +22,46 @@ import { useSidebar } from "@/components/layout/SidebarContext";
 import { useEffect, useRef, useState } from "react";
 
 const providerLinks = [
-  { name: "Dashboard", path: "/provider/dashboard", icon: Home },
-  { name: "Services", path: "/provider/services", icon: Briefcase },
-  { name: "Bookings", path: "/provider/bookings", icon: Calendar },
-  { name: "Earnings", path: "/provider/earnings", icon: TrendingUp },
-  { name: "Reviews", path: "/provider/reviews", icon: Star },
-  { name: "Notifications", path: "/provider/notifications", icon: Bell },
-  { name: "Availability", path: "/provider/availability", icon: ChevronsRightIcon },
+  {
+    name: "Dashboard",
+    path: "/provider/dashboard",
+    icon: Home,
+  },
+  {
+    name: "Ai-assistant",
+    path: "/provider/ai-assistant",
+    icon: Bot,
+  },
+  {
+    name: "Services",
+    path: "/provider/services",
+    icon: Briefcase,
+  },
+  {
+    name: "Bookings",
+    path: "/provider/bookings",
+    icon: Calendar,
+  },
+  {
+    name: "Earnings",
+    path: "/provider/earnings",
+    icon: TrendingUp,
+  },
+  {
+    name: "Reviews",
+    path: "/provider/reviews",
+    icon: Star,
+  },
+  {
+    name: "Notifications",
+    path: "/provider/notifications",
+    icon: Bell,
+  },
+  {
+    name: "Availability",
+    path: "/provider/availability",
+    icon: ChevronsRightIcon,
+  },
 ];
 
 export default function ProviderSidebar() {
@@ -40,7 +74,10 @@ export default function ProviderSidebar() {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsDropdownOpen(false);
       }
     };
@@ -52,7 +89,6 @@ export default function ProviderSidebar() {
   useEffect(() => {
     const userId = session?.user?.id;
     if (!userId) {
-      setUnreadCount(0);
       return;
     }
 
@@ -60,13 +96,18 @@ export default function ProviderSidebar() {
 
     const loadUnread = async () => {
       try {
-        const res = await fetch(`/api/notifications?userId=${userId}&page=1&limit=50`, {
-          cache: "no-store",
-        });
+        const res = await fetch(
+          `/api/notifications?userId=${userId}&page=1&limit=50`,
+          {
+            cache: "no-store",
+          },
+        );
         if (!res.ok) return;
         const data = await res.json();
         const items = data?.data?.notifications ?? [];
-        const unread = items.filter((item: { isRead?: boolean }) => !item.isRead).length;
+        const unread = items.filter(
+          (item: { isRead?: boolean }) => !item.isRead,
+        ).length;
         if (isMounted) setUnreadCount(unread);
       } catch {
         // No-op
@@ -77,13 +118,19 @@ export default function ProviderSidebar() {
       void loadUnread();
     };
 
-    window.addEventListener("notifications-updated", handleNotificationsUpdated);
+    window.addEventListener(
+      "notifications-updated",
+      handleNotificationsUpdated,
+    );
     void loadUnread();
     const interval = window.setInterval(loadUnread, 5000);
 
     return () => {
       isMounted = false;
-      window.removeEventListener("notifications-updated", handleNotificationsUpdated);
+      window.removeEventListener(
+        "notifications-updated",
+        handleNotificationsUpdated,
+      );
       window.clearInterval(interval);
     };
   }, [session?.user?.id]);
@@ -111,7 +158,9 @@ export default function ProviderSidebar() {
           }`}
           aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
         >
-          <ChevronLeft className={`h-5 w-5 transition-transform ${isOpen ? "" : "-rotate-180"}`} />
+          <ChevronLeft
+            className={`h-5 w-5 transition-transform ${isOpen ? "" : "-rotate-180"}`}
+          />
         </button>
 
         <nav className="flex-1 space-y-2 overflow-y-auto px-0 py-2">
@@ -132,17 +181,23 @@ export default function ProviderSidebar() {
               >
                 <Icon className="h-5 w-5" />
 
-                {link.path === "/provider/notifications" && unreadCount > 0 && !isOpen && (
-                  <span className="absolute left-8 top-2 inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
-                )}
+                {link.path === "/provider/notifications" &&
+                  unreadCount > 0 &&
+                  !isOpen && (
+                    <span className="absolute left-8 top-2 inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+                  )}
 
-                <span className={`${isOpen ? "inline" : "hidden"}`}>{link.name}</span>
+                <span className={`${isOpen ? "inline" : "hidden"}`}>
+                  {link.name}
+                </span>
 
-                {link.path === "/provider/notifications" && unreadCount > 0 && isOpen && (
-                  <span className="ml-auto inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-semibold text-white">
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </span>
-                )}
+                {link.path === "/provider/notifications" &&
+                  unreadCount > 0 &&
+                  isOpen && (
+                    <span className="ml-auto inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-semibold text-white">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
               </Link>
             );
           })}
@@ -158,10 +213,14 @@ export default function ProviderSidebar() {
                 {session?.user?.name?.charAt(0)?.toUpperCase() || "P"}
               </div>
               <div className={`${isOpen ? "flex-1 text-left" : "hidden"}`}>
-                <p className="text-sm font-medium text-slate-900">{session?.user?.name || "Provider"}</p>
+                <p className="text-sm font-medium text-slate-900">
+                  {session?.user?.name || "Provider"}
+                </p>
                 <p className="text-xs text-slate-500">Provider</p>
               </div>
-              <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
+              <ChevronDown
+                className={`h-4 w-4 text-slate-400 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
+              />
             </button>
 
             {isDropdownOpen && (

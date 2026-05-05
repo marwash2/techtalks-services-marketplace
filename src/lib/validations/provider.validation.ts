@@ -6,6 +6,7 @@ export const createProviderSchema = z.object({
   description: z.string().optional(),
   location: z.string().min(2, "Location is required"),
   avatar: z.string().url("Invalid avatar URL").nullable().optional(),
+  providerStatus: z.enum(["pending", "approved", "rejected"]).optional(), // add this
 });
 
 export const providerOnboardingSchema = z.object({
@@ -23,4 +24,4 @@ export const providerOnboardingSchema = z.object({
   }, z.string().url("Invalid avatar URL").nullable().optional()),
 });
 
-export const updateProviderSchema = createProviderSchema.partial();
+export const updateProviderSchema = createProviderSchema.partial().passthrough();

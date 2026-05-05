@@ -13,6 +13,7 @@ const providerSchema = new mongoose.Schema(
     location: { type: String, required: true },
     rating: { type: Number, default: 0, min: 0, max: 5 },
     isVerified: { type: Boolean, default: false },
+    providerStatus: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
     totalReviews: { type: Number, default: 0 },
     avatar: { type: String, default: null },
     services: [{ type: mongoose.Schema.Types.ObjectId, ref: "Service" }],

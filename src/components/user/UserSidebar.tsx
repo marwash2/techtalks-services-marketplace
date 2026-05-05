@@ -1,5 +1,5 @@
 "use client";
-
+import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -8,6 +8,7 @@ import {
   CircleUserRound,
   Heart,
   House,
+  Bot,
   Sparkles,
 } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
@@ -24,6 +25,11 @@ const userLinks = [
     name: "Dashboard",
     path: "/user/dashboard",
     icon: Sparkles,
+  },
+  {
+    name: "AI Assistant", // ← add this block
+    path: "/user/ai-assistant",
+    icon: Bot,
   },
   {
     name: "Services",
@@ -134,6 +140,14 @@ export default function UserSidebar() {
               </Link>
             );
           })}
+          <button
+            type="button"
+            onClick={() => signOut({ callbackUrl: "/" })}
+            className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+          >
+            <span className="h-4 w-4 text-red-600">⎋</span>
+            <span>Logout</span>
+          </button>
         </nav>
       </aside>
     </>
