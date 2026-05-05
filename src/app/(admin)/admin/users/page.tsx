@@ -11,7 +11,7 @@ type User = {
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
-
+  console.log("users:", users);
   async function fetchUsers() {
     try {
       const res = await fetch("/api/users");
@@ -19,7 +19,7 @@ export default function AdminUsersPage() {
         throw new Error("Failed to fetch users");
       }
       const data = await res.json();
-      setUsers(data);
+      setUsers(data.data.users);
     } catch (error) {
       console.error("Error fetching users:", error);
     }
@@ -60,7 +60,7 @@ export default function AdminUsersPage() {
 
           <tbody>
             {users.map((user) => (
-              <tr key={user._id} className="border-b hover:bg-gray-50">
+              <tr key={user.id} className="border-b hover:bg-gray-50">
                 <td className="p-4">{user.name}</td>
                 <td className="p-4 text-gray-500">{user.email}</td>
 
