@@ -29,7 +29,7 @@ export const GET = withApiHandler(
     const limit = parseInt(
       searchParams.get("limit") ||
         String(
-          PAGINATION.DEFAULT_LIMIT
+          PAGINATION.DEFAULT_LIMIT = 1000
         )
     );
 

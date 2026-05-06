@@ -114,7 +114,6 @@ export async function getAllServices(
 
   /* ---------------- FETCH ---------------- */
   let services = await Service.find(query)
-    .sort({ createdAt: -1 })
     .populate("providerId", "location businessName userId")
     .populate("categoryId", "name");
 
