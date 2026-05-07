@@ -27,11 +27,7 @@ const providerLinks = [
     path: "/provider/dashboard",
     icon: Home,
   },
-  {
-    name: "Ai-assistant",
-    path: "/provider/ai-assistant",
-    icon: Bot,
-  },
+
   {
     name: "Services",
     path: "/provider/services",

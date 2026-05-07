@@ -1,193 +1,336 @@
 "use client";
 
+import { useEffect, useState, type ElementType, type ReactNode } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import {
+  Check,
+  CircleDollarSign,
+  Eraser,
+  Loader2,
+  MapPin,
+  SlidersHorizontal,
+  Sparkles,
+  Star,
+} from "lucide-react";
 
-const CATEGORIES = [
-  { label: "Cleaning", value: "cleaning" },
-  { label: "Electrical", value: "electrical" },
-  { label: "Plumbing", value: "plumbing" },
-  { label: "Carpentry", value: "carpentry" },
-  { label: "Painting", value: "painting" },
-];
-
-const LOCATIONS = [
-  { label: "Beirut", value: "beirut" },
-  { label: "Tripoli", value: "tripoli" },
-  { label: "Sidon", value: "sidon" },
-  { label: "Tyre", value: "tyre" },
-];
-
-const RATINGS = [
-  { stars: "★☆☆☆☆", label: "1 & up", value: "1" },
-  { stars: "★★☆☆☆", label: "2 & up", value: "2" },
-  { stars: "★★★☆☆", label: "3 & up", value: "3" },
-  { stars: "★★★★☆", label: "4 & up", value: "4" },
-  { stars: "★★★★★", label: "5 only", value: "5" },
-];
-
-const selectClass =
-  "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition appearance-none cursor-pointer";
-
-// 1. We added an optional onClose prop type
 type FiltersProps = {
   onClose?: () => void;
 };
 
-// 2. Pass the prop into the component
+type FilterCategory = {
+  id: string;
+  name: string;
+  slug?: string;
+};
+
+type FilterOptions = {
+  categories: FilterCategory[];
+  locations: string[];
+};
+
+const RATINGS = [
+  { label: "5 only", value: "5" },
+  { label: "4 & up", value: "4" },
+  { label: "3 & up", value: "3" },
+  { label: "2 & up", value: "2" },
+  { label: "1 & up", value: "1" },
+];
+
+function SectionTitle({
+  icon: Icon,
+  title,
+  count,
+}: {
+  icon: ElementType;
+  title: string;
+  count?: number;
+}) {
+  return (
+    <div className="mb-3 flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2">
+        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+          <Icon className="h-4 w-4" />
+        </div>
+        <h3 className="text-sm font-bold text-slate-950">{title}</h3>
+      </div>
+      {typeof count === "number" && (
+        <span className="rounded-full bg-slate-50 px-2 py-0.5 text-xs font-semibold text-slate-500">
+          {count}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function ListOption({
+  active,
+  children,
+  onClick,
+}: {
+  active: boolean;
+  children: ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition ${
+        active
+          ? "border-blue-200 bg-blue-50 text-blue-700"
+          : "border-transparent bg-white text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+      }`}
+    >
+      <span className="min-w-0 truncate">{children}</span>
+      {active && <Check className="h-4 w-4 shrink-0" />}
+    </button>
+  );
+}
+
 export default function Filters({ onClose }: FiltersProps = {}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  const [options, setOptions] = useState<FilterOptions>({
+    categories: [],
+    locations: [],
+  });
+  const [loadingOptions, setLoadingOptions] = useState(true);
 
   const currentCategory = searchParams.get("category") ?? "";
   const currentLocation = searchParams.get("location") ?? "";
   const currentRating = searchParams.get("minRating") ?? "";
   const currentMaxPrice = searchParams.get("maxPrice") ?? "";
 
+  useEffect(() => {
+    let mounted = true;
+
+    async function fetchOptions() {
+      try {
+        setLoadingOptions(true);
+        const res = await fetch("/api/filter-options", {
+          cache: "no-store",
+        });
+        const data = await res.json();
+
+        if (!mounted || !res.ok || data?.success === false) return;
+
+        setOptions({
+          categories: data.data?.categories || [],
+          locations: data.data?.locations || [],
+        });
+      } catch {
+        if (mounted) {
+          setOptions({ categories: [], locations: [] });
+        }
+      } finally {
+        if (mounted) {
+          setLoadingOptions(false);
+        }
+      }
+    }
+
+    fetchOptions();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const updateParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
+
     if (value) {
       params.set(key, value);
     } else {
       params.delete(key);
     }
-    router.push(`${pathname}?${params.toString()}`);
+
+    router.push(
+      params.toString() ? `${pathname}?${params.toString()}` : pathname,
+    );
   };
 
-  const toggleRating = (value: string) => {
-    updateParam("minRating", currentRating === value ? "" : value);
+  const clearFilters = () => {
+    router.push(pathname);
   };
 
   const hasActiveFilters =
     currentCategory || currentLocation || currentRating || currentMaxPrice;
 
   return (
-    // Added flex flex-col and h-full so the "Show Results" button pushes to the bottom
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col h-full ">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 shrink-0">
-        <span className="text-xs font-semibold tracking-widest text-gray-400 uppercase ">
-          Filters
-        </span>
-        {hasActiveFilters && (
-          <button
-            onClick={() => router.push(pathname)}
-            className="text-xs text-red-400 hover:text-red-600 transition cursor-pointer"
-          >
-            Clear all
-          </button>
-        )}
+    <aside className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-100 p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-xl bg-blue-50 px-3 py-2 text-sm font-bold text-blue-700">
+              <SlidersHorizontal className="h-4 w-4" />
+              Filters
+            </div>
+            <p className="mt-3 text-sm leading-6 text-slate-500">
+              Use real marketplace data to narrow your search.
+            </p>
+          </div>
+
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-50"
+            >
+              <Eraser className="h-3.5 w-3.5" />
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Make this inner area scrollable if the screen is super small */}
-      <div className="overflow-y-auto flex-1 scrollbar-hide">
-        {/* Category */}
-        <div className="px-4 py-4 border-b border-gray-100">
-          <label className="block text-xs font-semibold tracking-widest text-gray-400 uppercase mb-2">
-            Category
-          </label>
-          <select
-            value={currentCategory}
-            onChange={(e) => updateParam("category", e.target.value)}
-            className={selectClass}
-          >
-            <option value="">All categories</option>
-            {CATEGORIES.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Location */}
-        <div className="px-4 py-4 border-b border-gray-100">
-          <label className="block text-xs font-semibold tracking-widest text-gray-400 uppercase mb-2">
-            Location
-          </label>
-          <select
-            value={currentLocation}
-            onChange={(e) => updateParam("location", e.target.value)}
-            className={selectClass}
-          >
-            <option value="">All locations</option>
-            {LOCATIONS.map((l) => (
-              <option key={l.value} value={l.value}>
-                {l.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Max Price */}
-        <div className="px-4 py-4 border-b border-gray-100">
-          <div className="flex items-center justify-between mb-3">
-            <label className="text-xs font-semibold tracking-widest text-gray-400 uppercase">
-              Max Price
-            </label>
-            {currentMaxPrice ? (
-              <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full ">
-                ${currentMaxPrice}
-              </span>
-            ) : (
-              <span className="text-xs text-gray-400">Any</span>
-            )}
+      <div className="flex-1 space-y-5 overflow-y-auto p-4 scrollbar-hide">
+        {loadingOptions ? (
+          <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-3 py-4 text-sm font-medium text-slate-500">
+            <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+            Loading filters...
           </div>
+        ) : (
+          <>
+            <section>
+              <SectionTitle
+                icon={Sparkles}
+                title="Categories"
+                count={options.categories.length}
+              />
+
+              <div className="rounded-2xl border border-slate-100 bg-white p-2">
+                <select
+                  value={currentCategory}
+                  onChange={(e) => updateParam("category", e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                  aria-label="Select category"
+                >
+                  <option value="">All categories</option>
+                  {options.categories.length > 0 ? (
+                    options.categories.map((category) => (
+                      <option key={category.id} value={category.name}>
+                        {category.name}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>
+                      No categories found
+                    </option>
+                  )}
+                </select>
+              </div>
+            </section>
+
+            <section className="border-t border-slate-100 pt-5">
+              <SectionTitle
+                icon={MapPin}
+                title="Locations"
+                count={options.locations.length}
+              />
+
+              <div className="rounded-2xl border border-slate-100 bg-white p-2">
+                <select
+                  value={currentLocation}
+                  onChange={(e) => updateParam("location", e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                  aria-label="Select location"
+                >
+                  <option value="">All locations</option>
+                  {options.locations.length > 0 ? (
+                    options.locations.map((location) => (
+                      <option key={location} value={location}>
+                        {location}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>
+                      No locations found
+                    </option>
+                  )}
+                </select>
+              </div>
+            </section>
+          </>
+        )}
+
+        <section className="border-t border-slate-100 pt-5">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <SectionTitle icon={CircleDollarSign} title="Max Price" />
+            <span className="rounded-full bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600">
+              {currentMaxPrice ? `$${currentMaxPrice}` : "Any"}
+            </span>
+          </div>
+
           <input
             type="range"
             min="0"
             max="500"
             step="10"
             value={currentMaxPrice || "500"}
-            onChange={(e) =>
+            onChange={(event) =>
               updateParam(
                 "maxPrice",
-                e.target.value === "500" ? "" : e.target.value,
+                event.target.value === "500" ? "" : event.target.value,
               )
             }
-            className="w-full accent-blue-600 cursor-pointer"
+            className="w-full accent-blue-600"
           />
-          <div className="flex justify-between mt-1">
-            <span className="text-xs text-gray-300">$0</span>
-            <span className="text-xs text-gray-300">$500+</span>
+          <div className="mt-2 flex justify-between text-xs font-medium text-slate-400">
+            <span>$0</span>
+            <span>$500+</span>
           </div>
-        </div>
+        </section>
 
-        {/* Rating */}
-        <div className="px-4 py-4">
-          <label className="block text-xs font-semibold tracking-widest text-gray-400 uppercase mb-2">
-            Min Rating
-          </label>
-          <div className="flex flex-col gap-1 ">
-            {RATINGS.map((r) => (
-              <button
-                key={r.value}
-                onClick={() => toggleRating(r.value)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm transition border cursor-pointer ${
-                  currentRating === r.value
-                    ? "bg-blue-50 border-blue-200 text-blue-700"
-                    : "border-transparent hover:bg-gray-50 text-gray-600"
-                }`}
+        <section className="border-t border-slate-100 pt-5">
+          <SectionTitle icon={Star} title="Minimum Rating" />
+          <div className="space-y-1 rounded-2xl border border-slate-100 bg-white p-1">
+            <ListOption
+              active={!currentRating}
+              onClick={() => updateParam("minRating", "")}
+            >
+              Any rating
+            </ListOption>
+            {RATINGS.map((rating) => (
+              <ListOption
+                key={rating.value}
+                active={currentRating === rating.value}
+                onClick={() => updateParam("minRating", rating.value)}
               >
-                <span className="tracking-tighter">{r.stars}</span>
-                <span className="text-xs">{r.label}</span>
-              </button>
+                <span className="flex items-center gap-2">
+                  <span className="flex items-center">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`h-3.5 w-3.5 ${
+                          star <= Number(rating.value)
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-slate-300"
+                        }`}
+                      />
+                    ))}
+                  </span>
+                  {rating.label}
+                </span>
+              </ListOption>
             ))}
           </div>
-        </div>
+        </section>
       </div>
 
-      {/* 3. MOBILE ONLY: Render a 'Show Results' button if onClose is provided */}
       {onClose && (
-        <div className="p-4 border-t border-gray-100 bg-gray-50 shrink-0">
+        <div className="border-t border-slate-100 bg-slate-50 p-4">
           <button
+            type="button"
             onClick={onClose}
-            className="w-full flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 cursor-pointer"
+            className="flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
           >
             Show Results
           </button>
         </div>
       )}
-    </div>
+    </aside>
   );
 }

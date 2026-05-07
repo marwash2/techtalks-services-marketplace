@@ -29,7 +29,10 @@ type CreateServiceInput = {
   description?: string;
   price: number;
   duration: number;
+  availability: string;
+  location?: string;
   image?: string | null;
+  isActive?: boolean;
 };
 
 type UpdateServiceInput = Partial<CreateServiceInput>;
@@ -115,7 +118,10 @@ export async function getAllServices(
   /* ---------------- FETCH ---------------- */
   let services = await Service.find(query)
     .sort({ createdAt: -1 })
-    .populate("providerId", "location businessName userId")
+    .populate(
+      "providerId",
+      "location businessName userId avatar isVerified createdAt rating totalReviews",
+    )
     .populate("categoryId", "name");
 
   /* ---------------- LOCATION FILTER ---------------- */
@@ -198,7 +204,10 @@ export async function createService(serviceData: CreateServiceInput) {
   await service.save();
 
   const populatedService = await Service.findById(service._id)
-    .populate("providerId", "businessName location userId")
+    .populate(
+      "providerId",
+      "businessName location userId avatar isVerified createdAt rating totalReviews",
+    )
     .populate("categoryId", "name");
 
   return toServiceDTO(populatedService);
@@ -212,7 +221,10 @@ export async function getServiceById(id: string) {
   await connectDB();
 
   const service = await Service.findById(id)
-    .populate("providerId", "businessName location userId")
+    .populate(
+      "providerId",
+      "businessName location userId avatar isVerified createdAt rating totalReviews",
+    )
     .populate("categoryId", "name");
 
   if (!service) {
@@ -280,7 +292,10 @@ export async function updateService(
     new: true,
     runValidators: true,
   })
-    .populate("providerId", "businessName location userId")
+    .populate(
+      "providerId",
+      "businessName location userId avatar isVerified createdAt rating totalReviews",
+    )
     .populate("categoryId", "name");
 
   if (!updatedService) {

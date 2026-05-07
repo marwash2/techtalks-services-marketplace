@@ -9,6 +9,7 @@ interface PopulatedUser {
 interface ProviderDocument {
   _id: Types.ObjectId;
   userId: Types.ObjectId | PopulatedUser;
+
   businessName: string;
   description?: string;
   location: string;

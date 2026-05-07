@@ -8,6 +8,7 @@ const providerSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    createdAt: { type: Date, default: Date.now },
     businessName: { type: String, required: true },
     description: { type: String, required: true },
     location: { type: String, required: true },

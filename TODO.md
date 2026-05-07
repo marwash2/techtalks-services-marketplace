@@ -1,0 +1,5 @@
+- [x] Inspect current filter UI (Filters.tsx) and how query params are updated.
+- [x] Replace category/location checkbox/list UI with dropdown selects.
+- [x] Ensure "All categories" and "All locations" map to empty query params.
+- [x] Keep existing rating and max price logic unchanged.
+- [ ] Test filters on services pages to confirm query params update correctly.

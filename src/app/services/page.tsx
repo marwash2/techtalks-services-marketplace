@@ -91,54 +91,58 @@ export default function Page() {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8 ">
-      {/* HEADER */}
-      <div className="mb-6 flex items-center justify-between ml-64 ">
-        <h1 className="text-2xl font-bold text-gray-800">Services</h1>
-
-        <button
-          onClick={() => setIsMobileFiltersOpen(true)}
-          className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm lg:hidden"
-        >
-          <SlidersHorizontal className="h-4 w-4" />
-          Filters
-        </button>
-      </div>
-
+    <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
       <Suspense fallback={<div>Loading...</div>}>
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* DESKTOP FILTERS */}
-          <div className="hidden fixed left-0 top-0 h-screen pt-20 flex lg:block w-64 shrink-0">
-            <Filters />
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-950">Services</h1>
+              <p className="mt-2 text-sm text-slate-500">
+                Browse trusted providers and filter by what matters.
+              </p>
+            </div>
+            <button
+              onClick={() => setIsMobileFiltersOpen(true)}
+              className="inline-flex w-fit items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 lg:hidden"
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              Filters
+            </button>
           </div>
 
-          {/* MOBILE FILTERS */}
-          {isMobileFiltersOpen && (
-            <div className="fixed inset-0 z-[100] flex lg:hidden">
-              <div
-                className="fixed inset-0 bg-slate-900/50"
-                onClick={() => setIsMobileFiltersOpen(false)}
-              />
+          <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+            <div className="hidden lg:block">
+              <div className="sticky top-24 h-[calc(100vh-7rem)]">
+                <Filters />
+              </div>
+            </div>
 
-              <div className="relative mr-auto h-full w-full max-w-xs bg-white">
-                <div className="flex items-center justify-between p-4 border-b">
-                  <h2 className="font-semibold">Filters</h2>
-                  <button onClick={() => setIsMobileFiltersOpen(false)}>
-                    <X />
-                  </button>
-                </div>
+            {isMobileFiltersOpen && (
+              <div className="fixed inset-0 z-[100] flex lg:hidden">
+                <div
+                  className="fixed inset-0 bg-slate-900/50"
+                  onClick={() => setIsMobileFiltersOpen(false)}
+                />
 
-                <div className="p-4">
+                <div className="relative mr-auto h-full w-full max-w-sm bg-white p-4 shadow-2xl">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h2 className="font-semibold text-slate-950">Filters</h2>
+                    <button
+                      onClick={() => setIsMobileFiltersOpen(false)}
+                      className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-50"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
                   <Filters onClose={() => setIsMobileFiltersOpen(false)} />
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* MAIN */}
-          <div className="flex-1 flex flex-col ml-64 gap-4 ">
-            <SearchBar />
-            <ServicesContent />
+            <div className="flex min-w-0 flex-col gap-4">
+              <SearchBar />
+              <ServicesContent />
+            </div>
           </div>
         </div>
       </Suspense>
