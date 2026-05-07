@@ -21,6 +21,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-gray-100 text-gray-900">
         <SessionProviderWrapper>
           <SidebarProvider>
+            <Navbar />
+
+            <main className="bg-white">{children}</main>
+
+            <Footer />
             <NavbarFooterWrapper>
               {children}
             </NavbarFooterWrapper>

@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "provider", "admin"],
       default: "user",
     },
-    avatar: { type: String, default: null },
+    avatar: { type: String, default: "" },
     phone: { type: String, default: null },
     bio: { type: String, default: null },
     resetToken: String,
