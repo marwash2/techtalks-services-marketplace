@@ -8,7 +8,7 @@ interface PopulatedUser {
 
 interface ProviderDocument {
   _id: Types.ObjectId;
-  userId: Types.ObjectId | PopulatedUser;
+  userId: Types.ObjectId | PopulatedUser | null | undefined;
   businessName: string;
   description?: string;
   location: string;
@@ -24,15 +24,19 @@ function isPopulatedUser(value: unknown): value is PopulatedUser {
 }
 
 export function toProviderDTO(provider: ProviderDocument) {
+  const normalizedUserId = isPopulatedUser(provider.userId)
+    ? {
+        id: provider.userId._id.toString(),
+        name: provider.userId.name,
+        email: provider.userId.email,
+      }
+    : provider.userId
+      ? provider.userId.toString()
+      : "";
+
   return {
     id: provider._id.toString(),
-    userId: isPopulatedUser(provider.userId)
-      ? {
-          id: provider.userId._id.toString(),
-          name: provider.userId.name,
-          email: provider.userId.email,
-        }
-      : provider.userId.toString(),
+    userId: normalizedUserId,
     businessName: provider.businessName,
     description: provider.description,
     location: provider.location,
