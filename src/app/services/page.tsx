@@ -94,21 +94,13 @@ export default function Page() {
     <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
       <Suspense fallback={<div>Loading...</div>}>
         <div className="mx-auto max-w-7xl">
-          <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-950">Services</h1>
-              <p className="mt-2 text-sm text-slate-500">
-                Browse trusted providers and filter by what matters.
-              </p>
-            </div>
-            <button
-              onClick={() => setIsMobileFiltersOpen(true)}
-              className="inline-flex w-fit items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 lg:hidden"
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-              Filters
-            </button>
-          </div>
+          <button
+            onClick={() => setIsMobileFiltersOpen(true)}
+            className="inline-flex w-fit items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 lg:hidden"
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            Filters
+          </button>
 
           <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
             <div className="hidden lg:block">

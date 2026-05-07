@@ -36,25 +36,15 @@ const RATINGS = [
   { label: "1 & up", value: "1" },
 ];
 
-function SectionTitle({
-  icon: Icon,
-  title,
-  count,
-}: {
-  icon: ElementType;
-  title: string;
-  count?: number;
-}) {
+function SectionTitle({ title, count }: { title: string; count?: number }) {
   return (
     <div className="mb-3 flex items-center justify-between gap-3">
-      <div className="flex items-center gap-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-          <Icon className="h-4 w-4" />
-        </div>
-        <h3 className="text-sm font-bold text-slate-950">{title}</h3>
+      <div className="flex items-center">
+        <div className="flex h-8 w-8 items-center justify-center rounded-xl text-blue-600"></div>
+        <h3 className="text-sm  font-bold text-slate-950">{title}</h3>
       </div>
       {typeof count === "number" && (
-        <span className="rounded-full bg-slate-50 px-2 py-0.5 text-xs font-semibold text-slate-500">
+        <span className="rounded-full bg-slate-50 px-2 py-0.5 text-xs font-semibold text-blue-500">
           {count}
         </span>
       )}
@@ -196,16 +186,15 @@ export default function Filters({ onClose }: FiltersProps = {}) {
           <>
             <section>
               <SectionTitle
-                icon={Sparkles}
                 title="Categories"
                 count={options.categories.length}
               />
 
-              <div className="rounded-2xl border border-slate-100 bg-white p-2">
+              <div className=" rounded-md bg-white p-2">
                 <select
                   value={currentCategory}
                   onChange={(e) => updateParam("category", e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                   aria-label="Select category"
                 >
                   <option value="">All categories</option>
@@ -226,16 +215,15 @@ export default function Filters({ onClose }: FiltersProps = {}) {
 
             <section className="border-t border-slate-100 pt-5">
               <SectionTitle
-                icon={MapPin}
                 title="Locations"
                 count={options.locations.length}
               />
 
-              <div className="rounded-2xl border border-slate-100 bg-white p-2">
+              <div className=" bg-white p-2">
                 <select
                   value={currentLocation}
                   onChange={(e) => updateParam("location", e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                  className="w-full rounded-md  border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                   aria-label="Select location"
                 >
                   <option value="">All locations</option>
@@ -258,7 +246,7 @@ export default function Filters({ onClose }: FiltersProps = {}) {
 
         <section className="border-t border-slate-100 pt-5">
           <div className="mb-3 flex items-center justify-between gap-3">
-            <SectionTitle icon={CircleDollarSign} title="Max Price" />
+            <SectionTitle title="Max Price" />
             <span className="rounded-full bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600">
               {currentMaxPrice ? `$${currentMaxPrice}` : "Any"}
             </span>
@@ -285,36 +273,39 @@ export default function Filters({ onClose }: FiltersProps = {}) {
         </section>
 
         <section className="border-t border-slate-100 pt-5">
-          <SectionTitle icon={Star} title="Minimum Rating" />
-          <div className="space-y-1 rounded-2xl border border-slate-100 bg-white p-1">
-            <ListOption
-              active={!currentRating}
+          <div className="mb-3">
+            <SectionTitle title="Minimum Rating" />
+          </div>
+
+          <div className="flex flex-wrap gap-2 rounded-2xl border border-slate-100 bg-white p-2">
+            <button
+              type="button"
               onClick={() => updateParam("minRating", "")}
+              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
+                !currentRating
+                  ? "border-blue-200 bg-blue-50 text-blue-700"
+                  : "border-transparent bg-white text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+              }`}
+              aria-pressed={!currentRating}
             >
               Any rating
-            </ListOption>
+            </button>
+
             {RATINGS.map((rating) => (
-              <ListOption
+              <button
                 key={rating.value}
-                active={currentRating === rating.value}
+                type="button"
                 onClick={() => updateParam("minRating", rating.value)}
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
+                  currentRating === rating.value
+                    ? "border-blue-200 bg-blue-50 text-blue-700"
+                    : "border-transparent bg-white text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                }`}
+                aria-pressed={currentRating === rating.value}
               >
-                <span className="flex items-center gap-2">
-                  <span className="flex items-center">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`h-3.5 w-3.5 ${
-                          star <= Number(rating.value)
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-slate-300"
-                        }`}
-                      />
-                    ))}
-                  </span>
-                  {rating.label}
-                </span>
-              </ListOption>
+                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                {rating.value}+
+              </button>
             ))}
           </div>
         </section>
