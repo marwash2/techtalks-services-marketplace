@@ -36,8 +36,17 @@ function ServicesContent() {
     setLoading(true);
 
     try {
-      const query = searchParams.toString();
-      const res = await fetch(`/api/services?${query}`);
+      const params = new URLSearchParams();
+      const search = searchParams.get("search");
+      const category = searchParams.get("category");
+      const location = searchParams.get("location");
+      const maxPrice = searchParams.get("maxPrice");
+      if (search) params.set("search", search);
+      if (category) params.set("category", category);
+      if (location) params.set("location", location);
+      if (maxPrice) params.set("maxPrice", maxPrice);
+      const query = params.toString();
+      const res = await fetch(`/api/services${query ? `?${query}` : ""}`);
       const data = await res.json();
 
       const servicesData = data.data?.services || data.services || [];
@@ -91,23 +100,42 @@ export default function Page() {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
-      <Suspense fallback={<div>Loading...</div>}>
-        <div className="mx-auto max-w-7xl">
-          <button
-            onClick={() => setIsMobileFiltersOpen(true)}
-            className="inline-flex w-fit items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 lg:hidden"
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-            Filters
-          </button>
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8 ">
+      {/* HEADER */}
+      <div className="mb-6 flex items-center justify-between ml-64 ">
+        <h1 className="text-2xl font-bold text-gray-800">Services</h1>
 
-          <div className="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-            <div className="hidden lg:block">
-              <div className="sticky top-24 h-[calc(100vh-7rem)]">
-                <Filters />
-              </div>
-            </div>
+        <button
+          onClick={() => setIsMobileFiltersOpen(true)}
+          className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm lg:hidden"
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          Filters
+        </button>
+      </div>
+
+      <Suspense fallback={<div>Loading...</div>}>
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* DESKTOP FILTERS */}
+          <div className="hidden fixed left-0 top-0 h-screen pt-20 flex lg:block w-64 shrink-0">
+            <Filters />
+          </div>
+
+          {/* MOBILE FILTERS */}
+          {isMobileFiltersOpen && (
+            <div className="fixed inset-0 z-[100] flex lg:hidden">
+              <div
+                className="fixed inset-0 bg-slate-900/50"
+                onClick={() => setIsMobileFiltersOpen(false)}
+              />
+
+              <div className="relative mr-auto h-full w-full max-w-xs bg-white">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <h2 className="font-semibold">Filters</h2>
+                  <button onClick={() => setIsMobileFiltersOpen(false)}>
+                    <X />
+                  </button>
+                </div>
 
             {isMobileFiltersOpen && (
               <div className="fixed inset-0 z-[100] flex lg:hidden">
@@ -131,10 +159,10 @@ export default function Page() {
               </div>
             )}
 
-            <div className="flex min-w-0 flex-col gap-4">
-              <SearchBar />
-              <ServicesContent />
-            </div>
+          {/* MAIN */}
+          <div className="flex-1 flex flex-col ml-64 gap-4 ">
+            <SearchBar />
+            <ServicesContent />
           </div>
         </div>
       </Suspense>

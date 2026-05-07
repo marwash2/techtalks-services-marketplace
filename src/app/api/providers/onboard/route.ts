@@ -23,6 +23,7 @@ export const POST = withApiHandler(async (req) => {
     location: validated.location,
     description: validated.description,
     avatar: validated.avatar,
+    providerStatus: "pending", // add this
   });
 
   return Response.json(successResponse(provider, MESSAGES.SUCCESS.CREATE), {

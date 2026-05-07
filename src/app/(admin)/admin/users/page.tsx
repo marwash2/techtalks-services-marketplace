@@ -2,84 +2,103 @@
 
 import { useEffect, useState } from "react";
 
-type User = {
-  _id: string;
-  name: string;
-  email: string;
-  role: string;
-};
-
-export default function AdminUsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
+export default function ManageUsersPage() {
+  const [users, setUsers] = useState<any[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
 
   async function fetchUsers() {
     try {
       const res = await fetch("/api/users");
-      if (!res.ok) {
-        throw new Error("Failed to fetch users");
-      }
       const data = await res.json();
-      setUsers(data);
-    } catch (error) {
-      console.error("Error fetching users:", error);
+      const list = data.data?.users || [];
+      setUsers(list);
+      setFilteredUsers(list);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   }
-
   useEffect(() => {
-    const loadUsers = async () => {
-      await fetchUsers();
-    };
-    loadUsers();
+    fetchUsers();
   }, []);
 
-  async function updateRole(id: string, role: string) {
-    await fetch(`/api/users/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ role }),
-    });
+  useEffect(() => {
+    const filtered = users.filter((u) =>
+      u.name?.toLowerCase().includes(search.toLowerCase()) ||
+      u.email?.toLowerCase().includes(search.toLowerCase())
+    );
+    setFilteredUsers(filtered);
+  }, [search, users]);
 
-    fetchUsers();
+  async function deleteUser(id: string) {
+    if (!confirm("Are you sure?")) return;
+
+    try {
+      const res = await fetch(`/api/users/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        alert("Failed to delete user");
+        return;
+      }
+
+      await fetchUsers();
+
+    } catch (error) {
+      console.error(error);
+    }
   }
+  if (loading) return <div className="p-6">Loading users...</div>;
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold mb-6">Manage Users</h1>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Manage Users</h1>
 
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="text-left p-4">Name</th>
-              <th className="text-left p-4">Email</th>
-              <th className="text-left p-4">Role</th>
+      {/* SEARCH */}
+      <input
+        placeholder="Search users..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="mb-4 w-full border p-2 rounded"
+      />
+      
+      <table className="w-full border rounded overflow-hidden">
+        <thead>
+          <tr className="bg-gray-100 text-left">
+            <th className="p-2">Name</th>
+            <th className="p-2">Email</th>
+            <th className="p-2">Role</th>
+            <th className="p-2">Joined At</th>
+            <th className="p-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredUsers.map((user) => (
+            <tr key={user.id} className="border-t">
+              <td className="p-2">{user.name}</td>
+              <td className="p-2">{user.email}</td>
+              <td className="p-2">{user.role}</td>
+              <td className="p-2">
+                {user.createdAt
+                  ? new Date(user.createdAt).toLocaleDateString()
+                  : "-"}
+                  </td>
+              <td className="p-2">
+                <button
+                  onClick={() => deleteUser(user.id)}
+                  className="text-red-600"
+                >
+                  Delete
+                </button>
+              </td>
             </tr>
-          </thead>
-
-          <tbody>
-            {users.map((user) => (
-              <tr key={user._id} className="border-b hover:bg-gray-50">
-                <td className="p-4">{user.name}</td>
-                <td className="p-4 text-gray-500">{user.email}</td>
-
-                <td className="p-4">
-                  <select
-                    value={user.role}
-                    onChange={(e) => updateRole(user._id, e.target.value)}
-                    className="border border-gray-200 rounded-lg px-2 py-1"
-                  >
-                    <option value="user">User</option>
-                    <option value="provider">Provider</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
