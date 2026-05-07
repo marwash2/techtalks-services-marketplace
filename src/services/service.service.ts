@@ -1,7 +1,7 @@
 import { connectDB } from "@/lib/db";
 import { Service } from "@/models/Service.model";
 import { Provider } from "@/models/Provider.model";
-import Category from "@/models/Category.model";
+import {Category } from "@/models/Category.model";
 import { MESSAGES, PAGINATION } from "@/constants/config";
 import { ApiError } from "@/lib/api-error";
 import { toServiceDTO } from "@/lib/dto/service.dto";
