@@ -76,7 +76,7 @@ function ServicesContent({ slug }: { slug: string }) {
         <ServiceCard
           key={service._id}
           service={{
-            id: service._id,
+            _id: service._id,
             title: service.title,
             description: service.description,
             price: service.price,
