@@ -28,9 +28,7 @@ export function withApiHandler(
           { status: err.statusCode }
         );
       }
-
-      console.error("[API_HANDLER_UNCAUGHT_ERROR]", err);
-
+      console.error("API HANDLER ERROR:", err);
       return Response.json(
         errorResponse("Internal Server Error"),
         { status: 500 }
