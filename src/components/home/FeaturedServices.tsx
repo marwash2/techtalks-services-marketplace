@@ -35,8 +35,8 @@ export default function FeaturedServices() {
       try {
         const res = await fetch("/api/services?page=1&limit=4");
         const json = await res.json();
-        console.log(json);
-        setServices(json.data.services || []);
+        console.log("API RESPONSE:", json);
+        setServices(json?.data?.services || []);
       } catch (err) {
         console.error("Error fetching services:", err);
       } finally {

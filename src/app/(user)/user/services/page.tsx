@@ -360,34 +360,6 @@ export default function UserServicesPage() {
           </div>
         </div>
       </Suspense>
-
-      {isMobileFiltersOpen && (
-  <div className="fixed inset-0 z-[100] flex">
-
-    {/* overlay */}
-    <div
-      className="fixed inset-0"
-      onClick={() => setIsMobileFiltersOpen(false)}
-    />
-
-    {/* LEFT DRAWER */}
-    <div className="relative h-full w-full max-w-xs bg-white shadow-xl animate-slide-in-left">
-      
-      <div className="flex items-center justify-between border-b p-4">
-        <h2 className="font-semibold">Filters</h2>
-
-        <button onClick={() => setIsMobileFiltersOpen(false)}>
-          <X className="h-5 w-5" />
-        </button>
-      </div>
-
-      <div className="p-4">
-        <Filters onClose={() => setIsMobileFiltersOpen(false)} />
-      </div>
-    </div>
-
-  </div>
-)}
     </section>
   );
 }

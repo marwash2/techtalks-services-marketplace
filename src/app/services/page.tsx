@@ -31,9 +31,11 @@ function ServicesContent() {
   const searchParams = useSearchParams();
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const fetchServices = async () => {
     setLoading(true);
+    setError("");
 
     try {
       const params = new URLSearchParams();
@@ -46,14 +48,21 @@ function ServicesContent() {
       if (location) params.set("location", location);
       if (maxPrice) params.set("maxPrice", maxPrice);
       const query = params.toString();
-      const res = await fetch(`/api/services${query ? `?${query}` : ""}`);
+      const res = await fetch(`/api/services${query ? `?${query}` : ""}`, {
+        cache: "no-store",
+      });
       const data = await res.json();
+      if (!res.ok || data?.success === false) {
+        throw new Error(data?.error || data?.message || "Failed to load services");
+      }
 
       const servicesData = data.data?.services || data.services || [];
       console.log("SERVICES:", servicesData);
       setServices(servicesData);
     } catch (err) {
       console.error("Error fetching services:", err);
+      setError(err instanceof Error ? err.message : "Failed to load services");
+      setServices([]);
     } finally {
       setLoading(false);
     }
@@ -70,6 +79,12 @@ function ServicesContent() {
   }
 
   if (services.length === 0) {
+    if (error) {
+      return (
+        <div className="text-center py-10 text-rose-500">{error}</div>
+      );
+    }
+
     return (
       <div className="text-center py-10 text-gray-400">No services found</div>
     );
@@ -129,35 +144,20 @@ export default function Page() {
                 onClick={() => setIsMobileFiltersOpen(false)}
               />
 
-              <div className="relative mr-auto h-full w-full max-w-xs bg-white">
-                <div className="flex items-center justify-between p-4 border-b">
-                  <h2 className="font-semibold">Filters</h2>
-                  <button onClick={() => setIsMobileFiltersOpen(false)}>
-                    <X />
+              <div className="relative mr-auto h-full w-full max-w-sm bg-white p-4 shadow-2xl">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="font-semibold text-slate-950">Filters</h2>
+                  <button
+                    onClick={() => setIsMobileFiltersOpen(false)}
+                    className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-50"
+                  >
+                    <X className="h-5 w-5" />
                   </button>
                 </div>
-
-            {isMobileFiltersOpen && (
-              <div className="fixed inset-0 z-[100] flex lg:hidden">
-                <div
-                  className="fixed inset-0 bg-slate-900/50"
-                  onClick={() => setIsMobileFiltersOpen(false)}
-                />
-
-                <div className="relative mr-auto h-full w-full max-w-sm bg-white p-4 shadow-2xl">
-                  <div className="mb-4 flex items-center justify-between">
-                    <h2 className="font-semibold text-slate-950">Filters</h2>
-                    <button
-                      onClick={() => setIsMobileFiltersOpen(false)}
-                      className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-50"
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-                  <Filters onClose={() => setIsMobileFiltersOpen(false)} />
-                </div>
+                <Filters onClose={() => setIsMobileFiltersOpen(false)} />
               </div>
-            )}
+            </div>
+          )}
 
           {/* MAIN */}
           <div className="flex-1 flex flex-col ml-64 gap-4 ">

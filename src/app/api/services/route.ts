@@ -16,7 +16,9 @@ import { createNotification } from "@/services/notification.service";
   *   TYPES
   * ========================================================= */
 export const GET = withApiHandler(
+  
   async (req) => {
+    console.log("🔥 API /services HIT");
     const { searchParams } =
       new URL(req.url);
 
@@ -29,7 +31,7 @@ export const GET = withApiHandler(
     const limit = parseInt(
       searchParams.get("limit") ||
         String(
-          PAGINATION.DEFAULT_LIMIT = 1000
+          PAGINATION.DEFAULT_LIMIT ?? 1000
         )
     );
 

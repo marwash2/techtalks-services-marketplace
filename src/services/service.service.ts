@@ -59,9 +59,13 @@ export async function getAllServices(
   page: number = 1,
   limit: number = PAGINATION.DEFAULT_LIMIT,
   filters: ServiceFilters = {},
-) {
+)
+ {
   await connectDB();
-
+console.log("GET SERVICES START");
+console.log("PAGE:", page);
+console.log("LIMIT:", limit);
+console.log("FILTERS:", filters);
   const skip = (page - 1) * limit;
 
   const query: FilterQuery<IService> = {};
@@ -145,9 +149,22 @@ export async function getAllServices(
   const total = services.length;
 
   const paginatedServices = services.slice(skip, skip + limit);
+  const safeServices = paginatedServices
+    .map((service) => {
+      try {
+        return toServiceDTO(service);
+      } catch (error) {
+        console.error("[getAllServices] Failed to map service DTO:", {
+          serviceId: (service as any)?._id?.toString?.() ?? null,
+          error,
+        });
+        return null;
+      }
+    })
+    .filter((service): service is NonNullable<typeof service> => service !== null);
 
   return {
-    services: paginatedServices.map((service) => toServiceDTO(service)),
+    services: safeServices,
     pagination: {
       page,
       limit,
