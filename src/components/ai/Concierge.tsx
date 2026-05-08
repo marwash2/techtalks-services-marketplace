@@ -492,7 +492,7 @@ function ServiceCard({
 
         {/* Book Now */}
         <button
-          onClick={() => router.push(`/user/bookings/${service._id}`)}
+          onClick={() => router.push(`/bookings/${service._id}`)}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2.5 rounded-xl transition-colors"
         >
           Book Now
