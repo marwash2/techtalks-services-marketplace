@@ -3,8 +3,6 @@ import type { Metadata } from "next";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import "@fortawesome/fontawesome-svg-core/styles.css";
 config.autoAddCss = false;
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import { SidebarProvider } from "@/components/layout/SidebarContext";
 import SessionProviderWrapper from "@/components/providers/SessionProviderWrapper";
 import NavbarFooterWrapper from "@/components/layout/NavbarFooterWrapper";
@@ -21,14 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-gray-100 text-gray-900">
         <SessionProviderWrapper>
           <SidebarProvider>
-            <Navbar />
-
-            <main className="bg-white">{children}</main>
-
-            <Footer />
-            <NavbarFooterWrapper>
-              {children}
-            </NavbarFooterWrapper>
+            <NavbarFooterWrapper>{children}</NavbarFooterWrapper>
           </SidebarProvider>
         </SessionProviderWrapper>
       </body>
