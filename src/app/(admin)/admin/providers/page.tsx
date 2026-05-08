@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -14,7 +13,7 @@ interface Provider {
   location: string;
   rating?: number;
   isVerified?: boolean;
-  providerStatus?: "pending" | "approved" | "rejected"; // add this
+  providerStatus?: "pending" | "approved" | "rejected";
   totalReviews?: number;
   avatar?: string | null;
   createdAt?: string;
@@ -31,13 +30,7 @@ function getUser(p: Provider): ProviderUser | null {
 function Avatar({ provider }: { provider: Provider }) {
   const initials = provider.businessName?.slice(0, 2).toUpperCase() ?? "??";
   if (provider.avatar) {
-    return (
-      <img
-        src={provider.avatar}
-        alt={provider.businessName}
-        className="w-10 h-10 rounded-xl object-cover"
-      />
-    );
+    return <img src={provider.avatar} alt={provider.businessName} className="w-10 h-10 rounded-xl object-cover" />;
   }
   const colors = [
     "bg-violet-100 text-violet-700",
@@ -69,39 +62,23 @@ function StarRating({ rating }: { rating?: number }) {
 }
 
 function ConfirmModal({
-  open,
-  title,
-  description,
-  confirmLabel,
-  confirmClass,
-  onConfirm,
-  onCancel,
+  open, title, description, confirmLabel, confirmClass, onConfirm, onCancel,
 }: {
-  open: boolean;
-  title: string;
-  description: string;
-  confirmLabel: string;
-  confirmClass: string;
-  onConfirm: () => void;
-  onCancel: () => void;
+  open: boolean; title: string; description: string;
+  confirmLabel: string; confirmClass: string;
+  onConfirm: () => void; onCancel: () => void;
 }) {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4 animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
         <h3 className="text-base font-semibold text-gray-900">{title}</h3>
         <p className="mt-2 text-sm text-gray-500">{description}</p>
         <div className="mt-5 flex gap-3 justify-end">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 transition cursor-pointer"
-          >
+          <button onClick={onCancel} className="px-4 py-2 rounded-xl text-sm font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 transition cursor-pointer">
             Cancel
           </button>
-          <button
-            onClick={onConfirm}
-            className={`px-4 py-2 rounded-xl text-sm font-medium text-white transition cursor-pointer ${confirmClass}`}
-          >
+          <button onClick={onConfirm} className={`px-4 py-2 rounded-xl text-sm font-medium text-white transition cursor-pointer ${confirmClass}`}>
             {confirmLabel}
           </button>
         </div>
@@ -110,53 +87,47 @@ function ConfirmModal({
   );
 }
 
+const LIMIT = 10;
+
 export default function AdminProvidersPage() {
-  const [providers, setProviders] = useState<Provider[]>([]);
+  // All providers fetched once (approved only for table)
+  const [allProviders, setAllProviders] = useState<Provider[]>([]);
+  const [providers, setProviders] = useState<Provider[]>([]); // approved only
+  const [pendingCount, setPendingCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-
-  // confirm modal state
   const [modal, setModal] = useState<{
     open: boolean;
     type: "delete" | "verify" | "unverify" | null;
     provider: Provider | null;
   }>({ open: false, type: null, provider: null });
 
-  const LIMIT = 10;
-
   useEffect(() => {
     fetchProviders();
-  }, [page]);
+  }, []);
 
   async function fetchProviders() {
     setLoading(true);
     setError(null);
-
     try {
-      const res = await fetch(`/api/providers?page=${page}&limit=${LIMIT}`);
+      // Fetch ALL providers at once for accurate stats + filtering
+      const res = await fetch(`/api/providers?page=1&limit=200`);
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.message || "Failed to fetch providers");
 
       const all: Provider[] = data.data?.providers ?? data.data ?? [];
-      console.log("ALL PROVIDERS:", all.map(p => ({
-        name: p.businessName,
-        status: (p as any).providerStatus,
-        verified: p.isVerified
-      })));
-      // filter only approved providers
+
       const approved = all.filter((p) => p.providerStatus === "approved");
+      const pending = all.filter((p) => p.providerStatus === "pending").length;
+
+      setAllProviders(approved);
       setProviders(approved);
-
-      setTotalPages(data.data?.pagination?.pages ?? 1);
-      setTotal(data.data?.pagination?.total ?? approved.length);
-
+      setPendingCount(pending);
+      setPage(1);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -169,8 +140,7 @@ export default function AdminProvidersPage() {
     try {
       const res = await fetch(`/api/providers/${provider.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete provider");
-      setProviders((prev) => prev.filter((p) => p.id !== provider.id));
-      setTotal((t) => t - 1);
+      await fetchProviders();
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to delete provider");
     } finally {
@@ -185,12 +155,11 @@ export default function AdminProvidersPage() {
       const res = await fetch(`/api/providers/${provider.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isVerified: verified, providerStatus: verified ? "approved" : "approved" }),
+        body: JSON.stringify({ isVerified: verified, providerStatus: "approved" }),
       });
       if (!res.ok) throw new Error("Failed to update provider");
-      setProviders((prev) =>
-        prev.map((p) => (p.id === provider.id ? { ...p, isVerified: verified } : p))
-      );
+      setAllProviders((prev) => prev.map((p) => p.id === provider.id ? { ...p, isVerified: verified } : p));
+      setProviders((prev) => prev.map((p) => p.id === provider.id ? { ...p, isVerified: verified } : p));
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to update provider");
     } finally {
@@ -199,14 +168,16 @@ export default function AdminProvidersPage() {
     }
   }
 
-  const filtered = providers.filter((p) => {
+  // Client-side search + status filter
+  const filtered = allProviders.filter((p) => {
+    const q = search.toLowerCase();
+    const user = getUser(p);
     const matchesSearch =
       search === "" ||
-      p.businessName.toLowerCase().includes(search.toLowerCase()) ||
-      p.location.toLowerCase().includes(search.toLowerCase()) ||
-      (typeof p.userId === "object" &&
-        ((p.userId as ProviderUser).name?.toLowerCase().includes(search.toLowerCase()) ||
-          (p.userId as ProviderUser).email?.toLowerCase().includes(search.toLowerCase())));
+      p.businessName.toLowerCase().includes(q) ||
+      p.location.toLowerCase().includes(q) ||
+      (user?.name?.toLowerCase().includes(q)) ||
+      (user?.email?.toLowerCase().includes(q));
     const matchesStatus =
       statusFilter === "all" ||
       (statusFilter === "verified" && p.isVerified) ||
@@ -214,53 +185,38 @@ export default function AdminProvidersPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const verifiedCount = providers.filter((p) => p.isVerified).length;
-  const unverifiedCount = providers.filter((p) => !p.isVerified).length;
+  // Client-side pagination
+  const totalPages = Math.max(1, Math.ceil(filtered.length / LIMIT));
+  const safePage = Math.min(page, totalPages);
+  const paginated = filtered.slice((safePage - 1) * LIMIT, safePage * LIMIT);
+
+  const verifiedCount = allProviders.filter((p) => p.isVerified).length;
+  const unverifiedCount = allProviders.filter((p) => !p.isVerified).length;
 
   return (
     <>
       <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.18s ease both; }
-        @keyframes shimmer {
-          0% { background-position: -400px 0; }
-          100% { background-position: 400px 0; }
-        }
-        .shimmer {
-          background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-          background-size: 400px 100%;
-          animation: shimmer 1.4s infinite;
-        }
+        @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+        .shimmer { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 400px 100%; animation: shimmer 1.4s infinite; }
       `}</style>
 
       <ConfirmModal
         open={modal.open}
-        title={
-          modal.type === "delete"
-            ? "Delete Provider"
-            : modal.type === "verify"
-              ? "Verify Provider"
-              : "Remove Verification"
-        }
+        title={modal.type === "delete" ? "Delete Provider" : modal.type === "verify" ? "Verify Provider" : "Remove Verification"}
         description={
           modal.type === "delete"
-            ? `Are you sure you want to delete "${modal.provider?.businessName}"? This action cannot be undone.`
+            ? `Are you sure you want to delete "${modal.provider?.businessName}"? This cannot be undone.`
             : modal.type === "verify"
-              ? `Verify "${modal.provider?.businessName}"? They will appear as a verified provider.`
-              : `Remove verification from "${modal.provider?.businessName}"?`
+            ? `Verify "${modal.provider?.businessName}"? They will appear as a verified provider.`
+            : `Remove verification from "${modal.provider?.businessName}"?`
         }
-        confirmLabel={
-          modal.type === "delete" ? "Delete" : modal.type === "verify" ? "Verify" : "Remove"
-        }
+        confirmLabel={modal.type === "delete" ? "Delete" : modal.type === "verify" ? "Verify" : "Remove"}
         confirmClass={
-          modal.type === "delete"
-            ? "bg-red-500 hover:bg-red-600"
-            : modal.type === "verify"
-              ? "bg-emerald-500 hover:bg-emerald-600"
-              : "bg-amber-500 hover:bg-amber-600"
+          modal.type === "delete" ? "bg-red-500 hover:bg-red-600"
+          : modal.type === "verify" ? "bg-emerald-500 hover:bg-emerald-600"
+          : "bg-amber-500 hover:bg-amber-600"
         }
         onConfirm={() => {
           if (!modal.provider) return;
@@ -273,57 +229,33 @@ export default function AdminProvidersPage() {
 
       <div className="p-6 space-y-6 min-h-screen bg-gray-50">
 
-
-
+        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-              Providers
-            </h1>
-            <p className="text-sm text-gray-500 mt-0.5">
-              Manage and verify all service providers on the platform
-            </p>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Providers</h1>
+            <p className="text-sm text-gray-500 mt-0.5">Manage and verify all service providers on the platform</p>
           </div>
-
           <div className="flex items-center gap-3">
-            {/* Pending Approvals Button */}
             <Link
               href="/admin/providers/approvals"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium transition cursor-pointer shadow-sm"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               Pending Approvals
+              {pendingCount > 0 && (
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white text-amber-600 text-xs font-bold">
+                  {pendingCount}
+                </span>
+              )}
             </Link>
-
-            {/* Refresh Button */}
             <button
               onClick={fetchProviders}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer shadow-sm"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
               Refresh
             </button>
@@ -331,28 +263,23 @@ export default function AdminProvidersPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
             {
-              label: "Total Providers", value: total, color: "text-gray-900", icon: (
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              )
+              label: "Approved Providers", value: allProviders.length, color: "text-gray-900",
+              icon: <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
             },
             {
-              label: "Verified", value: verifiedCount, color: "text-emerald-600", icon: (
-                <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                </svg>
-              )
+              label: "Verified", value: verifiedCount, color: "text-emerald-600",
+              icon: <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>
             },
             {
-              label: "Pending Verification", value: unverifiedCount, color: "text-amber-600", icon: (
-                <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              )
+              label: "Unverified", value: unverifiedCount, color: "text-gray-600",
+              icon: <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+            },
+            {
+              label: "Pending Approvals", value: pendingCount, color: "text-amber-600",
+              icon: <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             },
           ].map((stat) => (
             <div key={stat.label} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex items-center gap-3">
@@ -365,7 +292,6 @@ export default function AdminProvidersPage() {
           ))}
         </div>
 
-
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
@@ -376,7 +302,7 @@ export default function AdminProvidersPage() {
               type="text"
               placeholder="Search by name, location, or email…"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition"
             />
           </div>
@@ -384,11 +310,10 @@ export default function AdminProvidersPage() {
             {STATUS_OPTIONS.map((s) => (
               <button
                 key={s}
-                onClick={() => setStatusFilter(s)}
-                className={`px-3.5 py-2.5 rounded-xl text-sm font-medium border transition cursor-pointer capitalize ${statusFilter === s
-                  ? "bg-gray-900 text-white border-gray-900"
-                  : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
-                  }`}
+                onClick={() => { setStatusFilter(s); setPage(1); }}
+                className={`px-3.5 py-2.5 rounded-xl text-sm font-medium border transition cursor-pointer capitalize ${
+                  statusFilter === s ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                }`}
               >
                 {s}
               </button>
@@ -415,9 +340,7 @@ export default function AdminProvidersPage() {
           ) : error ? (
             <div className="p-10 text-center">
               <p className="text-red-500 font-medium">{error}</p>
-              <button onClick={fetchProviders} className="mt-3 text-blue-600 text-sm underline cursor-pointer">
-                Try again
-              </button>
+              <button onClick={fetchProviders} className="mt-3 text-blue-600 text-sm underline cursor-pointer">Try again</button>
             </div>
           ) : filtered.length === 0 ? (
             <div className="p-14 text-center">
@@ -441,25 +364,20 @@ export default function AdminProvidersPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {filtered.map((provider) => {
+                  {paginated.map((provider) => {
                     const user = getUser(provider);
                     const isLoading = actionLoading === provider.id;
                     return (
                       <tr key={provider.id} className="hover:bg-gray-50/50 transition-colors animate-fade-in">
-                        {/* Provider */}
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <Avatar provider={provider} />
                             <div>
                               <p className="font-semibold text-gray-900">{provider.businessName}</p>
-                              {user && (
-                                <p className="text-xs text-gray-400 mt-0.5">{user.email}</p>
-                              )}
+                              {user && <p className="text-xs text-gray-400 mt-0.5">{user.email}</p>}
                             </div>
                           </div>
                         </td>
-
-                        {/* Location */}
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-1.5 text-gray-600">
                             <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -468,40 +386,28 @@ export default function AdminProvidersPage() {
                             <span className="text-sm">{provider.location || "—"}</span>
                           </div>
                         </td>
-
-                        {/* Rating */}
                         <td className="px-6 py-4">
                           <div className="space-y-0.5">
                             <StarRating rating={provider.rating} />
                             <p className="text-xs text-gray-400">{provider.totalReviews ?? 0} reviews</p>
                           </div>
                         </td>
-
-                        {/* Status */}
                         <td className="px-6 py-4">
                           {provider.isVerified ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                              Verified
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Verified
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                              Unverified
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
+                              <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />Unverified
                             </span>
                           )}
                         </td>
-
-                        {/* Joined */}
                         <td className="px-6 py-4 text-sm text-gray-500">
                           {provider.createdAt
-                            ? new Date(provider.createdAt).toLocaleDateString("en-US", {
-                              month: "short", day: "numeric", year: "numeric",
-                            })
+                            ? new Date(provider.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
                             : "—"}
                         </td>
-
-                        {/* Actions */}
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-end gap-2">
                             {isLoading ? (
@@ -555,19 +461,19 @@ export default function AdminProvidersPage() {
         {!loading && totalPages > 1 && (
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-500">
-              Page {page} of {totalPages}
+              Page {safePage} of {totalPages} — {filtered.length} providers
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                disabled={page <= 1}
+                disabled={safePage <= 1}
                 className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
               >
                 Previous
               </button>
               <button
                 onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                disabled={page >= totalPages}
+                disabled={safePage >= totalPages}
                 className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
               >
                 Next
