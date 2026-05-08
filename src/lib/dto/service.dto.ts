@@ -5,6 +5,11 @@ interface PopulatedProvider {
   businessName: string;
   location: string;
   userId?: Types.ObjectId;
+  avatar?: string | null;
+  isVerified?: boolean;
+  rating?: number;
+  totalReviews?: number;
+  createdAt?: Date;
 }
 
 interface PopulatedCategory {
@@ -31,6 +36,9 @@ interface ServiceDocument {
   image?: string | null;
 
   isActive?: boolean;
+  averageRating?: number;
+  reviewCount?: number;
+  favoritesCount?: number;
 
   createdAt?: Date;
   updatedAt?: Date;
@@ -56,6 +64,11 @@ export function toServiceDTO(service: ServiceDocument) {
           _id: service.providerId._id.toString(),
           businessName: service.providerId.businessName,
           location: service.providerId.location,
+          avatar: service.providerId.avatar ?? null,
+          isVerified: service.providerId.isVerified ?? false,
+          rating: service.providerId.rating ?? 0,
+          totalReviews: service.providerId.totalReviews ?? 0,
+          joinedAt: service.providerId.createdAt ?? null,
         }
       : service.providerId.toString(),
     categoryId: isPopulatedCategory(service.categoryId)
@@ -80,6 +93,12 @@ export function toServiceDTO(service: ServiceDocument) {
     image: service.image || null,
 
     isActive: service.isActive ?? true,
+
+    averageRating: service.averageRating ?? 0,
+
+    reviewCount: service.reviewCount ?? 0,
+
+    favoritesCount: service.favoritesCount ?? 0,
 
     createdAt: service.createdAt || null,
 
@@ -127,6 +146,16 @@ export function toServiceDTO(service: ServiceDocument) {
           businessName: service.providerId.businessName,
 
           location: service.providerId.location,
+
+          avatar: service.providerId.avatar ?? null,
+
+          isVerified: service.providerId.isVerified ?? false,
+
+          rating: service.providerId.rating ?? 0,
+
+          totalReviews: service.providerId.totalReviews ?? 0,
+
+          joinedAt: service.providerId.createdAt ?? null,
         }
       : null,
 

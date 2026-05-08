@@ -137,12 +137,27 @@ export default function Page() {
                   </button>
                 </div>
 
-                <div className="p-4">
+            {isMobileFiltersOpen && (
+              <div className="fixed inset-0 z-[100] flex lg:hidden">
+                <div
+                  className="fixed inset-0 bg-slate-900/50"
+                  onClick={() => setIsMobileFiltersOpen(false)}
+                />
+
+                <div className="relative mr-auto h-full w-full max-w-sm bg-white p-4 shadow-2xl">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h2 className="font-semibold text-slate-950">Filters</h2>
+                    <button
+                      onClick={() => setIsMobileFiltersOpen(false)}
+                      className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-50"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
                   <Filters onClose={() => setIsMobileFiltersOpen(false)} />
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* MAIN */}
           <div className="flex-1 flex flex-col ml-64 gap-4 ">
