@@ -15,7 +15,9 @@ import { assertCategoryExists } from "@/services/category.service"; // ← NEW
 import { Category } from "@/models/Category.model";                 // ← NEW
 
 export const GET = withApiHandler(
+  
   async (req) => {
+    console.log("🔥 API /services HIT");
     const { searchParams } =
       new URL(req.url);
 

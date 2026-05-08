@@ -29,7 +29,10 @@ type CreateServiceInput = {
   description?: string;
   price: number;
   duration: number;
+  availability: string;
+  location?: string;
   image?: string | null;
+  isActive?: boolean;
 };
 
 type UpdateServiceInput = Partial<CreateServiceInput>;
@@ -56,9 +59,13 @@ export async function getAllServices(
   page: number = 1,
   limit: number = PAGINATION.DEFAULT_LIMIT,
   filters: ServiceFilters = {},
-) {
+)
+ {
   await connectDB();
-
+console.log("GET SERVICES START");
+console.log("PAGE:", page);
+console.log("LIMIT:", limit);
+console.log("FILTERS:", filters);
   const skip = (page - 1) * limit;
 
   const query: FilterQuery<IService> = {};
@@ -115,7 +122,10 @@ export async function getAllServices(
   /* ---------------- FETCH ---------------- */
   let services = await Service.find(query)
     .sort({ createdAt: -1 })
-    .populate("providerId", "location businessName userId")
+    .populate(
+      "providerId",
+      "location businessName userId avatar isVerified createdAt rating totalReviews",
+    )
     .populate("categoryId", "name");
 
   /* ---------------- LOCATION FILTER ---------------- */
@@ -139,9 +149,22 @@ export async function getAllServices(
   const total = services.length;
 
   const paginatedServices = services.slice(skip, skip + limit);
+  const safeServices = paginatedServices
+    .map((service) => {
+      try {
+        return toServiceDTO(service);
+      } catch (error) {
+        console.error("[getAllServices] Failed to map service DTO:", {
+          serviceId: (service as any)?._id?.toString?.() ?? null,
+          error,
+        });
+        return null;
+      }
+    })
+    .filter((service): service is NonNullable<typeof service> => service !== null);
 
   return {
-    services: paginatedServices.map((service) => toServiceDTO(service)),
+    services: safeServices,
     pagination: {
       page,
       limit,
@@ -198,7 +221,10 @@ export async function createService(serviceData: CreateServiceInput) {
   await service.save();
 
   const populatedService = await Service.findById(service._id)
-    .populate("providerId", "businessName location userId")
+    .populate(
+      "providerId",
+      "businessName location userId avatar isVerified createdAt rating totalReviews",
+    )
     .populate("categoryId", "name");
 
   return toServiceDTO(populatedService);
@@ -212,7 +238,10 @@ export async function getServiceById(id: string) {
   await connectDB();
 
   const service = await Service.findById(id)
-    .populate("providerId", "businessName location userId")
+    .populate(
+      "providerId",
+      "businessName location userId avatar isVerified createdAt rating totalReviews",
+    )
     .populate("categoryId", "name");
 
   if (!service) {
@@ -280,7 +309,10 @@ export async function updateService(
     new: true,
     runValidators: true,
   })
-    .populate("providerId", "businessName location userId")
+    .populate(
+      "providerId",
+      "businessName location userId avatar isVerified createdAt rating totalReviews",
+    )
     .populate("categoryId", "name");
 
   if (!updatedService) {

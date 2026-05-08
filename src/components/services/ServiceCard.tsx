@@ -109,7 +109,7 @@ export default function ServiceCard({
   return (
     <article
       className="
-       group flex flex-col  rounded-3xl border border-slate-300 hover:border-primary/50 shadow-sm bg-white transition-all duration-300 overflow-hidden h-full  hover:-translate-y-1 hover:shadow-xl"
+       group flex flex-col  rounded-3xl border border-slate-300 hover:border-primary/50 shadow-sm bg-gray-50 transition-all duration-300 overflow-hidden h-full  hover:-translate-y-1 hover:shadow-xl"
     >
       {/* IMAGE */}
       <div className="relative h-48 w-full overflow-hidden bg-muted">
@@ -121,11 +121,11 @@ export default function ServiceCard({
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="w-full bg-gradient-to-r from-sky-50 via-white to-blue-50 h-full flex items-center justify-center border-b border-slate-300 text-muted-foreground">
-            <span className=" text-sm font-semibold text-gray-400 line-clamp-2">
-              No Image
-            </span>
-          </div>
+          <img
+            src="/noimage.jpeg"
+            alt={service.title}
+            className="w-full  h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
         )}
         <div className="absolute bottom-3 left-3 bg-background/90 backdrop-blur-sm px-2.5 py-1 rounded-full ">
           <span className="text-xs font-semibold text-blue-500  tracking-wider ">

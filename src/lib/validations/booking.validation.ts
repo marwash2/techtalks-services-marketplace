@@ -61,6 +61,7 @@ export const updateStatusSchema = z.object({
       { message: `status must be one of: ${BOOKING_STATUS_VALUES.join(", ")}` }
     )
     .transform((s) => s.toLowerCase() as BookingStatusValue),
+  actor: z.enum(["provider", "user"]).optional(),
 });
 
 export type UpdateStatusInput = z.infer<typeof updateStatusSchema>;

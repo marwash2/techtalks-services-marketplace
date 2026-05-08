@@ -49,6 +49,10 @@ function getNotificationStyle(type?: string) {
       return { icon: CircleX, iconColor: "text-red-600", bg: "bg-red-50", unreadDot: "bg-red-500" };
     case "booking_completed":
       return { icon: CalendarCheck2, iconColor: "text-blue-600", bg: "bg-blue-50", unreadDot: "bg-blue-500" };
+    case "booking_reminder_24h":
+    case "booking_reminder_6h":
+    case "booking_reminder_3h":
+      return { icon: Clock3, iconColor: "text-cyan-700", bg: "bg-cyan-50", unreadDot: "bg-cyan-500" };
     case "service_updated":
     case "booking_updated":
       return { icon: RefreshCcw, iconColor: "text-orange-600", bg: "bg-orange-50", unreadDot: "bg-orange-500" };
@@ -56,6 +60,15 @@ function getNotificationStyle(type?: string) {
       return { icon: Trash2, iconColor: "text-rose-600", bg: "bg-rose-50", unreadDot: "bg-rose-500" };
     case "service_added":
       return { icon: BadgeCheck, iconColor: "text-green-600", bg: "bg-green-50", unreadDot: "bg-green-500" };
+    case "provider_approval_approved":
+    case "provider_verified":
+      return { icon: BadgeCheck, iconColor: "text-emerald-600", bg: "bg-emerald-50", unreadDot: "bg-emerald-500" };
+    case "provider_application_submitted":
+      return { icon: CircleDashed, iconColor: "text-amber-600", bg: "bg-amber-50", unreadDot: "bg-amber-500" };
+    case "provider_approval_rejected":
+    case "provider_unverified":
+    case "provider_deleted":
+      return { icon: CircleX, iconColor: "text-red-600", bg: "bg-red-50", unreadDot: "bg-red-500" };
     case "system":
       return { icon: Bell, iconColor: "text-indigo-600", bg: "bg-indigo-50", unreadDot: "bg-indigo-500" };
     case "booking":

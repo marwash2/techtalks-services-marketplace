@@ -5,6 +5,11 @@ interface PopulatedProvider {
   businessName: string;
   location: string;
   userId?: Types.ObjectId;
+  avatar?: string | null;
+  isVerified?: boolean;
+  rating?: number;
+  totalReviews?: number;
+  createdAt?: Date;
 }
 
 interface PopulatedCategory {
@@ -15,9 +20,9 @@ interface PopulatedCategory {
 interface ServiceDocument {
   _id: Types.ObjectId;
 
-  providerId: Types.ObjectId | PopulatedProvider;
+  providerId: Types.ObjectId | PopulatedProvider | null | undefined;
 
-  categoryId: Types.ObjectId | PopulatedCategory;
+  categoryId: Types.ObjectId | PopulatedCategory | null | undefined;
 
   title: string;
   description?: string;
@@ -31,39 +36,54 @@ interface ServiceDocument {
   image?: string | null;
 
   isActive?: boolean;
+  averageRating?: number;
+  reviewCount?: number;
+  favoritesCount?: number;
 
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 function isPopulatedProvider(
-  value: Types.ObjectId | PopulatedProvider,
+  value: Types.ObjectId | PopulatedProvider | null | undefined,
 ): value is PopulatedProvider {
   return !!value && typeof value === "object" && "businessName" in value;
 }
 
 function isPopulatedCategory(
-  value: Types.ObjectId | PopulatedCategory,
+  value: Types.ObjectId | PopulatedCategory | null | undefined,
 ): value is PopulatedCategory {
   return !!value && typeof value === "object" && "name" in value;
 }
 
+function toIdString(value: Types.ObjectId | null | undefined) {
+  return value ? value.toString() : null;
+}
+
 export function toServiceDTO(service: ServiceDocument) {
+  const providerId = service.providerId;
+  const categoryId = service.categoryId;
+
   return {
     id: service._id.toString(),
-    providerId: isPopulatedProvider(service.providerId)
+    providerId: isPopulatedProvider(providerId)
       ? {
-          _id: service.providerId._id.toString(),
-          businessName: service.providerId.businessName,
-          location: service.providerId.location,
+          _id: providerId._id.toString(),
+          businessName: providerId.businessName,
+          location: providerId.location,
+          avatar: providerId.avatar ?? null,
+          isVerified: providerId.isVerified ?? false,
+          rating: providerId.rating ?? 0,
+          totalReviews: providerId.totalReviews ?? 0,
+          joinedAt: providerId.createdAt ?? null,
         }
-      : service.providerId.toString(),
-    categoryId: isPopulatedCategory(service.categoryId)
+      : toIdString(providerId as Types.ObjectId | null | undefined),
+    categoryId: isPopulatedCategory(categoryId)
       ? {
-          _id: service.categoryId._id.toString(),
-          name: service.categoryId.name,
+          _id: categoryId._id.toString(),
+          name: categoryId.name,
         }
-      : service.categoryId.toString(),
+      : toIdString(categoryId as Types.ObjectId | null | undefined),
     title: service.title,
 
     description: service.description || "",
@@ -80,6 +100,12 @@ export function toServiceDTO(service: ServiceDocument) {
     image: service.image || null,
 
     isActive: service.isActive ?? true,
+
+    averageRating: service.averageRating ?? 0,
+
+    reviewCount: service.reviewCount ?? 0,
+
+    favoritesCount: service.favoritesCount ?? 0,
 
     createdAt: service.createdAt || null,
 
@@ -120,22 +146,32 @@ export function toServiceDTO(service: ServiceDocument) {
     //     : service.categoryId.toString(),
 
     /* PROVIDER POPULATED */
-    provider: isPopulatedProvider(service.providerId)
+    provider: isPopulatedProvider(providerId)
       ? {
-          _id: service.providerId._id.toString(),
+          _id: providerId._id.toString(),
 
-          businessName: service.providerId.businessName,
+          businessName: providerId.businessName,
 
-          location: service.providerId.location,
+          location: providerId.location,
+
+          avatar: providerId.avatar ?? null,
+
+          isVerified: providerId.isVerified ?? false,
+
+          rating: providerId.rating ?? 0,
+
+          totalReviews: providerId.totalReviews ?? 0,
+
+          joinedAt: providerId.createdAt ?? null,
         }
       : null,
 
     /* CATEGORY POPULATED */
-    category: isPopulatedCategory(service.categoryId)
+    category: isPopulatedCategory(categoryId)
       ? {
-          _id: service.categoryId._id.toString(),
+          _id: categoryId._id.toString(),
 
-          name: service.categoryId.name,
+          name: categoryId.name,
         }
       : null,
   };

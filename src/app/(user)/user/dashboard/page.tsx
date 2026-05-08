@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Button from "@/components/ui/Button";
 
 export default function UserDashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [recommendedServices, setRecommendedServices] = useState<
+    { id: string; title: string; desc: string }[]
+  >([]);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -20,10 +22,38 @@ export default function UserDashboardPage() {
     if (session.user.role === "admin") router.replace("/admin/dashboard");
   }, [status, session, router]);
 
+  useEffect(() => {
+    const loadRecommendedServices = async () => {
+      try {
+        const res = await fetch("/api/services?limit=4", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        const services = data?.data?.services ?? data?.services ?? [];
+        setRecommendedServices(
+          services.map((s: any) => ({
+            id: s.id || s._id || Math.random().toString(36),
+            title: s.title || "Service",
+            desc: s.description || "Reliable local service providers near you.",
+          })),
+        );
+      } catch {
+        // keep fallback cards
+      }
+    };
+
+    void loadRecommendedServices();
+  }, []);
+
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#F4F6FA" }}>
-        <div className="animate-spin rounded-full h-14 w-14 border-t-2 border-b-2" style={{ borderColor: "#7A9CC8" }} />
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "#F4F6FA" }}
+      >
+        <div
+          className="animate-spin rounded-full h-14 w-14 border-t-2 border-b-2"
+          style={{ borderColor: "#7A9CC8" }}
+        />
       </div>
     );
   }
@@ -81,7 +111,8 @@ export default function UserDashboardPage() {
 
     // HERO
     hero: {
-      background: "linear-gradient(135deg, #2D4E7A 0%, #4A72A8 55%, #6B96C8 100%)",
+      background:
+        "linear-gradient(135deg, #2D4E7A 0%, #4A72A8 55%, #6B96C8 100%)",
       borderRadius: 20,
       padding: "44px 48px",
       marginBottom: 20,
@@ -94,18 +125,22 @@ export default function UserDashboardPage() {
     },
     heroCircle1: {
       position: "absolute" as const,
-      width: 380, height: 380,
+      width: 380,
+      height: 380,
       borderRadius: "50%",
       border: "1px solid rgba(255,255,255,0.07)",
-      top: -140, right: 60,
+      top: -140,
+      right: 60,
       pointerEvents: "none" as const,
     },
     heroCircle2: {
       position: "absolute" as const,
-      width: 240, height: 240,
+      width: 240,
+      height: 240,
       borderRadius: "50%",
       border: "1px solid rgba(255,255,255,0.09)",
-      bottom: -100, right: 180,
+      bottom: -100,
+      right: 180,
       pointerEvents: "none" as const,
     },
     heroTag: {
@@ -234,7 +269,12 @@ export default function UserDashboardPage() {
       marginBottom: 3,
     },
     cardSub: { fontSize: 12, color: "#AABFDA" },
-    viewAll: { fontSize: 12, color: "#5B82B8", textDecoration: "none", fontWeight: 500 },
+    viewAll: {
+      fontSize: 12,
+      color: "#5B82B8",
+      textDecoration: "none",
+      fontWeight: 500,
+    },
 
     // BOOKING ITEMS
     bookingItem: {
@@ -249,24 +289,51 @@ export default function UserDashboardPage() {
     },
     bookingLeft: { display: "flex", alignItems: "center", gap: 14 },
     bookingIconBlue: {
-      width: 40, height: 40,
+      width: 40,
+      height: 40,
       borderRadius: 10,
       background: "#E2EEF8",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      fontSize: 16, flexShrink: 0,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: 16,
+      flexShrink: 0,
     },
     bookingIconSoft: {
-      width: 40, height: 40,
+      width: 40,
+      height: 40,
       borderRadius: 10,
       background: "#E8EEF8",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      fontSize: 16, flexShrink: 0,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: 16,
+      flexShrink: 0,
     },
-    bookingName: { fontSize: 14, fontWeight: 500, color: "#1A2740", marginBottom: 3 },
+    bookingName: {
+      fontSize: 14,
+      fontWeight: 500,
+      color: "#1A2740",
+      marginBottom: 3,
+    },
     bookingMeta: { fontSize: 12, color: "#AABFDA" },
 
-    badgeGreen:  { fontSize: 11, fontWeight: 500, padding: "5px 12px", borderRadius: 100, background: "#E2F4EC", color: "#2D7A52" },
-    badgeYellow: { fontSize: 11, fontWeight: 500, padding: "5px 12px", borderRadius: 100, background: "#FEF9E7", color: "#9A7020" },
+    badgeGreen: {
+      fontSize: 11,
+      fontWeight: 500,
+      padding: "5px 12px",
+      borderRadius: 100,
+      background: "#E2F4EC",
+      color: "#2D7A52",
+    },
+    badgeYellow: {
+      fontSize: 11,
+      fontWeight: 500,
+      padding: "5px 12px",
+      borderRadius: 100,
+      background: "#FEF9E7",
+      color: "#9A7020",
+    },
 
     // RECOMMENDED
     recGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 },
@@ -277,18 +344,43 @@ export default function UserDashboardPage() {
       cursor: "pointer",
     },
     recIcon: { fontSize: 20, marginBottom: 10 },
-    recTitle: { fontSize: 14, fontWeight: 500, color: "#1A2740", marginBottom: 5 },
+    recTitle: {
+      fontSize: 14,
+      fontWeight: 500,
+      color: "#1A2740",
+      marginBottom: 5,
+    },
     recDesc: { fontSize: 12, color: "#AABFDA", lineHeight: 1.5 },
 
     // ACTIVITY
     actRow: {
-      display: "flex", alignItems: "center", gap: 10,
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
       padding: "10px 0",
       borderBottom: "1px solid #EEF4FB",
     },
-    actDotBlue:   { width: 7, height: 7, borderRadius: "50%", background: "#5B82B8", flexShrink: 0 },
-    actDotGreen:  { width: 7, height: 7, borderRadius: "50%", background: "#4A9E76", flexShrink: 0 },
-    actDotSlate:  { width: 7, height: 7, borderRadius: "50%", background: "#8AAAC8", flexShrink: 0 },
+    actDotBlue: {
+      width: 7,
+      height: 7,
+      borderRadius: "50%",
+      background: "#5B82B8",
+      flexShrink: 0,
+    },
+    actDotGreen: {
+      width: 7,
+      height: 7,
+      borderRadius: "50%",
+      background: "#4A9E76",
+      flexShrink: 0,
+    },
+    actDotSlate: {
+      width: 7,
+      height: 7,
+      borderRadius: "50%",
+      background: "#8AAAC8",
+      flexShrink: 0,
+    },
     actText: { fontSize: 12, color: "#5A7BA8", flex: 1, lineHeight: 1.4 },
     actTime: { fontSize: 11, color: "#BCCFE0" },
 
@@ -301,28 +393,65 @@ export default function UserDashboardPage() {
       textAlign: "center" as const,
     },
     avatar: {
-      width: 72, height: 72,
+      width: 72,
+      height: 72,
       borderRadius: "50%",
       background: "linear-gradient(135deg, #4A72A8, #6B96C8)",
-      display: "flex", alignItems: "center", justifyContent: "center",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
       fontFamily: "'DM Serif Display', serif",
-      fontSize: 28, color: "#fff",
+      fontSize: 28,
+      color: "#fff",
       margin: "0 auto 16px",
     },
-    profileName: { fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#1A2740", marginBottom: 4 },
+    profileName: {
+      fontFamily: "'DM Serif Display', serif",
+      fontSize: 20,
+      color: "#1A2740",
+      marginBottom: 4,
+    },
     profileEmail: { fontSize: 12, color: "#AABFDA", marginBottom: 20 },
-    profileDivider: { border: "none", borderTop: "1px solid #DAEAF8", margin: "0 0 18px" },
-    profileStats: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 },
-    pstat: { background: "#F2F7FC", borderRadius: 10, padding: "12px 10px", textAlign: "center" as const },
-    pstatNum: { fontFamily: "'DM Serif Display', serif", fontSize: 22, color: "#4A72A8", marginBottom: 2 },
-    pstatLabel: { fontSize: 10, color: "#AABFDA", textTransform: "uppercase" as const, letterSpacing: "0.07em" },
+    profileDivider: {
+      border: "none",
+      borderTop: "1px solid #DAEAF8",
+      margin: "0 0 18px",
+    },
+    profileStats: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 10,
+      marginBottom: 20,
+    },
+    pstat: {
+      background: "#F2F7FC",
+      borderRadius: 10,
+      padding: "12px 10px",
+      textAlign: "center" as const,
+    },
+    pstatNum: {
+      fontFamily: "'DM Serif Display', serif",
+      fontSize: 22,
+      color: "#4A72A8",
+      marginBottom: 2,
+    },
+    pstatLabel: {
+      fontSize: 10,
+      color: "#AABFDA",
+      textTransform: "uppercase" as const,
+      letterSpacing: "0.07em",
+    },
     manageBtn: {
-      display: "block", width: "100%",
+      display: "block",
+      width: "100%",
       padding: 12,
-      background: "#4A72A8", color: "#fff",
+      background: "#4A72A8",
+      color: "#fff",
       fontFamily: "'DM Sans', sans-serif",
-      fontSize: 13, fontWeight: 500,
-      borderRadius: 12, border: "none",
+      fontSize: 13,
+      fontWeight: 500,
+      borderRadius: 12,
+      border: "none",
       cursor: "pointer",
     },
 
@@ -336,22 +465,40 @@ export default function UserDashboardPage() {
     },
     supportCircle: {
       position: "absolute" as const,
-      width: 180, height: 180,
+      width: 180,
+      height: 180,
       borderRadius: "50%",
       border: "1px solid rgba(255,255,255,0.1)",
-      bottom: -60, right: -40,
+      bottom: -60,
+      right: -40,
     },
-    supportTitle: { fontFamily: "'DM Serif Display', serif", fontSize: 20, color: "#fff", marginBottom: 10 },
-    supportText: { fontSize: 13, color: "#A8C4E0", lineHeight: 1.6, marginBottom: 20, fontWeight: 300 },
+    supportTitle: {
+      fontFamily: "'DM Serif Display', serif",
+      fontSize: 20,
+      color: "#fff",
+      marginBottom: 10,
+    },
+    supportText: {
+      fontSize: 13,
+      color: "#A8C4E0",
+      lineHeight: 1.6,
+      marginBottom: 20,
+      fontWeight: 300,
+    },
     supportBtn: {
-      display: "block", width: "100%",
+      display: "block",
+      width: "100%",
       padding: 12,
-      background: "#fff", color: "#3D6494",
+      background: "#fff",
+      color: "#3D6494",
       fontFamily: "'DM Sans', sans-serif",
-      fontSize: 13, fontWeight: 500,
-      borderRadius: 12, border: "none",
+      fontSize: 13,
+      fontWeight: 500,
+      borderRadius: 12,
+      border: "none",
       cursor: "pointer",
-      position: "relative" as const, zIndex: 1,
+      position: "relative" as const,
+      zIndex: 1,
     },
   };
 
@@ -364,7 +511,6 @@ export default function UserDashboardPage() {
 
       <div style={styles.page}>
         <div style={styles.inner}>
-
           {/* TOP BAR */}
           <div style={styles.topBar}>
             <span style={styles.topLabel}>Dashboard</span>
@@ -384,7 +530,9 @@ export default function UserDashboardPage() {
               <p style={styles.heroTag}>Welcome back</p>
               <h1 style={styles.heroTitle}>
                 Hello,{" "}
-                <em style={styles.heroTitleEm}>{session.user.name || "User"}.</em>
+                <em style={styles.heroTitleEm}>
+                  {session.user.name || "User"}.
+                </em>
               </h1>
               <p style={styles.heroSub}>
                 Your schedule is looking clear today. You have 3 upcoming
@@ -392,12 +540,18 @@ export default function UserDashboardPage() {
               </p>
               <div style={styles.heroActions}>
                 <button style={styles.btnPrimary}>
-                  <Link href="/user/services" style={{ color: "inherit", textDecoration: "none" }}>
+                  <Link
+                    href="/user/services"
+                    style={{ color: "inherit", textDecoration: "none" }}
+                  >
                     Explore Services
                   </Link>
                 </button>
                 <button style={styles.btnGhost}>
-                  <Link href="/user/bookings" style={{ color: "inherit", textDecoration: "none" }}>
+                  <Link
+                    href="/user/bookings"
+                    style={{ color: "inherit", textDecoration: "none" }}
+                  >
                     My Bookings →
                   </Link>
                 </button>
@@ -407,7 +561,9 @@ export default function UserDashboardPage() {
               <div style={styles.heroBadgeIcon}>📌</div>
               <p style={styles.heroBadgeLabel}>This week</p>
               <p style={styles.heroBadgeVal}>3</p>
-              <p style={{ fontSize: 11, color: "#A8C4E0", marginTop: 4 }}>appointments</p>
+              <p style={{ fontSize: 11, color: "#A8C4E0", marginTop: 4 }}>
+                appointments
+              </p>
             </div>
           </section>
 
@@ -415,22 +571,62 @@ export default function UserDashboardPage() {
           <div style={styles.statGrid}>
             <div style={styles.statCard}>
               <p style={styles.statLabel}>Total Bookings</p>
-              <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 38, lineHeight: 1, marginBottom: 6, color: "#1A2740" }}>12</p>
+              <p
+                style={{
+                  fontFamily: "'DM Serif Display', serif",
+                  fontSize: 38,
+                  lineHeight: 1,
+                  marginBottom: 6,
+                  color: "#1A2740",
+                }}
+              >
+                12
+              </p>
               <p style={styles.statSub}>All time</p>
             </div>
             <div style={styles.statCard}>
               <p style={styles.statLabel}>Upcoming</p>
-              <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 38, lineHeight: 1, marginBottom: 6, color: "#2D7A52" }}>3</p>
+              <p
+                style={{
+                  fontFamily: "'DM Serif Display', serif",
+                  fontSize: 38,
+                  lineHeight: 1,
+                  marginBottom: 6,
+                  color: "#2D7A52",
+                }}
+              >
+                3
+              </p>
               <p style={styles.statSub}>This week</p>
             </div>
             <div style={styles.statCard}>
               <p style={styles.statLabel}>Saved Providers</p>
-              <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 38, lineHeight: 1, marginBottom: 6, color: "#4A72A8" }}>8</p>
+              <p
+                style={{
+                  fontFamily: "'DM Serif Display', serif",
+                  fontSize: 38,
+                  lineHeight: 1,
+                  marginBottom: 6,
+                  color: "#4A72A8",
+                }}
+              >
+                8
+              </p>
               <p style={styles.statSub}>Trusted</p>
             </div>
             <div style={styles.statCard}>
               <p style={styles.statLabel}>Reviews</p>
-              <p style={{ fontFamily: "'DM Serif Display', serif", fontSize: 38, lineHeight: 1, marginBottom: 6, color: "#6A80B8" }}>5</p>
+              <p
+                style={{
+                  fontFamily: "'DM Serif Display', serif",
+                  fontSize: 38,
+                  lineHeight: 1,
+                  marginBottom: 6,
+                  color: "#6A80B8",
+                }}
+              >
+                5
+              </p>
               <p style={styles.statSub}>Submitted</p>
             </div>
           </div>
@@ -438,7 +634,6 @@ export default function UserDashboardPage() {
           {/* MAIN GRID */}
           <div style={styles.mainGrid}>
             <div style={styles.leftCol}>
-
               {/* RECENT BOOKINGS */}
               <div style={styles.card}>
                 <div style={styles.cardHeader}>
@@ -446,7 +641,9 @@ export default function UserDashboardPage() {
                     <h2 style={styles.cardTitle}>Recent Bookings</h2>
                     <p style={styles.cardSub}>Your latest scheduled services</p>
                   </div>
-                  <Link href="/user/bookings" style={styles.viewAll}>View all →</Link>
+                  <Link href="/user/bookings" style={styles.viewAll}>
+                    View all →
+                  </Link>
                 </div>
 
                 <div style={styles.bookingItem}>
@@ -454,7 +651,9 @@ export default function UserDashboardPage() {
                     <div style={styles.bookingIconBlue}>🧹</div>
                     <div>
                       <p style={styles.bookingName}>Premium Home Cleaning</p>
-                      <p style={styles.bookingMeta}>Tomorrow · 10:00 AM · Beirut</p>
+                      <p style={styles.bookingMeta}>
+                        Tomorrow · 10:00 AM · Beirut
+                      </p>
                     </div>
                   </div>
                   <span style={styles.badgeGreen}>Confirmed</span>
@@ -465,7 +664,9 @@ export default function UserDashboardPage() {
                     <div style={styles.bookingIconSoft}>🔧</div>
                     <div>
                       <p style={styles.bookingName}>Plumbing Inspection</p>
-                      <p style={styles.bookingMeta}>April 30 · 3:00 PM · Mount Lebanon</p>
+                      <p style={styles.bookingMeta}>
+                        April 30 · 3:00 PM · Mount Lebanon
+                      </p>
                     </div>
                   </div>
                   <span style={styles.badgeYellow}>Pending</span>
@@ -477,16 +678,37 @@ export default function UserDashboardPage() {
                 <div style={styles.cardHeader}>
                   <div>
                     <h2 style={styles.cardTitle}>Recommended</h2>
-                    <p style={styles.cardSub}>Curated for your recent activity</p>
+                    <p style={styles.cardSub}>
+                      Curated for your recent activity
+                    </p>
                   </div>
                 </div>
                 <div style={styles.recGrid}>
-                  {[
-                    { icon: "⚡", title: "Electrical Maintenance", desc: "Reliable electricians for home and office" },
-                    { icon: "✨", title: "Deep Cleaning", desc: "Top-rated professional cleaning teams" },
-                    { icon: "🪟", title: "Window Installation", desc: "Expert glaziers and frame specialists" },
-                    { icon: "🌿", title: "Landscaping", desc: "Garden design and seasonal upkeep" },
-                  ].map((s) => (
+                  {(false && recommendedServices.length > 0
+                    ? recommendedServices
+                    : [
+                        {
+                          icon: "⚡",
+                          title: "Electrical Maintenance",
+                          desc: "Reliable electricians for home and office",
+                        },
+                        {
+                          icon: "✨",
+                          title: "Deep Cleaning",
+                          desc: "Top-rated professional cleaning teams",
+                        },
+                        {
+                          icon: "🪟",
+                          title: "Window Installation",
+                          desc: "Expert glaziers and frame specialists",
+                        },
+                        {
+                          icon: "🌿",
+                          title: "Landscaping",
+                          desc: "Garden design and seasonal upkeep",
+                        },
+                      ]
+                  ).map((s: any) => (
                     <div key={s.title} style={styles.recCard}>
                       <div style={styles.recIcon}>{s.icon}</div>
                       <p style={styles.recTitle}>{s.title}</p>
@@ -506,26 +728,30 @@ export default function UserDashboardPage() {
                 </div>
                 <div style={styles.actRow}>
                   <div style={styles.actDotGreen} />
-                  <p style={styles.actText}>Booking confirmed — Premium Home Cleaning on May 2</p>
+                  <p style={styles.actText}>
+                    Booking confirmed — Premium Home Cleaning on May 2
+                  </p>
                   <span style={styles.actTime}>2h ago</span>
                 </div>
                 <div style={styles.actRow}>
                   <div style={styles.actDotBlue} />
-                  <p style={styles.actText}>Review submitted for Ahmad's Electrical — 5 stars</p>
+                  <p style={styles.actText}>
+                    Review submitted for Ahmad's Electrical — 5 stars
+                  </p>
                   <span style={styles.actTime}>Yesterday</span>
                 </div>
                 <div style={{ ...styles.actRow, borderBottom: "none" }}>
                   <div style={styles.actDotSlate} />
-                  <p style={styles.actText}>New provider saved — Zeina's Cleaning Co.</p>
+                  <p style={styles.actText}>
+                    New provider saved — Zeina's Cleaning Co.
+                  </p>
                   <span style={styles.actTime}>Apr 28</span>
                 </div>
               </div>
-
             </div>
 
             {/* SIDEBAR */}
             <div style={styles.rightCol}>
-
               {/* PROFILE CARD */}
               <div style={styles.profileCard}>
                 <div style={styles.avatar}>
@@ -537,9 +763,9 @@ export default function UserDashboardPage() {
                 <div style={styles.profileStats}>
                   {[
                     { num: "12", label: "Bookings" },
-                    { num: "5",  label: "Reviews" },
-                    { num: "8",  label: "Saved" },
-                    { num: "3",  label: "Upcoming" },
+                    { num: "5", label: "Reviews" },
+                    { num: "8", label: "Saved" },
+                    { num: "3", label: "Upcoming" },
                   ].map((s) => (
                     <div key={s.label} style={styles.pstat}>
                       <p style={styles.pstatNum}>{s.num}</p>
@@ -564,10 +790,8 @@ export default function UserDashboardPage() {
                   <button style={styles.supportBtn}>Contact Support</button>
                 </Link>
               </div>
-
             </div>
           </div>
-
         </div>
       </div>
     </>

@@ -25,6 +25,8 @@ function describeChanges(
   addChange("Description", beforeService.description, payload.description);
   addChange("Price", beforeService.price, payload.price);
   addChange("Duration", beforeService.duration, payload.duration);
+  addChange("Availability", beforeService.availability, payload.availability);
+  addChange("Location", beforeService.location, payload.location);
   addChange("Image", beforeService.image, payload.image);
   if (payload.categoryId !== undefined) {
     const beforeCategory =
