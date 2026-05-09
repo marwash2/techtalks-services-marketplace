@@ -32,7 +32,7 @@ export function toProviderDTO(provider: ProviderDocument) {
           name: provider.userId.name,
           email: provider.userId.email,
         }
-      : provider.userId.toString(),
+      : provider.userId != null ? provider.userId.toString() : null,
     businessName: provider.businessName,
     description: provider.description,
     location: provider.location,
