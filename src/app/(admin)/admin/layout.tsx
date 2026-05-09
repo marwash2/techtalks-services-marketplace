@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Users,
   BarChart3,
@@ -15,6 +15,8 @@ import {
   UserCheck,
   Clock,
   ChevronLeft,
+  Bell,
+  Briefcase,
 } from "lucide-react";
 
 const navItems = [
@@ -25,6 +27,7 @@ const navItems = [
       { name: "Users",             href: "/admin/users",               icon: Users,           sub: false },
       { name: "Providers",         href: "/admin/providers",           icon: UserCheck,       sub: false },
       { name: "Pending Approvals", href: "/admin/providers/approvals", icon: Clock,           sub: true  },
+      { name: "Services",          href: "/admin/services",            icon: Briefcase,       sub: false },
       { name: "Analytics",         href: "/admin/analytics",           icon: BarChart3,       sub: false },
       { name: "Reports",           href: "/admin/reports",             icon: FileBarChart,    sub: false },
     ],
@@ -40,6 +43,41 @@ const navItems = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(true);
+  const [pendingApprovals, setPendingApprovals] = useState(0);
+
+  useEffect(() => {
+    let mounted = true;
+    async function fetchPendingApprovals() {
+      try {
+        const res = await fetch("/api/providers?page=1&limit=1000", {
+          cache: "no-store",
+        });
+        const data = await res.json();
+        const providers = data?.data?.providers || [];
+        const pending = providers.filter((p: any) => p.providerStatus === "pending").length;
+        if (mounted) setPendingApprovals(pending);
+      } catch {
+        if (mounted) setPendingApprovals(0);
+      }
+    }
+    fetchPendingApprovals();
+    const intervalId = setInterval(fetchPendingApprovals, 30000);
+    return () => {
+      mounted = false;
+      clearInterval(intervalId);
+    };
+  }, [pathname]);
+
+  const displayedNavItems = useMemo(
+    () =>
+      navItems.map((section) => ({
+        ...section,
+        items: section.items.filter(
+          (item) => item.name !== "Notifications" || pendingApprovals > 0
+        ),
+      })),
+    [pendingApprovals]
+  );
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -86,7 +124,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Nav */}
         <div className="flex-1 overflow-y-auto py-5 px-3 min-h-0">
-          {navItems.map((section) => (
+          {displayedNavItems.map((section) => (
             <div key={section.section} className="mb-6">
               {isOpen ? (
                 <p className="text-xs font-semibold text-gray-400 uppercase mb-3 px-2">
@@ -115,7 +153,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         }`}
                     >
                       <Icon size={18} className="shrink-0" />
-                      {isOpen && <span>{item.name}</span>}
+                      {isOpen && (
+                        <div className="flex w-full items-center justify-between gap-2">
+                          <span>{item.name}</span>
+                          {item.name === "Notifications" && pendingApprovals > 0 && (
+                            <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+                              {pendingApprovals}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </Link>
                   );
                 })}
