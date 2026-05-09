@@ -13,6 +13,8 @@ import {
   Trash2,
   CircleDashed,
   BadgeCheck,
+  CreditCard,
+  ShieldAlert,
 } from "lucide-react";
 
 type NotificationItem = {
@@ -40,41 +42,53 @@ function getRelativeTime(dateValue?: string) {
 function getNotificationStyle(type?: string) {
   switch (type) {
     case "booking_created":
-      return { icon: CalendarCheck2, iconColor: "text-green-600", bg: "bg-green-50", unreadDot: "bg-green-500" };
+      return { icon: CalendarCheck2, iconColor: "text-green-600",  bg: "bg-green-50",  unreadDot: "bg-green-500"  };
     case "booking_pending":
-      return { icon: CircleDashed, iconColor: "text-amber-600", bg: "bg-amber-50", unreadDot: "bg-amber-500" };
+      return { icon: CircleDashed,   iconColor: "text-amber-600",  bg: "bg-amber-50",  unreadDot: "bg-amber-500"  };
     case "booking_confirmed":
-      return { icon: BadgeCheck, iconColor: "text-emerald-600", bg: "bg-emerald-50", unreadDot: "bg-emerald-500" };
+      return { icon: BadgeCheck,     iconColor: "text-emerald-600",bg: "bg-emerald-50",unreadDot: "bg-emerald-500"};
     case "booking_cancelled":
-      return { icon: CircleX, iconColor: "text-red-600", bg: "bg-red-50", unreadDot: "bg-red-500" };
+      return { icon: CircleX,        iconColor: "text-red-600",    bg: "bg-red-50",    unreadDot: "bg-red-500"    };
     case "booking_completed":
-      return { icon: CalendarCheck2, iconColor: "text-blue-600", bg: "bg-blue-50", unreadDot: "bg-blue-500" };
+      return { icon: CalendarCheck2, iconColor: "text-blue-600",   bg: "bg-blue-50",   unreadDot: "bg-blue-500"   };
     case "booking_reminder_24h":
     case "booking_reminder_6h":
     case "booking_reminder_3h":
-      return { icon: Clock3, iconColor: "text-cyan-700", bg: "bg-cyan-50", unreadDot: "bg-cyan-500" };
+      return { icon: Clock3,         iconColor: "text-cyan-700",   bg: "bg-cyan-50",   unreadDot: "bg-cyan-500"   };
     case "service_updated":
     case "booking_updated":
-      return { icon: RefreshCcw, iconColor: "text-orange-600", bg: "bg-orange-50", unreadDot: "bg-orange-500" };
+      return { icon: RefreshCcw,     iconColor: "text-orange-600", bg: "bg-orange-50", unreadDot: "bg-orange-500" };
     case "service_deleted":
-      return { icon: Trash2, iconColor: "text-rose-600", bg: "bg-rose-50", unreadDot: "bg-rose-500" };
+      return { icon: Trash2,         iconColor: "text-rose-600",   bg: "bg-rose-50",   unreadDot: "bg-rose-500"   };
     case "service_added":
-      return { icon: BadgeCheck, iconColor: "text-green-600", bg: "bg-green-50", unreadDot: "bg-green-500" };
+      return { icon: BadgeCheck,     iconColor: "text-green-600",  bg: "bg-green-50",  unreadDot: "bg-green-500"  };
     case "provider_approval_approved":
     case "provider_verified":
-      return { icon: BadgeCheck, iconColor: "text-emerald-600", bg: "bg-emerald-50", unreadDot: "bg-emerald-500" };
+      return { icon: BadgeCheck,     iconColor: "text-emerald-600",bg: "bg-emerald-50",unreadDot: "bg-emerald-500"};
     case "provider_application_submitted":
-      return { icon: CircleDashed, iconColor: "text-amber-600", bg: "bg-amber-50", unreadDot: "bg-amber-500" };
+      return { icon: CircleDashed,   iconColor: "text-amber-600",  bg: "bg-amber-50",  unreadDot: "bg-amber-500"  };
     case "provider_approval_rejected":
     case "provider_unverified":
     case "provider_deleted":
-      return { icon: CircleX, iconColor: "text-red-600", bg: "bg-red-50", unreadDot: "bg-red-500" };
+      return { icon: CircleX,        iconColor: "text-red-600",    bg: "bg-red-50",    unreadDot: "bg-red-500"    };
+
+    // ── Payment notifications ─────────────────────────────────────────────────
+    case "payment_success":
+      return { icon: CreditCard,     iconColor: "text-emerald-600",bg: "bg-emerald-50",unreadDot: "bg-emerald-500"};
+    case "payment_failed":
+      return { icon: ShieldAlert,    iconColor: "text-red-600",    bg: "bg-red-50",    unreadDot: "bg-red-500"    };
+    case "payment_pending":
+      return { icon: CreditCard,     iconColor: "text-amber-600",  bg: "bg-amber-50",  unreadDot: "bg-amber-500"  };
+    case "payment_refunded":
+      return { icon: CreditCard,     iconColor: "text-purple-600", bg: "bg-purple-50", unreadDot: "bg-purple-500" };
+    // ─────────────────────────────────────────────────────────────────────────
+
     case "system":
-      return { icon: Bell, iconColor: "text-indigo-600", bg: "bg-indigo-50", unreadDot: "bg-indigo-500" };
+      return { icon: Bell,           iconColor: "text-indigo-600", bg: "bg-indigo-50", unreadDot: "bg-indigo-500" };
     case "booking":
-      return { icon: CalendarCheck2, iconColor: "text-green-600", bg: "bg-green-50", unreadDot: "bg-green-500" };
+      return { icon: CalendarCheck2, iconColor: "text-green-600",  bg: "bg-green-50",  unreadDot: "bg-green-500"  };
     default:
-      return { icon: Clock3, iconColor: "text-gray-600", bg: "bg-gray-50", unreadDot: "bg-gray-500" };
+      return { icon: Clock3,         iconColor: "text-gray-600",   bg: "bg-gray-50",   unreadDot: "bg-gray-500"   };
   }
 }
 
@@ -117,7 +131,9 @@ export default function NotificationsView() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ isRead: true }),
     });
-    setItems((prev) => prev.map((item) => (item.id === notificationId ? { ...item, isRead: true } : item)));
+    setItems((prev) =>
+      prev.map((item) => (item.id === notificationId ? { ...item, isRead: true } : item))
+    );
     window.dispatchEvent(new Event("notifications-updated"));
   };
 
@@ -137,14 +153,16 @@ export default function NotificationsView() {
   };
 
   if (status === "loading") return <div className="mx-auto max-w-4xl px-4 py-10">Loading...</div>;
-  if (!session?.user) return <div className="mx-auto max-w-4xl px-4 py-10 text-center">Please log in.</div>;
+  if (!session?.user)       return <div className="mx-auto max-w-4xl px-4 py-10 text-center">Please log in.</div>;
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-          <p className="mt-1 text-sm text-gray-600">{unreadCount} unread notification{unreadCount === 1 ? "" : "s"}</p>
+          <p className="mt-1 text-sm text-gray-600">
+            {unreadCount} unread notification{unreadCount === 1 ? "" : "s"}
+          </p>
         </div>
         <button
           onClick={markAllRead}
@@ -165,39 +183,75 @@ export default function NotificationsView() {
           </div>
         ) : (
           <ul>
-            {items.map((item, index) => (
-              <li key={item.id} className={`flex items-start gap-3 p-4 ${index > 0 ? "border-t border-gray-100" : ""}`}>
-                <div className={`mt-1 rounded-full p-2 ${getNotificationStyle(item.type).bg}`}>
-                  <NotificationIcon type={item.type} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h2 className="font-semibold text-gray-900">{item.title}</h2>
-                      <p className="mt-1 text-sm text-gray-700">{item.message}</p>
-                      <p className="mt-1 text-xs text-gray-500">{getRelativeTime(item.createdAt)}</p>
+            {items.map((item, index) => {
+              const style = getNotificationStyle(item.type);
+              const isPayment = item.type?.startsWith("payment_");
+
+              return (
+                <li
+                  key={item.id}
+                  className={`flex items-start gap-3 p-4 ${index > 0 ? "border-t border-gray-100" : ""} ${!item.isRead ? "bg-gray-50/60" : ""}`}
+                >
+                  {/* Icon */}
+                  <div className={`mt-1 rounded-full p-2 ${style.bg} ${isPayment ? "ring-2 ring-offset-1 " + (item.type === "payment_failed" ? "ring-red-200" : "ring-emerald-200") : ""}`}>
+                    <NotificationIcon type={item.type} />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h2 className="font-semibold text-gray-900">{item.title}</h2>
+                          {/* Payment badge */}
+                          {isPayment && (
+                            <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full ${
+                              item.type === "payment_success"  ? "bg-emerald-100 text-emerald-700" :
+                              item.type === "payment_failed"   ? "bg-red-100 text-red-700"         :
+                              item.type === "payment_refunded" ? "bg-purple-100 text-purple-700"   :
+                              "bg-amber-100 text-amber-700"
+                            }`}>
+                              {item.type === "payment_success"  ? "Paid"     :
+                               item.type === "payment_failed"   ? "Failed"   :
+                               item.type === "payment_refunded" ? "Refunded" : "Pending"}
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-1 text-sm text-gray-700">{item.message}</p>
+                        <p className="mt-1 text-xs text-gray-500">{getRelativeTime(item.createdAt)}</p>
+                      </div>
+                      {!item.isRead && (
+                        <span className={`mt-2 h-2.5 w-2.5 rounded-full shrink-0 ${style.unreadDot}`} />
+                      )}
                     </div>
-                    {!item.isRead && <span className={`mt-2 h-2.5 w-2.5 rounded-full ${getNotificationStyle(item.type).unreadDot}`} />}
+
+                    <div className="mt-3 flex gap-3">
+                      {item.link && (
+                        <Link
+                          href={item.link}
+                          onClick={() => void markRead(item.id)}
+                          className={`text-sm font-medium hover:underline ${
+                            isPayment ? "text-emerald-700" : "text-green-700"
+                          }`}
+                        >
+                          {isPayment ? "View Booking" : "Open"}
+                        </Link>
+                      )}
+                      {!item.isRead && (
+                        <button
+                          onClick={() => void markRead(item.id)}
+                          className="text-sm font-medium text-gray-600 hover:text-gray-900"
+                        >
+                          Mark as read
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="mt-3 flex gap-3">
-                    {item.link && (
-                      <Link href={item.link} onClick={() => void markRead(item.id)} className="text-sm font-medium text-green-700 hover:underline">
-                        Open
-                      </Link>
-                    )}
-                    {!item.isRead && (
-                      <button onClick={() => void markRead(item.id)} className="text-sm font-medium text-gray-600 hover:text-gray-900">
-                        Mark as read
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
     </main>
   );
 }
-

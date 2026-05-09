@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 
-type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled" | "done";
+type BookingStatus = "pending" | "confirmed" | "pending_payment" | "completed" | "cancelled" | "done";
 
 interface Booking {
   id: string;
@@ -13,6 +13,7 @@ interface Booking {
   date: string;
   time?: string;
   status: BookingStatus;
+  paymentStatus?: string;
   notes?: string;
   createdAt: string;
 }
@@ -20,11 +21,12 @@ interface Booking {
 const STATUS_CONFIG: Record<string, {
   label: string; bg: string; text: string; dot: string; border: string;
 }> = {
-  pending:   { label: "Pending",   bg: "bg-yellow-50", text: "text-yellow-700", dot: "bg-yellow-400", border: "border-yellow-200" },
-  confirmed: { label: "Confirmed", bg: "bg-green-50",  text: "text-green-700",  dot: "bg-green-500",  border: "border-green-200"  },
-  completed: { label: "Completed", bg: "bg-blue-50",   text: "text-blue-700",   dot: "bg-blue-500",   border: "border-blue-200"   },
-  done:      { label: "Completed", bg: "bg-blue-50",   text: "text-blue-700",   dot: "bg-blue-500",   border: "border-blue-200"   },
-  cancelled: { label: "Cancelled", bg: "bg-gray-100",  text: "text-gray-500",   dot: "bg-gray-400",   border: "border-gray-200"   },
+  pending:         { label: "Pending",         bg: "bg-yellow-50",  text: "text-yellow-700",  dot: "bg-yellow-400",  border: "border-yellow-200"  },
+  confirmed:       { label: "Confirmed",       bg: "bg-green-50",   text: "text-green-700",   dot: "bg-green-500",   border: "border-green-200"   },
+  pending_payment: { label: "Awaiting Payment",bg: "bg-purple-50",  text: "text-purple-700",  dot: "bg-purple-500",  border: "border-purple-200"  },
+  completed:       { label: "Completed",       bg: "bg-blue-50",    text: "text-blue-700",    dot: "bg-blue-500",    border: "border-blue-200"    },
+  done:            { label: "Completed",       bg: "bg-blue-50",    text: "text-blue-700",    dot: "bg-blue-500",    border: "border-blue-200"    },
+  cancelled:       { label: "Cancelled",       bg: "bg-gray-100",   text: "text-gray-500",    dot: "bg-gray-400",    border: "border-gray-200"    },
 };
 
 const FILTERS: { label: string; value: "all" | BookingStatus }[] = [
@@ -60,16 +62,16 @@ function canCancel(status: BookingStatus): boolean {
 }
 
 export default function UserBookingsPage() {
-  const router = useRouter();
+  const router       = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
 
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [bookings,     setBookings]     = useState<Booking[]>([]);
+  const [loading,      setLoading]      = useState(true);
+  const [error,        setError]        = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<"all" | BookingStatus>("all");
   const [cancellingId, setCancellingId] = useState<string | null>(null);
-  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [confirmId,    setConfirmId]    = useState<string | null>(null);
 
   const showSuccess = searchParams.get("success") === "true";
 
@@ -82,7 +84,7 @@ export default function UserBookingsPage() {
     const fetchBookings = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/bookings?userId=${session.user.id}`);
+        const res  = await fetch(`/api/bookings?userId=${session.user.id}`);
         const data = await res.json();
         if (!res.ok) throw new Error("Failed to load bookings");
         setBookings(data.data?.bookings ?? []);
@@ -98,15 +100,13 @@ export default function UserBookingsPage() {
   const handleCancel = async (bookingId: string) => {
     setCancellingId(bookingId);
     try {
-      const res = await fetch(`/api/bookings/${bookingId}/status`, {
+      const res  = await fetch(`/api/bookings/${bookingId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "cancelled" }),
+        body: JSON.stringify({ status: "cancelled", actor: "user" }),
       });
-
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to cancel booking");
-
       setBookings((prev) =>
         prev.map((b) => b.id === bookingId ? { ...b, status: "cancelled" as BookingStatus } : b)
       );
@@ -119,7 +119,7 @@ export default function UserBookingsPage() {
   };
 
   const filtered = activeFilter === "all" ? bookings : bookings.filter((b) => b.status === activeFilter);
-  const counts = bookings.reduce((acc, b) => {
+  const counts   = bookings.reduce((acc, b) => {
     acc[b.status] = (acc[b.status] ?? 0) + 1;
     return acc;
   }, {} as Record<string, number>);
@@ -186,7 +186,7 @@ export default function UserBookingsPage() {
         {/* Filter Tabs */}
         <div className="flex gap-2 flex-wrap">
           {FILTERS.map((f) => {
-            const count = f.value === "all" ? bookings.length : (counts[f.value] ?? 0);
+            const count   = f.value === "all" ? bookings.length : (counts[f.value] ?? 0);
             const isActive = activeFilter === f.value;
             return (
               <button
@@ -219,9 +219,7 @@ export default function UserBookingsPage() {
               {activeFilter === "all" ? "No bookings yet" : `No ${activeFilter} bookings`}
             </h3>
             <p className="text-gray-500 text-sm mt-1">
-              {activeFilter === "all"
-                ? "Browse services and make your first booking."
-                : "Try a different filter."}
+              {activeFilter === "all" ? "Browse services and make your first booking." : "Try a different filter."}
             </p>
             {activeFilter === "all" && (
               <button
@@ -238,8 +236,10 @@ export default function UserBookingsPage() {
         <div className="space-y-4">
           {filtered.map((booking) => {
             const isCancelling = cancellingId === booking.id;
-            const isConfirming = confirmId === booking.id;
-            const cancellable = canCancel(booking.status);
+            const isConfirming = confirmId    === booking.id;
+            const cancellable  = canCancel(booking.status);
+            const needsPayment = booking.status === "confirmed" &&
+              (booking.paymentStatus === "unpaid" || booking.paymentStatus === "failed");
 
             return (
               <div
@@ -266,8 +266,39 @@ export default function UserBookingsPage() {
                       {booking.provider?.location}
                     </p>
                   </div>
-                  <StatusBadge status={booking.status} />
+                  <div className="flex flex-col items-end gap-1.5">
+                    <StatusBadge status={booking.status} />
+                    {/* Payment status pill */}
+                    {booking.paymentStatus && booking.paymentStatus !== "unpaid" && (
+                      <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${
+                        booking.paymentStatus === "paid"    ? "bg-emerald-100 text-emerald-700" :
+                        booking.paymentStatus === "failed"  ? "bg-red-100 text-red-700"         :
+                        booking.paymentStatus === "pending" ? "bg-amber-100 text-amber-700"     :
+                        "bg-gray-100 text-gray-500"
+                      }`}>
+                        {booking.paymentStatus === "paid" ? "✓ Paid" : booking.paymentStatus}
+                      </span>
+                    )}
+                  </div>
                 </div>
+
+                {/* Pay Now inline banner */}
+                {needsPayment && (
+                  <div className="mt-3 flex items-center justify-between gap-2 bg-blue-50 border border-blue-200 rounded-xl px-3 py-2">
+                    <div className="flex items-center gap-1.5">
+                      <svg className="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                      <p className="text-xs text-blue-700 font-medium">Payment required to finalise</p>
+                    </div>
+                    <button
+                      onClick={() => router.push(`/bookings/${booking.id}/pay`)}
+                      className="shrink-0 bg-blue-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-700 transition cursor-pointer"
+                    >
+                      Pay ${booking.service?.price}
+                    </button>
+                  </div>
+                )}
 
                 {/* Divider */}
                 <div className="my-4 border-t border-gray-100" />
@@ -307,7 +338,7 @@ export default function UserBookingsPage() {
                 <div className="mt-4 flex items-center justify-between gap-3">
                   <p className="text-xs text-gray-400">
                     Booked {new Date(booking.createdAt).toLocaleDateString("en-US", {
-                      month: "short", day: "numeric", year: "numeric"
+                      month: "short", day: "numeric", year: "numeric",
                     })}
                   </p>
                   <div className="flex items-center gap-2">
@@ -340,11 +371,13 @@ export default function UserBookingsPage() {
                         </button>
                       )
                     )}
+
+                    {/* ── Changed: View Booking → /user/bookings/[id] ── */}
                     <button
-                      onClick={() => router.push(`/services/${booking.service?.id}`)}
+                      onClick={() => router.push(`/user/bookings/${booking.id}`)}
                       className="text-sm text-blue-600 font-medium hover:underline cursor-pointer flex items-center gap-1"
                     >
-                      View Service
+                      View Booking
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>

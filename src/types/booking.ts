@@ -1,16 +1,30 @@
 import { Document, Types } from "mongoose";
 
-export type BookingStatus = "pending" | "confirmed" | "completed" | "cancelled";
+export type BookingStatus =
+  | "pending"
+  | "confirmed"
+  | "pending_payment"
+  | "completed"
+  | "cancelled";
+
+export type PaymentStatus = "unpaid" | "pending" | "paid" | "failed" | "refunded";
 
 export interface IBooking extends Document {
   userId:     Types.ObjectId;
   providerId: Types.ObjectId;
   serviceId:  Types.ObjectId;
   status:     BookingStatus;
-  date:       string;   // "2025-05-20" — simple date string, not Date object
-  time:       string;   // "10:00 AM"
+  date:       string;
+  time:       string;
   price:      number;
   notes?:     string;
-  createdAt:  Date;
-  updatedAt:  Date;
+
+  // ── Payment ─────────────────────────────────────────────────────────────────
+  paymentStatus:    PaymentStatus;
+  paymentIntentId:  string | null;
+  paidAt:           Date | null;
+  // ────────────────────────────────────────────────────────────────────────────
+
+  createdAt: Date;
+  updatedAt: Date;
 }

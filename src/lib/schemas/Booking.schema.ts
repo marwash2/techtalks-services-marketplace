@@ -18,11 +18,11 @@ const bookingSchema = new mongoose.Schema(
       required: true,
     },
     date: {
-      type: String,   // "2025-05-20" — simple date, no timezone issues
+      type: String,
       required: true,
     },
     time: {
-      type: String,   // "10:00 AM" — separate time slot
+      type: String,
       required: true,
     },
     price: {
@@ -31,9 +31,26 @@ const bookingSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "confirmed", "completed", "cancelled"],
+      enum: ["pending", "confirmed", "pending_payment", "completed", "cancelled"],
       default: "pending",
     },
+
+    // ── Payment fields ────────────────────────────────────────────────────────
+    paymentStatus: {
+      type: String,
+      enum: ["unpaid", "pending", "paid", "failed", "refunded"],
+      default: "unpaid",
+    },
+    paymentIntentId: {
+      type: String,
+      default: null,
+    },
+    paidAt: {
+      type: Date,
+      default: null,
+    },
+    // ─────────────────────────────────────────────────────────────────────────
+
     notes: {
       type: String,
       default: null,

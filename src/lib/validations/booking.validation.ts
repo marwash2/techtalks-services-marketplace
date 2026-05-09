@@ -2,10 +2,10 @@ import { z } from "zod";
 import { BOOKING_STATUS, PAGINATION } from "@/constants/config";
 
 // ─── Status Tuple ─────────────────────────────────────────────────────────────
-//fixed list of allowed values
 const BOOKING_STATUS_VALUES = [
   BOOKING_STATUS.PENDING,
   BOOKING_STATUS.CONFIRMED,
+  "pending_payment",          // ← added for payment flow
   BOOKING_STATUS.COMPLETED,
   BOOKING_STATUS.CANCELLED,
 ] as const;
@@ -13,18 +13,22 @@ const BOOKING_STATUS_VALUES = [
 export type BookingStatusValue = (typeof BOOKING_STATUS_VALUES)[number];
 
 // ─── Transition Map ───────────────────────────────────────────────────────────
-
+//
+//  pending         → confirmed | cancelled
+//  confirmed       → pending_payment | cancelled
+//  pending_payment → completed | cancelled
+//  completed       → (terminal)
+//  cancelled       → (terminal)
+//
 export const ALLOWED_TRANSITIONS: Record<BookingStatusValue, BookingStatusValue[]> = {
   [BOOKING_STATUS.PENDING]:   [BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.CANCELLED],
-  [BOOKING_STATUS.CONFIRMED]: [BOOKING_STATUS.COMPLETED, BOOKING_STATUS.CANCELLED],
+  [BOOKING_STATUS.CONFIRMED]: ["pending_payment", BOOKING_STATUS.CANCELLED],
+  pending_payment:             [BOOKING_STATUS.COMPLETED, BOOKING_STATUS.CANCELLED],
   [BOOKING_STATUS.COMPLETED]: [],
   [BOOKING_STATUS.CANCELLED]: [],
 };
 
 // ─── Create Booking ───────────────────────────────────────────────────────────
-// userId  → from session on server, NOT from frontend
-// price   → looked up from DB on server, NOT from frontend
-
 export const createBookingSchema = z.object({
   serviceId:  z.string().min(1, "Service ID is required"),
   providerId: z.string().min(1, "Provider ID is required"),
@@ -42,7 +46,6 @@ export const createBookingSchema = z.object({
 export type CreateBookingInput = z.infer<typeof createBookingSchema>;
 
 // ─── Update Booking ───────────────────────────────────────────────────────────
-
 export const updateBookingSchema = z.object({
   status: z.enum(BOOKING_STATUS_VALUES).optional(),
   notes:  z.string().optional(),
@@ -51,7 +54,6 @@ export const updateBookingSchema = z.object({
 export type UpdateBookingInput = z.infer<typeof updateBookingSchema>;
 
 // ─── Status Update ────────────────────────────────────────────────────────────
-
 export const updateStatusSchema = z.object({
   status: z
     .string()
@@ -67,7 +69,6 @@ export const updateStatusSchema = z.object({
 export type UpdateStatusInput = z.infer<typeof updateStatusSchema>;
 
 // ─── GET Bookings Query ───────────────────────────────────────────────────────
-
 export const getBookingsQuerySchema = z.object({
   page:       z.coerce.number().int().positive().default(PAGINATION.DEFAULT_PAGE),
   limit:      z.coerce.number().int().min(1).max(PAGINATION.MAX_LIMIT).default(PAGINATION.DEFAULT_LIMIT),
