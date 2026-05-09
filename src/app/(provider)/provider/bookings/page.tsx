@@ -13,13 +13,23 @@ type BookingStatus =
   | "cancelled";
 
   type Booking = {
+  id?: string;
   _id: string;
   userId: any;
   serviceId: any;
+  service?: {
+    id?: string;
+    title?: string;
+    price?: number;
+    duration?: number;
+  };
   date: string;
+  time?: string;
   price: number;
   notes?: string;
   status: BookingStatus;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 const tabs = [
@@ -29,6 +39,21 @@ const tabs = [
   "completed",
   "cancelled",
 ];
+
+function truncateNote(text?: string, wordLimit = 20, charLimit = 120) {
+  if (!text) return "No notes";
+  const trimmed = text.trim();
+  const words = trimmed.split(/\s+/);
+
+  if (words.length > wordLimit) {
+    return `${words.slice(0, wordLimit).join(" ")}...`;
+  }
+  if (trimmed.length > charLimit) {
+    return `${trimmed.slice(0, charLimit)}...`;
+  }
+  return trimmed;
+}
+
 export default function ProviderBookingsPage() {
   const { data: session } = useSession();
 
@@ -36,6 +61,7 @@ export default function ProviderBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
   const providerId = session?.user?.id;
 
@@ -71,18 +97,20 @@ export default function ProviderBookingsPage() {
     status: BookingStatus
   ) {
     try {
+      if (!bookingId) return;
       const res = await fetch(`/api/bookings/${bookingId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, actor: "provider" }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.message || "Failed to update booking status");
+        console.error(data.message || "Failed to update booking status");
+        return;
       }
 
       setBookings((prev) =>
-        prev.map((b) => (b._id === bookingId ? { ...b, status } : b))
+        prev.map((b) => ((b.id || b._id) === bookingId ? { ...b, status } : b))
       );
     } catch (error) {
       console.error(error);
@@ -185,8 +213,8 @@ export default function ProviderBookingsPage() {
 
             <div className="flex flex-wrap gap-3">
               {tabs.map((tab) => (
-                <button
-                  key={tab}
+              <button
+                key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={
                     activeTab === tab
@@ -238,24 +266,38 @@ export default function ProviderBookingsPage() {
             )}
             {filteredBookings.map((booking) => (
               <BookingRow
-                key={booking._id}
+                key={booking.id || booking._id}
                 booking={booking}
+                onViewDetails={() => setSelectedBooking(booking)}
                 onAccept={() =>
                   updateStatus(
-                    booking._id,
+                    booking.id || booking._id,
                     "confirmed"
                   )
                 }
                 onReject={() =>
                   updateStatus(
-                    booking._id,
+                    booking.id || booking._id,
                     "cancelled"
+                  )
+                }
+                onComplete={() =>
+                  updateStatus(
+                    booking.id || booking._id,
+                    "completed"
                   )
                 }
               />
             ))}
 
           </div>
+
+          {selectedBooking && (
+            <BookingDetailsModal
+              booking={selectedBooking}
+              onClose={() => setSelectedBooking(null)}
+            />
+          )}
         </main>
       </div>
     </div>
@@ -309,13 +351,27 @@ function StatusBadge({status}:{status:BookingStatus}) {
 }
 function BookingRow({
  booking,
+ onViewDetails,
  onAccept,
  onReject,
+ onComplete,
 }: {
  booking: Booking;
+ onViewDetails: ()=>void;
  onAccept: ()=>void;
  onReject: ()=>void;
+ onComplete: ()=>void;
 }) {
+  const userName =
+    booking.userId && typeof booking.userId === "object"
+      ? booking.userId.name || booking.userId.email || booking.userId._id
+      : booking.userId;
+  const serviceTitle =
+    booking.service?.title ||
+    (booking.serviceId && typeof booking.serviceId === "object"
+      ? booking.serviceId.title || booking.serviceId._id
+      : booking.serviceId);
+
     return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 
@@ -327,19 +383,21 @@ function BookingRow({
             Client Booking
           </p>
           <p className="mt-1 text-sm text-slate-500">
-            User ID: {String(booking.userId)}
+            User: {String(userName ?? "-")}
           </p>
         </div>
 
          {/* service */}
         <div>
           <p className="font-semibold">
-            Service #{String(booking.serviceId).slice(-6)}
+            {serviceTitle ? String(serviceTitle) : "Service"}
           </p>
 
           <p className="mt-2 text-sm text-slate-500">
             Notes:
-            {booking.notes || " No notes"}
+            <span className="ml-1 inline-block max-w-full break-words align-top whitespace-pre-wrap">
+              {truncateNote(booking.notes, 20, 120)}
+            </span>
           </p>
         </div>
 
@@ -364,34 +422,104 @@ function BookingRow({
         </div>
 
          {/* actions */}
-        <div className="flex flex-wrap gap-3">
-
-          <button className="rounded-xl border px-4 py-2 text-sm font-medium">
+        <div className="flex flex-col items-start gap-2 lg:items-end">
+          <button onClick={onViewDetails} className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 cursor-pointer">
             <span className="inline-flex items-center gap-2">
               <Eye className="h-4 w-4" />
               View Details
             </span>
           </button>
 
-          {booking.status === "pending" && (
-            <>
-              <button
-                onClick={onAccept}
-                className="rounded-xl bg-green-600 px-4 py-2 text-sm font-medium text-white"
-              >
-                Accept
-              </button>
+          <div className="flex flex-wrap gap-2">
 
+            {booking.status === "pending" && (
+              <>
+                <button
+                  onClick={onAccept}
+                  className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                >
+                  Accept
+                </button>
+
+                <button
+                  onClick={onReject}
+                  className="rounded-xl border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-600 shadow-sm transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-200"
+                >
+                  Reject
+                </button>
+              </>
+            )}
+
+            {booking.status === "confirmed" && (
               <button
-                onClick={onReject}
-                className="rounded-xl border border-red-300 px-4 py-2 text-sm font-medium text-red-600"
+                onClick={onComplete}
+                className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
               >
-                Reject
+                Complete
               </button>
-            </>
-          )}
+            )}
+          </div>
         </div>
 
+      </div>
+    </div>
+  );
+}
+
+function BookingDetailsModal({
+  booking,
+  onClose,
+}: {
+  booking: Booking;
+  onClose: () => void;
+}) {
+  const userName =
+    booking.userId && typeof booking.userId === "object"
+      ? booking.userId.name || booking.userId.email || booking.userId._id
+      : booking.userId;
+  const userEmail =
+    booking.userId && typeof booking.userId === "object"
+      ? booking.userId.email
+      : "";
+  const serviceTitle =
+    booking.service?.title ||
+    (booking.serviceId && typeof booking.serviceId === "object"
+      ? booking.serviceId.title || booking.serviceId._id
+      : booking.serviceId);
+  const servicePrice =
+    booking.service?.price ??
+    (booking.serviceId && typeof booking.serviceId === "object" ? booking.serviceId.price : booking.price);
+  const serviceDuration =
+    booking.service?.duration ??
+    (booking.serviceId && typeof booking.serviceId === "object" ? booking.serviceId.duration : "");
+
+  return (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-slate-900">Booking Details</h3>
+          <button onClick={onClose} className="rounded-md px-2 py-1 text-slate-100 bg-red-500 hover:bg-red-700 cursor-pointer">
+            X
+          </button>
+        </div>
+        <div className="grid grid-cols-1 gap-3 text-sm text-slate-700 md:grid-cols-2">
+          <p><span className="font-semibold">Client:</span> {String(userName ?? "-")}</p>
+          <p><span className="font-semibold">Client Email:</span> {String(userEmail || "-")}</p>
+          <p><span className="font-semibold">Service:</span> {String(serviceTitle ?? "-")}</p>
+          <p><span className="font-semibold">Status:</span> {booking.status}</p>
+          <p><span className="font-semibold">Date:</span> {new Date(booking.date).toLocaleDateString()}</p>
+          <p><span className="font-semibold">Time:</span> {String(booking.time || "-")}</p>
+          <p><span className="font-semibold">Price:</span> ${String(servicePrice ?? "-")}</p>
+          <p><span className="font-semibold">Duration:</span> {String(serviceDuration || "-")} min</p>
+          <p className="md:col-span-2">
+            <span className="font-semibold">Notes:</span>
+            <span className="mt-1 block max-h-28 overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-slate-50 p-2">
+              {booking.notes || "-"}
+            </span>
+          </p>
+          <p><span className="font-semibold">Created:</span> {booking.createdAt ? new Date(booking.createdAt).toLocaleString() : "-"}</p>
+          <p><span className="font-semibold">Updated:</span> {booking.updatedAt ? new Date(booking.updatedAt).toLocaleString() : "-"}</p>
+        </div>
       </div>
     </div>
   );

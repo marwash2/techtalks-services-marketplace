@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/db";
 import { Review } from "@/models/Review.model";
 import { Service } from "@/models/Service.model";
+import { Provider } from "@/models/Provider.model";
 import { ApiError } from "@/lib/api-error";
 import { toReviewDTO, toReviewListDTO } from "@/lib/dto/review.dto";
 import { MESSAGES, PAGINATION } from "@/constants/config";
@@ -37,6 +38,48 @@ async function syncServiceStats(serviceId: string): Promise<void> {
     });
   }
 }
+
+async function syncProviderStats(providerId: string): Promise<void> {
+  const [result] = await Review.aggregate([
+    { $match: { providerId: new mongoose.Types.ObjectId(providerId) } },
+    {
+      $group: {
+        _id: "$providerId",
+        averageRating: { $avg: "$rating" },
+        reviewCount: { $sum: 1 },
+      },
+    },
+  ]).exec();
+
+  if (result) {
+    await Provider.findByIdAndUpdate(providerId, {
+      rating: Math.round(result.averageRating * 10) / 10,
+      totalReviews: result.reviewCount,
+    });
+  } else {
+    await Provider.findByIdAndUpdate(providerId, {
+      rating: 0,
+      totalReviews: 0,
+    });
+  }
+}
+
+function buildStatsMatch(filters: ReviewFilters) {
+  const match: Record<string, mongoose.Types.ObjectId> = {};
+
+  if (filters.serviceId && mongoose.Types.ObjectId.isValid(filters.serviceId)) {
+    match.serviceId = new mongoose.Types.ObjectId(filters.serviceId);
+  }
+
+  if (
+    filters.providerId &&
+    mongoose.Types.ObjectId.isValid(filters.providerId)
+  ) {
+    match.providerId = new mongoose.Types.ObjectId(filters.providerId);
+  }
+
+  return match;
+}
 // ── Populate helper ────────────────────────────────────────────────────────────
 
 function withPopulate(query: any) {
@@ -69,7 +112,7 @@ export async function getAllReviews(
 
   const skip = (page - 1) * limit;
 
-  const [reviews, total] = await Promise.all([
+  const [reviews, total, stats] = await Promise.all([
     withPopulate(
       Review.find(query)
         .sort({ createdAt: -1 })
@@ -80,10 +123,32 @@ export async function getAllReviews(
       .exec(),
 
     Review.countDocuments(query),
+
+    Review.aggregate([
+      { $match: buildStatsMatch(filters) },
+      {
+        $group: {
+          _id: null,
+          averageRating: { $avg: "$rating" },
+          reviewCount: { $sum: 1 },
+        },
+      },
+    ]).exec(),
   ]);
+
+  const summary = stats[0]
+    ? {
+        averageRating: Math.round(stats[0].averageRating * 10) / 10,
+        reviewCount: stats[0].reviewCount,
+      }
+    : {
+        averageRating: 0,
+        reviewCount: 0,
+      };
 
   return {
     reviews: toReviewListDTO(reviews),
+    summary,
     pagination: {
       page,
       limit,
@@ -129,6 +194,7 @@ export async function createReview(
     });
 
     await syncServiceStats(input.serviceId);
+    await syncProviderStats(input.providerId);
 
     const populated = await withPopulate(
       Review.findById(review._id)
@@ -177,6 +243,7 @@ export async function updateReview(
   );
 
   await syncServiceStats(review.serviceId.toString());
+  await syncProviderStats(review.providerId.toString());
 
   const populated = await withPopulate(
     Review.findById(updated!._id)
@@ -212,10 +279,13 @@ export async function deleteReview(
 
   const serviceId =
     review.serviceId.toString();
+  const providerId =
+    review.providerId.toString();
 
   await review.deleteOne();
 
   await syncServiceStats(serviceId);
+  await syncProviderStats(providerId);
 
   return { id };
 }

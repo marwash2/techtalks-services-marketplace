@@ -30,14 +30,51 @@ export default async function ProviderLayout({
 
   await connectDB();
   const provider = await Provider.findOne({ userId: session.user.id }).lean();
+  const providerStatus =
+    (provider as { providerStatus?: "pending" | "approved" | "rejected" } | null)
+      ?.providerStatus ?? null;
 
   if (!provider) {
     return (
-      <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto w-full max-w-6xl">
-          <ProviderOnboardingForm />
-        </div>
-      </div>
+      <>
+        <ProviderSidebar />
+        <ProviderContentWrapper>
+          <div className="mx-auto max-w-7xl py-8">
+            <ProviderOnboardingForm />
+          </div>
+        </ProviderContentWrapper>
+      </>
+    );
+  }
+
+  if (providerStatus !== "approved") {
+    const onboardingProvider = provider as {
+      _id: { toString(): string };
+      businessName?: string;
+      location?: string;
+      description?: string;
+      avatar?: string | null;
+      providerStatus?: "pending" | "approved" | "rejected";
+    };
+
+    return (
+      <>
+        <ProviderSidebar />
+        <ProviderContentWrapper>
+          <div className="mx-auto max-w-7xl py-8">
+            <ProviderOnboardingForm
+              initialProvider={{
+                id: onboardingProvider._id.toString(),
+                businessName: onboardingProvider.businessName ?? "",
+                location: onboardingProvider.location ?? "",
+                description: onboardingProvider.description ?? "",
+                avatar: onboardingProvider.avatar ?? "",
+                providerStatus: onboardingProvider.providerStatus ?? "pending",
+              }}
+            />
+          </div>
+        </ProviderContentWrapper>
+      </>
     );
   }
 

@@ -1,19 +1,6 @@
 "use client";
 
-import {
-  CalendarDays,
-  ChevronRight,
-  ShieldCheck,
-  Sparkles,
-  Wrench,
-  Zap,
-  PanelsTopLeft,
-  Trees,
-  Droplets,
-  User,
-} from "lucide-react";
-
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -21,6 +8,9 @@ import Link from "next/link";
 export default function UserDashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [recommendedServices, setRecommendedServices] = useState<
+    { id: string; title: string; desc: string }[]
+  >([]);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -38,6 +28,28 @@ export default function UserDashboardPage() {
       router.replace("/admin/dashboard");
     }
   }, [status, session, router]);
+
+  useEffect(() => {
+    const loadRecommendedServices = async () => {
+      try {
+        const res = await fetch("/api/services?limit=4", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        const services = data?.data?.services ?? data?.services ?? [];
+        setRecommendedServices(
+          services.map((s: any) => ({
+            id: s.id || s._id || Math.random().toString(36),
+            title: s.title || "Service",
+            desc: s.description || "Reliable local service providers near you.",
+          })),
+        );
+      } catch {
+        // keep fallback cards
+      }
+    };
+
+    void loadRecommendedServices();
+  }, []);
 
   if (status === "loading") {
     return (

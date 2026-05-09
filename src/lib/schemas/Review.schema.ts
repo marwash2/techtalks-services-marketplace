@@ -17,6 +17,7 @@ const reviewSchema = new mongoose.Schema(
       ref: "Service",
       required: true,
     },
+    createdAt: { type: Date, default: Date.now },
     rating: { type: Number, required: true, min: 1, max: 5 },
     comment: { type: String },
   },

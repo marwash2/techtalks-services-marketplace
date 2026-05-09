@@ -11,117 +11,86 @@ import { createServiceSchema } from "@/lib/validations/service.validation";
 
 import { requireAuth } from "@/lib/auth-utils";
 import { createNotification } from "@/services/notification.service";
+import { assertCategoryExists } from "@/services/category.service"; // ← NEW
+import { Category } from "@/models/Category.model";                 // ← NEW
 
-/* =========================================================
-  *   TYPES
-  * ========================================================= */
 export const GET = withApiHandler(
+  
   async (req) => {
+    console.log("🔥 API /services HIT");
     const { searchParams } =
       new URL(req.url);
 
     /* ---------------- PAGINATION ---------------- */
     const page = parseInt(
-      searchParams.get("page") ||
-        "1"
+      searchParams.get("page") || "1"
     );
 
     const limit = parseInt(
       searchParams.get("limit") ||
-        String(
-          PAGINATION.DEFAULT_LIMIT
-        )
+        String(PAGINATION.DEFAULT_LIMIT)
     );
 
-    /* ---------------- DASHBOARD MODE ----------------
-       If dashboard=true:
-       Show ONLY logged-in provider services
-    */
+    /* ---------------- DASHBOARD MODE ---------------- */
     const dashboardOnly =
-      searchParams.get(
-        "dashboard"
-      ) === "true";
+      searchParams.get("dashboard") === "true";
 
     const filters: any = {};
 
     if (dashboardOnly) {
-      const session =
-        await requireAuth(req, [
-          "provider",
-          "admin",
-        ]);
-
-      /*
-        IMPORTANT:
-        session.user.id = USER ID
-        service layer converts USER ID
-        -> Provider._id
-      */
-      filters.providerId =
-        session.user.id;
+      const session = await requireAuth(req, ["provider", "admin"]);
+      filters.providerId = session.user.id;
     } else {
-      /*
-        Optional public providerId filter
-      */
       const providerId =
-        searchParams.get(
-          "providerId"
-        ) || undefined;
+        searchParams.get("providerId") || undefined;
+      if (providerId) filters.providerId = providerId;
+    }
 
-      if (providerId) {
-        filters.providerId =
-          providerId;
+    /* ---------------- CATEGORY FILTER (FIXED) ----------------
+       Old code: filters.category = "plumbing"
+       ❌ Service model has no "category" string field — never worked.
+
+       New code: resolve slug → categoryId (ObjectId) first,
+       then pass filters.categoryId to the service layer.
+    */
+    const categoryParam =
+      searchParams.get("category") || undefined;
+
+    if (categoryParam) {
+      const categoryDoc = await Category.findOne({ slug: categoryParam })
+        .select("_id")
+        .lean();
+
+      if (categoryDoc) {
+        filters.categoryId = categoryDoc._id.toString();
+      } else {
+        // Unknown slug — return empty result immediately, no DB scan needed
+        return Response.json(
+          successResponse({
+            services: [],
+            pagination: { page, limit, total: 0, pages: 0 },
+          })
+        );
       }
     }
 
     /* ---------------- OTHER FILTERS ---------------- */
-    const category =
-      searchParams.get(
-        "category"
-      ) || undefined;
+    const location = searchParams.get("location") || undefined;
+    const search   = searchParams.get("search")   || undefined;
+    const maxPrice = searchParams.get("maxPrice");
 
-    const location =
-      searchParams.get(
-        "location"
-      ) || undefined;
-
-    const search =
-      searchParams.get(
-        "search"
-      ) || undefined;
-
-    const maxPrice =
-      searchParams.get(
-        "maxPrice"
-      );
-
-    if (category)
-      filters.category =
-        category;
-
-    if (location)
-      filters.location =
-        location;
-
-    if (search)
-      filters.search =
-        search;
-
-    if (maxPrice)
-      filters.price =
-        Number(maxPrice);
+    if (location) filters.location = location;
+    if (search)   filters.search   = search;
+    if (maxPrice) filters.price    = Number(maxPrice);
 
     /* ---------------- FETCH SERVICES ---------------- */
-    const result =
-      await serviceService.getAllServices(
-        page,
-        limit,
-        filters
-      );
-
-    return Response.json(
-      successResponse(result)
+    const result = await serviceService.getAllServices(
+      page,
+      limit,
+      filters
     );
+
+    return Response.json(successResponse(result));
   }
 );
 
@@ -129,49 +98,32 @@ export const GET = withApiHandler(
    CREATE SERVICE
    - Provider/Admin only
    - Session gives USER ID
-   - Service layer converts USER ID
-     -> Provider._id
+   - Service layer converts USER ID → Provider._id
    ========================================================= */
 export const POST = withApiHandler(
   async (req) => {
     try {
-      const session =
-        await requireAuth(req, [
-          "provider",
-          "admin",
-        ]);
+      const session = await requireAuth(req, ["provider", "admin"]);
 
-      console.log(
-        "SESSION USER:",
-        session.user
-      );
+      console.log("SESSION USER:", session.user);
 
-      const body =
-        await req.json();
+      const body = await req.json();
 
-      console.log(
-        "REQUEST BODY:",
-        body
-      );
+      console.log("REQUEST BODY:", body);
 
-      const validated =
-        createServiceSchema.parse(
-          {
-            ...body,
-            providerId:
-              session.user.id,
-          }
-        );
+      const validated = createServiceSchema.parse({
+        ...body,
+        providerId: session.user.id,
+      });
 
-      console.log(
-        "VALIDATED:",
-        validated
-      );
+      console.log("VALIDATED:", validated);
 
-      const service =
-        await serviceService.createService(
-          validated
-        );
+      // ← NEW: validate category exists before creating service
+      if (validated.categoryId) {
+        await assertCategoryExists(validated.categoryId);
+      }
+
+      const service = await serviceService.createService(validated);
 
       try {
         await createNotification({
@@ -186,20 +138,11 @@ export const POST = withApiHandler(
       }
 
       return Response.json(
-        successResponse(
-          service,
-          MESSAGES.SUCCESS.CREATE
-        ),
-        {
-          status: 201,
-        }
+        successResponse(service, MESSAGES.SUCCESS.CREATE),
+        { status: 201 }
       );
     } catch (error) {
-      console.error(
-        "CREATE SERVICE ERROR:",
-        error
-      );
-
+      console.error("CREATE SERVICE ERROR:", error);
       throw error;
     }
   }
