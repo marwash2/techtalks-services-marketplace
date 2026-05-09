@@ -162,6 +162,14 @@ export const DELETE = withApiHandler(async (req, { params }) => {
   const { id } = await params;
 
   const existing = await serviceService.getServiceById(id);
+
+// Get the provider's userId (which is the actual User ID who owns this service)
+const providerUserId = String(
+  (existing as any)?.providerId?.userId || ""
+);
+console.log("SERVICE PROVIDER USER ID:", providerUserId);
+console.log("ADMIN ID:", session.user.id);
+
   const affectedUserIds = await getAffectedUserIds(id);
 
   await Booking.updateMany(
@@ -177,29 +185,55 @@ export const DELETE = withApiHandler(async (req, { params }) => {
     role: session.user.role || "",
   });
 
+  // ✅ notification for who deleted service
   try {
     await createNotification({
       userId: session.user.id,
       title: "Service Deleted",
-      message: `You deleted "${(existing as { title?: string }).title || "a service"}" (Price: $${String((existing as { price?: number }).price ?? "-")}, Duration: ${String((existing as { duration?: number }).duration ?? "-")} min).`,
+      message: `You deleted "${(existing as { title?: string }).title || "a service"}".`,
       type: "service_deleted",
       link: "/provider/services",
     });
   } catch (notificationError) {
     console.error(
-      "[DELETE /api/services/[id]] notification error:",
+      "[DELETE /api/services/[id]] self notification error:",
       notificationError,
     );
   }
 
+  // ✅ admin deleted provider service
+  if (
+    session.user.role === "admin" &&
+    providerUserId &&
+    providerUserId !== session.user.id
+  ) {
+    try {
+      await createNotification({
+        userId: providerUserId,
+        title: "Service Deleted by Admin",
+        message: `Your service "${(existing as { title?: string }).title || "a service"}" was deleted by admin.`,
+        type: "service_deleted",
+        link: "/provider/services",
+      });
+    } catch (notificationError) {
+      console.error(
+        "[DELETE /api/services/[id]] provider notification error:",
+        notificationError,
+      );
+    }
+  }
+
+  // ✅ notify users with bookings
   try {
-    const deletedTitle = (existing as { title?: string }).title || "a service";
+    const deletedTitle =
+      (existing as { title?: string }).title || "a service";
+
     await Promise.all(
       affectedUserIds.map((userId) =>
         createNotification({
           userId,
           title: "Service Removed",
-          message: `The provider deleted "${deletedTitle}". If you had a future booking, please choose another service.`,
+          message: `The service "${deletedTitle}" was removed. Your booking was cancelled.`,
           type: "service_deleted",
           link: "/user/bookings",
         }),
