@@ -25,15 +25,10 @@ export default async function UserLayout({
   }
 
   return (
-    <div className="mx-auto max-w-7xl py-8">
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-        <Toaster position="top-center" reverseOrder={false} />
-        <UserSidebar />
-        <div className="min-w-0 flex-1">
-       
-          {children}
-        </div>
-      </div>
-    </div>
+    <>
+      <Toaster position="top-center" reverseOrder={false} />
+      <UserSidebar />
+      <UserLayoutClient>{children}</UserLayoutClient>
+    </>
   );
 }

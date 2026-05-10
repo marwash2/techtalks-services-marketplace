@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 import {
   Bell,
@@ -18,7 +17,6 @@ import {
   ShieldCheck,
   CheckCheck,
   Sparkles,
-  ArrowLeft,
 } from "lucide-react";
 
 type NotificationItem = {
@@ -120,6 +118,21 @@ function getNotificationStyle(type?: string) {
         bg: "bg-green-50",
       };
 
+    case "review":
+    case "review_added":
+      return {
+        icon: Sparkles,
+        iconColor: "text-violet-600",
+        bg: "bg-violet-50",
+      };
+
+    case "earning_received":
+      return {
+        icon: CircleCheckBig,
+        iconColor: "text-emerald-600",
+        bg: "bg-emerald-50",
+      };
+
     case "system":
       return {
         icon: Bell,
@@ -153,8 +166,6 @@ function NotificationIcon({
 }
 
 export default function NotificationsView() {
-  const router = useRouter();
-
   const { data: session, status } =
     useSession();
 
@@ -300,18 +311,6 @@ export default function NotificationsView() {
   return (
     <div className="min-h-screen bg-[#f0f6ff]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-
-        {/* BACK BUTTON */}
-        <button
-          onClick={() =>
-            router.push("/user/dashboard")
-          }
-          className="inline-flex items-center gap-2 bg-white border-[1.5px] border-blue-100 hover:border-blue-200 rounded-2xl px-4 py-3 text-sm font-semibold text-[#1e3a5f] transition hover:bg-blue-50"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Dashboard
-        </button>
-
         {/* HERO */}
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-100 via-blue-50 to-indigo-100 border-[1.5px] border-blue-200 p-8 md:p-10">
 

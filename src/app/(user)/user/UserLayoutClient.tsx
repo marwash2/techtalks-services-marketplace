@@ -1,17 +1,14 @@
 "use client";
 
-import UserSidebar from "@/components/user/UserSidebar";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { Menu } from "lucide-react";
 
 export default function UserLayoutClient({
   children,
-  name,
 }: {
   children: React.ReactNode;
-  name?: string | null;
 }) {
-  const { open } = useSidebar();
+  const { open, isOpen } = useSidebar();
 
   return (
     <div className="mx-auto max-w-7xl py-8 ">
@@ -23,12 +20,10 @@ export default function UserLayoutClient({
         <Menu className="h-5 w-5 cursor-pointer"/>
       </button>
 
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-        <UserSidebar />
-
-        <div className="min-w-0 flex-1">
-          {children}
-        </div>
+      <div
+        className={`min-w-0 transition-all duration-300 ${isOpen ? "lg:ml-54" : "lg:ml-15"}`}
+      >
+        {children}
       </div>
     </div>
   );

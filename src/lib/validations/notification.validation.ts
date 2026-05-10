@@ -20,6 +20,8 @@ export const createNotificationSchema = z.object({
       "service_deleted",
       "service_added",
       "review",
+      "review_added",
+      "earning_received",
       "message",
       "promotion",
       "system",
