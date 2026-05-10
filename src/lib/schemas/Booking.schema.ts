@@ -59,4 +59,17 @@ const bookingSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// ── Prevents double-booking the same slot at the DB level ─────────────────────
+// Partial filter means cancelled/completed bookings don't block the slot.
+bookingSchema.index(
+  { serviceId: 1, date: 1, time: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      status: { $in: ["pending", "confirmed", "pending_payment"] },
+    },
+  }
+);
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default bookingSchema;
