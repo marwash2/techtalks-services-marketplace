@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { Bell, LogOut, Menu, X } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import BecomeProviderButtons from "./BecomeProviderButtons";
 
@@ -157,7 +157,7 @@ export default function Navbar() {
           {!session ? (
             <>
               <BecomeProviderButtons
-                value="become a provider"
+                value="Become a Provider"
                 classes="text-sm text-slate-600 hover:text-blue-600 bg-gray-50 transition border border-gray-200 px-4 py-2 rounded-full  "
               />
 
@@ -178,30 +178,7 @@ export default function Navbar() {
                 <span className="text-sm text-gray-500">Admin Panel</span>
               )}
 
-              {user?.role !== "provider" && (
-                <Link
-                  href={notificationsPath}
-                  className="relative p-2 text-gray-600 hover:text-blue-600 transition"
-                  aria-label="Notifications"
-                >
-                  <Bell className="h-5 w-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute -right-1 -top-1 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full border border-gray-300 bg-red-500 px-1 text-[10px] font-semibold text-white shadow-sm">
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
-                  )}
-                </Link>
-              )}
-
-              {user?.role !== "provider" && (
-                <button
-                  onClick={() => signOut({ callbackUrl: "/" })}
-                  className="text-sm bg-red-500 hover:bg-red-700 text-white px-3 py-1 rounded-md transition cursor-pointer"
-                  aria-label="Logout"
-                >
-                  <LogOut className="h-5 w-5" />
-                </button>
-              )}
+  
             </>
           )}
         </div>

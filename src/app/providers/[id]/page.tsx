@@ -2,11 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   ArrowRight,
-  BadgeCheck,
   BriefcaseBusiness,
   MapPin,
-  MessageSquareText,
+  ShieldCheck,
   Star,
+  ChevronRight,
 } from "lucide-react";
 
 import { PAGINATION } from "@/constants/config";
@@ -49,31 +49,27 @@ function isProviderUser(value: ProviderDTO["userId"]): value is ProviderUser {
   return typeof value === "object" && value !== null;
 }
 
-function getProviderName(provider: ProviderDTO) {
+function getProviderName(provider: ProviderDTO): string {
   if (isProviderUser(provider.userId) && provider.userId.name) {
     return provider.userId.name;
   }
-
   if (provider.businessName) {
     return provider.businessName;
   }
-
   return "Provider";
 }
 
-function getProviderAvatar(provider: ProviderDTO) {
+function getProviderAvatar(provider: ProviderDTO): string | null {
   if (provider.avatar) {
     return provider.avatar;
   }
-
   if (isProviderUser(provider.userId) && provider.userId.avatar) {
     return provider.userId.avatar;
   }
-
   return null;
 }
 
-function formatCurrency(value: number) {
+function formatCurrency(value: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -81,8 +77,19 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
+function getMinPrice(services: ServiceDTO[]): number | null {
+  if (services.length === 0) return null;
+  let min = services[0].price;
+  for (const service of services) {
+    if (service.price < min) {
+      min = service.price;
+    }
+  }
+  return min;
+}
+
 export default async function ProviderDetailsPage(
-  props: PageProps<"/providers/[id]">,
+  props: PageProps<"/providers/[id]">
 ) {
   const { id } = await props.params;
 
@@ -94,318 +101,277 @@ export default async function ProviderDetailsPage(
     if (error instanceof ApiError && error.statusCode === 404) {
       notFound();
     }
-
     throw error;
   }
 
-  const { services } = (await getAllServices(1, PAGINATION.MAX_LIMIT, {
+  const result = (await getAllServices(1, PAGINATION.MAX_LIMIT, {
     providerId: id,
   })) as { services: ServiceDTO[] };
 
+  const services = result.services;
   const providerName = getProviderName(provider);
   const providerAvatar = getProviderAvatar(provider);
-  const providerInitial = providerName.charAt(0).toUpperCase() || "P";
+  const initial = providerName.charAt(0).toUpperCase() || "P";
   const serviceCount = services.length;
+  const minPrice = getMinPrice(services);
+
+  const ratingDisplay = provider.rating ? provider.rating.toFixed(1) : "New";
+  const totalReviews = provider.totalReviews ?? 0;
+  const locationDisplay = provider.location || "Not provided";
+  const companyDisplay = provider.businessName || "Independent Provider";
+  const descriptionDisplay =
+    provider.description ||
+    providerName + " offers professional services" +
+      (provider.location ? " in " + provider.location : "") + ".";
+  const minPriceDisplay = minPrice !== null ? formatCurrency(minPrice) : "No pricing yet";
+  const verificationDisplay = provider.isVerified ? "Verified Provider" : "Not verified";
+  const servicesAvailableText =
+    serviceCount === 0
+      ? "No services yet"
+      : serviceCount === 1
+      ? "1 service available"
+      : serviceCount + " services available";
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 overflow-x-hidden">
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1.6fr)_360px]">
-        <div className="space-y-8 min-w-0">
-          <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-200 bg-gradient-to-r from-sky-50 via-white to-blue-50 px-6 py-8 sm:px-8">
-              <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-                <div className="flex items-start gap-4 min-w-0">
-                  {providerAvatar ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={providerAvatar}
-                      alt={providerName}
-                      className="h-24 w-24 rounded-[28px] object-cover shadow-sm"
-                    />
-                  ) : (
-                    <div className="flex h-24 w-24 items-center justify-center rounded-[28px] bg-blue-600 text-3xl font-semibold text-white shadow-sm">
-                      {providerInitial}
-                    </div>
-                  )}
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
 
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <h1 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-                        {providerName}
-                      </h1>
-                      {provider.isVerified ? (
-                        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">
-                          <BadgeCheck className="h-4 w-4" />
-                          Verified
-                        </span>
-                      ) : null}
-                    </div>
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-sm text-slate-400">
+          <Link href="/" className="text-blue-500 font-medium hover:underline">
+            Home
+          </Link>
+          <ChevronRight className="w-3.5 h-3.5" />
+          <Link href={Routes.PROVIDERS} className="text-blue-500 font-medium hover:underline">
+            Providers
+          </Link>
+          <ChevronRight className="w-3.5 h-3.5" />
+          <span className="text-slate-500 truncate">{providerName}</span>
+        </nav>
 
-                    <div className="flex flex-wrap gap-3 text-sm text-slate-600">
-                      <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 ring-1 ring-slate-200">
-                        <BriefcaseBusiness className="h-4 w-4 text-blue-600" />
-                        {provider.businessName || "Independent Provider"}
-                      </span>
-                      <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 ring-1 ring-slate-200">
-                        <MapPin className="h-4 w-4 text-amber-500" />
-                        {provider.location || "Location not available"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+        {/* Hero Banner */}
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-100 via-blue-50 to-indigo-100 border-[1.5px] border-blue-200 p-8 md:p-10">
+          {/* Decorative blobs */}
+          <div className="pointer-events-none absolute -top-16 -right-16 w-56 h-56 rounded-full bg-blue-300/20 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-10 left-1/3 w-40 h-40 rounded-full bg-indigo-300/15 blur-2xl" />
 
-                <div className="flex flex-wrap gap-3 text-sm">
-                  <div className="rounded-2xl bg-white px-4 py-3 text-slate-700 ring-1 ring-slate-200">
-                    <span className="block text-xs uppercase tracking-[0.2em] text-slate-400">
-                      Services
-                    </span>
-                    <span className="mt-1 block text-2xl font-semibold text-slate-900">
-                      {serviceCount}
-                    </span>
-                  </div>
-                  <div className="rounded-2xl bg-blue-600 px-4 py-3 text-white shadow-sm">
-                    <span className="block text-xs uppercase tracking-[0.2em] text-blue-100">
-                      Rating
-                    </span>
-                    <span className="mt-1 inline-flex items-center gap-2 text-2xl font-semibold">
-                      <Star className="h-5 w-5 fill-current" />
-                      {provider.rating?.toFixed(1) || "New"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="relative space-y-6">
 
-            <div className="px-6 py-8 sm:px-8">
-              <div className="grid gap-8 lg:grid-cols-[minmax(0,1.25fr)_220px]">
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-400">
-                      About Provider
-                    </p>
-                    <p className="mt-4 text-base leading-8 text-slate-600">
-                      {provider.description ||
-                        `${providerName} offers professional services${
-                          provider.location ? ` in ${provider.location}` : ""
-                        }.`}
-                    </p>
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="rounded-3xl bg-slate-50 p-5">
-                      <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
-                        Company
-                      </p>
-                      <p className="mt-3 text-lg font-semibold text-slate-900">
-                        {provider.businessName || "Independent Provider"}
-                      </p>
-                    </div>
-                    <div className="rounded-3xl bg-slate-50 p-5">
-                      <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
-                        Reviews
-                      </p>
-                      <p className="mt-3 text-lg font-semibold text-slate-900">
-                        {provider.totalReviews || 0} total reviews
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-[28px] bg-slate-50 p-5">
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-400">
-                    Profile Summary
-                  </p>
-                  <dl className="mt-4 space-y-4 text-sm text-slate-600">
-                    <div>
-                      <dt className="font-medium text-slate-500">
-                        Provider Name
-                      </dt>
-                      <dd className="mt-1 text-base font-semibold text-slate-900">
-                        {providerName}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="font-medium text-slate-500">Location</dt>
-                      <dd className="mt-1">
-                        {provider.location || "Not provided"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="font-medium text-slate-500">
-                        Availability
-                      </dt>
-                      <dd className="mt-1">Browse active services below</dd>
-                    </div>
-                  </dl>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section
-            id="provider-services"
-            className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
-          >
-            <div className="flex flex-col gap-3 border-b border-slate-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-400">
-                  Services By This Provider
-                </p>
-                <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
-                  Services by {providerName}
-                </h2>
-              </div>
-              <p className="text-sm text-slate-500">
-                {serviceCount === 0
-                  ? "No services published yet"
-                  : `${serviceCount} service${serviceCount === 1 ? "" : "s"} available`}
-              </p>
-            </div>
-
-            {serviceCount === 0 ? (
-              <div className="mt-8 rounded-[28px] border border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center">
-                <p className="text-lg font-semibold text-slate-900">
-                  No services available right now
-                </p>
-                <p className="mt-3 text-sm leading-7 text-slate-600">
-                  This provider profile exists, but there are no active services
-                  to display yet.
-                </p>
-              </div>
-            ) : (
-              <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                {services.map((service) => (
-                  <ServiceCard
-                    key={service.id}
-                    service={service}
-                    providerLocation={provider.location}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
-
-        <aside className="space-y-6">
-          <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-400">
-              Provider Header
-            </p>
-            <div className="mt-5 flex items-center gap-4">
+            {/* Avatar + Name + Tags */}
+            <div className="flex items-center gap-5 flex-wrap">
               {providerAvatar ? (
-                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={providerAvatar}
                   alt={providerName}
-                  className="h-16 w-16 rounded-2xl object-cover"
+                  className="w-[72px] h-[72px] rounded-[20px] object-cover border-2 border-blue-200 flex-shrink-0"
                 />
               ) : (
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600 text-xl font-semibold text-white">
-                  {providerInitial}
+                <div className="w-[72px] h-[72px] rounded-[20px] bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white text-3xl font-bold border-2 border-blue-200 flex-shrink-0">
+                  {initial}
                 </div>
               )}
 
-              <div>
-                <p className="text-xs uppercase tracking-[0.16em] text-slate-400">
-                  Provided by
-                </p>
-                <h2 className="mt-1 text-2xl font-semibold text-slate-900">
+              <div className="space-y-2.5">
+                <h1 className="text-2xl md:text-3xl font-bold text-[#1e3a5f] leading-tight">
                   {providerName}
-                </h2>
-                <p className="text-sm text-slate-500">
-                  {provider.businessName || "Independent Provider"}
-                </p>
+                </h1>
+                <div className="flex flex-wrap gap-2">
+                  {provider.isVerified && (
+                    <span className="inline-flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">
+                      <ShieldCheck className="w-3 h-3" />
+                      Verified Provider
+                    </span>
+                  )}
+                  {provider.location && (
+                    <span className="inline-flex items-center gap-1.5 bg-white border border-blue-200 text-[#1e3a5f] text-xs font-medium px-3 py-1 rounded-full">
+                      <MapPin className="w-3 h-3 text-amber-500" />
+                      {provider.location}
+                    </span>
+                  )}
+                  {provider.businessName && (
+                    <span className="inline-flex items-center gap-1.5 bg-white border border-blue-200 text-[#1e3a5f] text-xs font-medium px-3 py-1 rounded-full">
+                      <BriefcaseBusiness className="w-3 h-3 text-blue-500" />
+                      {provider.businessName}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
-            <p className="mt-6 text-sm leading-7 text-slate-600">
-              {provider.description ||
-                `${providerName} helps customers discover and book trusted services.`}
-            </p>
+            {/* Stat Pills */}
+            <div className="flex flex-wrap gap-3">
+              <div className="bg-white border border-blue-200 rounded-2xl px-5 py-3 flex flex-col gap-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Services
+                </span>
+                <span className="text-xl font-bold text-[#1e3a5f]">{serviceCount}</span>
+              </div>
 
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href={Routes.PROVIDERS}
-                className="inline-flex flex-1 items-center justify-center rounded-2xl border border-slate-200 px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-              >
-                Browse Providers
-              </Link>
+              <div className="bg-blue-600 border border-blue-500 rounded-2xl px-5 py-3 flex flex-col gap-1">
+                <span className="text-[10px] font-bold text-blue-200 uppercase tracking-widest">
+                  Rating
+                </span>
+                <span className="text-xl font-bold text-white">★ {ratingDisplay}</span>
+              </div>
+
+              <div className="bg-white border border-blue-200 rounded-2xl px-5 py-3 flex flex-col gap-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Reviews
+                </span>
+                <span className="text-xl font-bold text-[#1e3a5f]">{totalReviews}</span>
+              </div>
+
+              {minPrice !== null && (
+                <div className="bg-white border border-blue-200 rounded-2xl px-5 py-3 flex flex-col gap-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Starting From
+                  </span>
+                  <span className="text-xl font-bold text-[#1e3a5f]">{minPriceDisplay}</span>
+                </div>
+              )}
+            </div>
+
+          </div>
+        </section>
+
+        
+        {/* Main Layout */}
+        <div className="grid gap-5 xl:grid-cols-[1fr_300px] items-start">
+
+          {/* Left Column */}
+          <div className="space-y-5">
+
+            {/* About */}
+            <section className="bg-white border border-slate-200 rounded-2xl p-6">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
+                About Provider
+              </p>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                {descriptionDisplay}
+              </p>
+
+              <div className="grid grid-cols-2 gap-3 mt-5">
+                <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    Company
+                  </p>
+                  <p className="text-sm font-bold text-slate-900">{companyDisplay}</p>
+                </div>
+                <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                    Total Reviews
+                  </p>
+                  <p className="text-sm font-bold text-slate-900">{totalReviews} reviews</p>
+                </div>
+              </div>
+            </section>
+
+            {/* Services */}
+            <section id="provider-services" className="bg-white border border-slate-200 rounded-2xl p-6">
+              <div className="flex items-end justify-between mb-5 pb-4 border-b border-slate-100 flex-wrap gap-3">
+                <div>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
+                    Available Services
+                  </p>
+                  <h2 className="text-xl font-bold text-slate-900">
+                    Services by {providerName}
+                  </h2>
+                </div>
+                <span className="text-sm text-slate-400">{servicesAvailableText}</span>
+              </div>
+
+              {serviceCount === 0 ? (
+                <div className="border-2 border-dashed border-slate-200 rounded-xl p-10 text-center">
+                  <div className="w-12 h-12 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <BriefcaseBusiness className="w-5 h-5 text-slate-400" />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-800 mb-1">No services yet</h3>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    This provider has no active services to display right now.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {services.map((service) => (
+                    <ServiceCard
+                      key={service.id}
+                      service={service}
+                      providerLocation={provider.location}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+
+          {/* Sidebar */}
+          <aside>
+            <div className="bg-white border border-slate-200 rounded-2xl p-6">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5">
+                Quick Details
+              </p>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-[18px] h-[18px] text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 font-semibold">Location</p>
+                    <p className="text-sm font-bold text-slate-900">{locationDisplay}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <ShieldCheck className="w-[18px] h-[18px] text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 font-semibold">Verification</p>
+                    <p className="text-sm font-bold text-slate-900">{verificationDisplay}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <BriefcaseBusiness className="w-[18px] h-[18px] text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 font-semibold">Starting From</p>
+                    <p className="text-sm font-bold text-slate-900">{minPriceDisplay}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Star className="w-[18px] h-[18px] text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 font-semibold">Rating</p>
+                    <p className="text-sm font-bold text-slate-900">
+                      {provider.rating ? provider.rating.toFixed(1) + " / 5" : "No ratings yet"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <a
                 href="#provider-services"
-                className="inline-flex flex-1 items-center justify-center rounded-2xl bg-blue-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-blue-700"
+                className="mt-6 flex items-center justify-center gap-2 w-full bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold py-3 rounded-xl transition"
               >
-                See Services
+                View Services
+                <ArrowRight className="w-4 h-4" />
               </a>
+
+              <Link
+                href={Routes.PROVIDERS}
+                className="mt-3 flex items-center justify-center gap-2 w-full bg-white hover:bg-slate-50 text-slate-600 text-sm font-medium py-3 rounded-xl border border-slate-200 transition"
+              >
+                Browse All Providers
+              </Link>
             </div>
-          </section>
-
-          <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
-            <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-400">
-              Quick Details
-            </p>
-            <div className="mt-5 space-y-5">
-              <div className="flex items-start gap-3">
-                <div className="rounded-2xl bg-amber-50 p-3 text-amber-500">
-                  <MapPin className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-500">Location</p>
-                  <p className="mt-1 text-base font-semibold text-slate-900">
-                    {provider.location || "Not provided"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <div className="rounded-2xl bg-sky-50 p-3 text-sky-600">
-                  <MessageSquareText className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-500">
-                    Description
-                  </p>
-                  <p className="mt-1 text-base font-semibold text-slate-900">
-                    {provider.description ? "Available" : "Not added yet"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3">
-                <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-600">
-                  <BriefcaseBusiness className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-500">
-                    Starting From
-                  </p>
-                  <p className="mt-1 text-base font-semibold text-slate-900">
-                    {serviceCount > 0
-                      ? formatCurrency(
-                          Math.min(...services.map((service) => service.price)),
-                        )
-                      : "No pricing yet"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <Link
-              href={
-                serviceCount > 0 ? Routes.SERVICE_DETAILS(services[0].id) : "#"
-              }
-              className={`mt-8 inline-flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-medium transition ${
-                serviceCount > 0
-                  ? "bg-blue-600 text-white hover:bg-blue-700"
-                  : "cursor-not-allowed bg-slate-100 text-slate-400"
-              }`}
-              aria-disabled={serviceCount === 0}
-              tabIndex={serviceCount === 0 ? -1 : undefined}
-            >
-              View Service Details
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </section>
-        </aside>
+          </aside>
+        </div>
       </div>
     </div>
   );
