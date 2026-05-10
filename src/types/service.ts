@@ -9,7 +9,7 @@ export interface IService extends Document {
   tags: string[]; // enables AI semantic search + keyword search
   availability: string;
   description: string;
-  location: string;
+    locationId?: Types.ObjectId;
   image: string;
   reviews?: Types.ObjectId[]; 
   averageRating: number;
