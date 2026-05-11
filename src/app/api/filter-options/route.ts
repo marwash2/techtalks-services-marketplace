@@ -1,7 +1,8 @@
 import { withApiHandler } from "@/lib/api-handler";
 import { successResponse } from "@/lib/api-response";
 import { connectDB } from "@/lib/db";
-import { Category } from "@/models/Category.model";
+
+import { Category }from "@/models/Category.model";
 import { Provider } from "@/models/Provider.model";
 import { toCategoryListDTO } from "@/lib/dto/category.dto";
 

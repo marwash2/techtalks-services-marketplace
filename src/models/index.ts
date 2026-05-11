@@ -2,6 +2,8 @@ export { Review }   from "@/models/Review.model";
 export { Service }   from "@/models/Service.model";
 export { Favorite }  from "@/models/Favorite.model";
 export { Category }  from "@/models/Category.model";
+ export { Location }  from "@/models/Location.model"; 
+
  
 import "@/lib/schemas/Booking.schema";
 import "@/lib/schemas/User.schema";
