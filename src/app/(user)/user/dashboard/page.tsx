@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { CalendarDays, ChevronRight, Droplets, PanelsTopLeft, Sparkles, Trees, User, Wrench, Zap } from "lucide-react";
 
 export default function UserDashboardPage() {
   const { data: session, status } = useSession();

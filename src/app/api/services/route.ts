@@ -11,11 +11,12 @@ import { createServiceSchema } from "@/lib/validations/service.validation";
 
 import { requireAuth } from "@/lib/auth-utils";
 import { createNotification } from "@/services/notification.service";
-import { assertCategoryExists } from "@/services/category.service"; // ← NEW
-import { Category } from "@/models/Category.model";                 // ← NEW
+import { assertCategoryExists } from "@/services/category.service";
+import { Category } from "@/models/Category.model";
+import { Location } from "@/models/Location.model";  // ← NEW
 
 export const GET = withApiHandler(
-  
+
   async (req) => {
     console.log("🔥 API /services HIT");
     const { searchParams } =
@@ -46,13 +47,7 @@ export const GET = withApiHandler(
       if (providerId) filters.providerId = providerId;
     }
 
-    /* ---------------- CATEGORY FILTER (FIXED) ----------------
-       Old code: filters.category = "plumbing"
-       ❌ Service model has no "category" string field — never worked.
-
-       New code: resolve slug → categoryId (ObjectId) first,
-       then pass filters.categoryId to the service layer.
-    */
+    /* ---------------- CATEGORY FILTER ---------------- */
     const categoryParam =
       searchParams.get("category") || undefined;
 
@@ -64,7 +59,35 @@ export const GET = withApiHandler(
       if (categoryDoc) {
         filters.categoryId = categoryDoc._id.toString();
       } else {
-        // Unknown slug — return empty result immediately, no DB scan needed
+        return Response.json(
+          successResponse({
+            services: [],
+            pagination: { page, limit, total: 0, pages: 0 },
+          })
+        );
+      }
+    }
+
+    /* ---------------- LOCATION FILTER (FIXED) ----------------
+       Old code: filters.location = "zahle"
+       ❌ Service model no longer has a location string field.
+       New code: resolve location name → locationId (ObjectId).
+    */
+    const locationParam =
+      searchParams.get("location") || undefined;
+
+    if (locationParam) {
+      const locationDoc = await Location.findOne({
+        name:     { $regex: new RegExp(`^${locationParam}$`, "i") },
+        isActive: true,
+      })
+        .select("_id")
+        .lean();
+
+      if (locationDoc) {
+        filters.locationId = locationDoc._id.toString();
+      } else {
+        // Unknown location — return empty result
         return Response.json(
           successResponse({
             services: [],
@@ -75,13 +98,11 @@ export const GET = withApiHandler(
     }
 
     /* ---------------- OTHER FILTERS ---------------- */
-    const location = searchParams.get("location") || undefined;
     const search   = searchParams.get("search")   || undefined;
     const maxPrice = searchParams.get("maxPrice");
 
-    if (location) filters.location = location;
-    if (search)   filters.search   = search;
-    if (maxPrice) filters.price    = Number(maxPrice);
+    if (search)   filters.search = search;
+    if (maxPrice) filters.price  = Number(maxPrice);
 
     /* ---------------- FETCH SERVICES ---------------- */
     const result = await serviceService.getAllServices(
@@ -118,9 +139,21 @@ export const POST = withApiHandler(
 
       console.log("VALIDATED:", validated);
 
-      // ← NEW: validate category exists before creating service
+      // Validate category exists before creating service
       if (validated.categoryId) {
         await assertCategoryExists(validated.categoryId);
+      }
+
+      // Validate location exists if provided
+      if (validated.locationId) {
+        const locationExists = await Location.exists({
+          _id:      validated.locationId,
+          isActive: true,
+        });
+        if (!locationExists) {
+          const { ApiError } = await import("@/lib/api-error");
+          throw new ApiError("Location not found", 404);
+        }
       }
 
       const service = await serviceService.createService(validated);

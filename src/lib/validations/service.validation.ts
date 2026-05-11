@@ -18,7 +18,11 @@ export const createServiceSchema = z.object({
     1,
     "Availability is required"
   ),
-  location: z.string().optional(),
+ locationId:   z
+    .string()
+    .regex(/^[a-f\d]{24}$/i, "Invalid location ID")
+    .optional(),
+    
   image: z.string().url("Invalid image URL").nullable().optional(),
   isActive: z.boolean().optional(),
 });

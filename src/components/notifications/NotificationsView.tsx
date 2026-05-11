@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 import {
   Bell,
@@ -20,7 +19,6 @@ import {
   ShieldCheck,
   CheckCheck,
   Sparkles,
-  ArrowLeft,
 } from "lucide-react";
 
 type NotificationItem = {
