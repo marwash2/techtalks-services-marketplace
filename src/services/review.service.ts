@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/db";
 import { Review } from "@/models/Review.model";
 import { Service } from "@/models/Service.model";
 import { Provider } from "@/models/Provider.model";
+import { createNotification } from "@/services/notification.service";
 import { ApiError } from "@/lib/api-error";
 import { toReviewDTO, toReviewListDTO } from "@/lib/dto/review.dto";
 import { MESSAGES, PAGINATION } from "@/constants/config";
@@ -176,11 +177,9 @@ export async function createReview(
 ) {
   await connectDB();
 
-  const serviceExists = await Service.exists({
-    _id: input.serviceId,
-  });
+  const serviceDoc = await Service.findById(input.serviceId).select("title").lean();
 
-  if (!serviceExists) {
+  if (!serviceDoc) {
     throw new ApiError("Service not found", 404);
   }
 
@@ -201,6 +200,25 @@ export async function createReview(
     )
       .lean()
       .exec();
+
+    try {
+      const providerDoc = await Provider.findById(input.providerId).select("userId").lean();
+      const providerUserId = String(
+        (providerDoc as { userId?: unknown } | null)?.userId ?? ""
+      );
+
+      if (providerUserId) {
+        await createNotification({
+          userId: providerUserId,
+          title: "New Review Received",
+          message: `You received a ${input.rating}-star review on "${(serviceDoc as { title?: string }).title ?? "your service"}".`,
+          type: "review_added",
+          link: "/provider/reviews",
+        });
+      }
+    } catch (notificationError) {
+      console.error("[createReview] notification error:", notificationError);
+    }
 
     return toReviewDTO(populated);
   } catch (err: any) {

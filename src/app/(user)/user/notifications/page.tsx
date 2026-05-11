@@ -1,6 +1,6 @@
-import { redirect } from "next/navigation";
+import NotificationsView from "@/components/notifications/NotificationsView";
 
 export default function UserNotificationsPage() {
-  redirect("/notifications");
+  return <NotificationsView />;
 }
 

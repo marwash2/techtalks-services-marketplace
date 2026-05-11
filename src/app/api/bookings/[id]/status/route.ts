@@ -5,10 +5,12 @@
 
 import "@/models";
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { ZodError } from "zod";
 import { getBookingById, updateBooking } from "@/services/booking.service";
 import { createNotification } from "@/services/notification.service";
 import { Provider } from "@/models/Provider.model";
+import Booking from "@/models/Booking.model";
 import {
   updateStatusSchema,
   ALLOWED_TRANSITIONS,
@@ -184,6 +186,38 @@ export async function PATCH(
             message: copy.providerMessage,
             type: copy.notificationType,
             link: "/provider/bookings",
+          })
+        );
+      }
+
+      if (newStatus === "completed" && providerUserId) {
+        const earnedAmount = Number((booking as { price?: unknown }).price ?? 0);
+        const providerObjectId = mongoose.Types.ObjectId.isValid(providerProfileId)
+          ? new mongoose.Types.ObjectId(providerProfileId)
+          : null;
+        const totals = await Booking.aggregate([
+          {
+            $match: {
+              providerId: providerObjectId,
+              status: "completed",
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              total: { $sum: "$price" },
+            },
+          },
+        ]);
+        const totalEarnings = Number((totals[0] as { total?: number } | undefined)?.total ?? 0);
+
+        tasks.push(
+          createNotification({
+            userId: providerUserId,
+            title: "Earning Received",
+            message: `You earned $${earnedAmount.toFixed(2)}. Total earnings: $${totalEarnings.toFixed(2)}.`,
+            type: "earning_received",
+            link: "/provider/earnings",
           })
         );
       }

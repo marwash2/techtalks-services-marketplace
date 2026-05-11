@@ -1,6 +1,6 @@
 "use client";
 
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -12,12 +12,11 @@ import {
   Bot,
   Sparkles,
   Bell,
-  Menu,
-  X,
+  ChevronLeft,
+  LogOut,
 } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
-import Image from "next/image";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const userLinks = [
   {
@@ -47,7 +46,7 @@ const userLinks = [
   },
   {
     name: "Notifications",
-    path: "/notifications",
+    path: "/user/notifications",
     icon: Bell,
   },
   {
@@ -65,134 +64,89 @@ const userLinks = [
 export default function UserSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { data: session } = useSession();
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  const { isOpen, close, open } = useSidebar();
+  const { isOpen, close, toggle } = useSidebar();
 
   useEffect(() => {
-    if (window.innerWidth >= 1024) return;
-    close();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+    const userId = session?.user?.id;
+    if (!userId) return;
+
+    let isMounted = true;
+
+    const loadUnread = async () => {
+      try {
+        const res = await fetch(
+          `/api/notifications?userId=${userId}&page=1&limit=50`,
+          {
+            cache: "no-store",
+          },
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        const items = data?.data?.notifications ?? [];
+        const unread = items.filter(
+          (item: { isRead?: boolean }) => !item.isRead,
+        ).length;
+        if (isMounted) setUnreadCount(unread);
+      } catch {
+        // no-op
+      }
+    };
+
+    const handleNotificationsUpdated = () => {
+      void loadUnread();
+    };
+
+    window.addEventListener("notifications-updated", handleNotificationsUpdated);
+    void loadUnread();
+    const interval = window.setInterval(loadUnread, 5000);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener(
+        "notifications-updated",
+        handleNotificationsUpdated,
+      );
+      window.clearInterval(interval);
+    };
+  }, [session?.user?.id]);
 
   return (
     <>
-      {/* MOBILE TOPBAR */}
-      <div className="sticky top-0 z-50 flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 shadow-sm lg:hidden">
-        <div className="flex items-center gap-3">
-          <Image
-            src="/dashboard-logo.jpg"
-            alt="Khidmati Logo"
-            width={40}
-            height={40}
-            className="rounded-xl object-contain"
-          />
-
-          <div>
-            <h2 className="text-sm font-semibold text-slate-900">
-              Khidmati
-            </h2>
-            <p className="text-[11px] uppercase tracking-[0.15em] text-slate-400">
-              User Area
-            </p>
-          </div>
-        </div>
-
-        <button
-          onClick={() => {
-            if (isOpen) {
-              close();
-            } else {
-              open();
-            }
-          }}
-          className="rounded-xl border border-slate-200 p-2 text-slate-700 transition hover:bg-slate-100"
-        >
-          {isOpen ? (
-            <X className="h-5 w-5" />
-          ) : (
-            <Menu className="h-5 w-5" />
-          )}
-        </button>
-      </div>
-
-      {/* Mobile overlay backdrop */}
       {isOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/40 lg:hidden"
-          onClick={() => {
-            if (window.innerWidth < 1024) close();
-          }}
           aria-hidden="true"
         />
       )}
 
       <aside
-        className={`
-          fixed top-0 left-0 z-50 h-full w-[280px] border-r border-slate-200 bg-white p-5 shadow-xl transition-transform duration-300
-          lg:static lg:h-auto lg:translate-x-0 lg:rounded-[28px] lg:border lg:shadow-sm lg:w-[260px]
-          ${isOpen ? "translate-x-0" : "-translate-x-full"}
-        `}
+        className={`fixed top-19 left-0 z-50 h-[calc(100vh-4rem)] w-64 border-r border-slate-200 bg-white shadow-sm transition-all duration-300 flex flex-col ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0 ${isOpen ? "lg:w-54" : "lg:w-15"}`}
       >
-        {/* DESKTOP HEADER */}
-        <div className="hidden items-center gap-3 px-3 py-2 lg:flex">
-          <div className="h-11 w-11 overflow-hidden rounded-2xl bg-white">
-            <Image
-              src="/dashboard-logo.jpg"
-              alt="Khidmati Logo"
-              width={44}
-              height={44}
-              className="object-contain"
-            />
-          </div>
+        <button
+          type="button"
+          onClick={toggle}
+          className={`fixed top-2 z-60 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 ${
+            isOpen ? "left-49" : "left-10"
+          }`}
+          aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
+        >
+          <ChevronLeft
+            className={`h-5 w-5 transition-transform ${isOpen ? "" : "-rotate-180"}`}
+          />
+        </button>
 
-          <div>
-            <p className="text-xl font-semibold tracking-tight text-slate-900">
-              Khidmati
-            </p>
-            <p className="text-xs uppercase tracking-[0.16em] text-slate-400">
-              User Area
-            </p>
-          </div>
-        </div>
-
-        {/* MOBILE CLOSE */}
-        <div className="mb-6 flex items-center justify-between lg:hidden">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/dashboard-logo.jpg"
-              alt="Khidmati Logo"
-              width={40}
-              height={40}
-              className="rounded-xl object-contain"
-            />
-
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900">
-                Khidmati
-              </h2>
-              <p className="text-xs uppercase tracking-[0.16em] text-slate-400">
-                User Area
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={close}
-            className="rounded-xl p-2 hover:bg-slate-100"
-          >
-            <X className="h-5 w-5 text-slate-700" />
-          </button>
-        </div>
-
-        <nav className="mt-4 space-y-2 lg:mt-6">
+        <nav className="flex-1 space-y-2 overflow-y-auto px-0 py-2">
           {userLinks.map((link) => {
             const Icon = link.icon;
-
             const isActive =
               link.path === "/"
                 ? pathname === "/"
-                : pathname === link.path ||
-                  pathname.startsWith(`${link.path}/`);
+                : pathname === link.path || pathname.startsWith(`${link.path}/`);
 
             return (
               <Link
@@ -203,33 +157,43 @@ export default function UserSidebar() {
                     event.preventDefault();
                     router.push("/user/dashboard");
                     router.refresh();
-                    close();
                     return;
                   }
-
-                  close();
                 }}
-                className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                className={`relative flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-slate-950 text-white shadow-sm"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    ? "bg-blue-50 text-blue-600"
+                    : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                 }`}
               >
                 <Icon className="h-5 w-5" />
-                <span>{link.name}</span>
+
+                {link.name === "Notifications" && unreadCount > 0 && !isOpen && (
+                  <span className="absolute left-8 top-2 inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+                )}
+
+                <span className={`${isOpen ? "inline" : "hidden"}`}>{link.name}</span>
+
+                {link.name === "Notifications" && unreadCount > 0 && isOpen && (
+                  <span className="ml-auto inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-semibold text-white">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
               </Link>
             );
           })}
+        </nav>
 
+        <div className="border-t border-slate-200 px-2 py-4">
           <button
             type="button"
             onClick={() => signOut({ callbackUrl: "/" })}
-            className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
           >
-            <span className="text-lg">⎋</span>
-            <span>Logout</span>
+            <LogOut className="h-4 w-4 text-red-600" />
+            <span className={`${isOpen ? "inline" : "hidden"}`}>Logout</span>
           </button>
-        </nav>
+        </div>
       </aside>
     </>
   );
