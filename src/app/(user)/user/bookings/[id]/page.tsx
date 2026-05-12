@@ -30,14 +30,14 @@ import Loader from "@/components/shared/Loader";
 type BookingRef =
   | string
   | {
-      _id?: string;
-      id?: string;
-      title?: string;
-      businessName?: string;
-      name?: string;
-      email?: string;
-      location?: string;
-    };
+    _id?: string;
+    id?: string;
+    title?: string;
+    businessName?: string;
+    name?: string;
+    email?: string;
+    location?: string;
+  };
 
 type BookingDetails = {
   id: string;
@@ -110,9 +110,9 @@ function statusConfig(status?: string) {
 }
 
 function paymentBadgeStyles(status?: string) {
-  if (status === "paid")    return "bg-emerald-50 text-emerald-700 border-emerald-200";
+  if (status === "paid") return "bg-emerald-50 text-emerald-700 border-emerald-200";
   if (status === "pending") return "bg-amber-50 text-amber-700 border-amber-200";
-  if (status === "failed")  return "bg-rose-50 text-rose-700 border-rose-200";
+  if (status === "failed") return "bg-rose-50 text-rose-700 border-rose-200";
   return "bg-slate-50 text-slate-500 border-slate-200";
 }
 
@@ -167,7 +167,9 @@ export default function UserBookingDetailsPage() {
   const canPay = useMemo(() => {
     return (
       booking?.status === "confirmed" &&
-      (booking?.paymentStatus === "unpaid" || booking?.paymentStatus === "failed")
+      (booking?.paymentStatus === "unpaid" ||
+        booking?.paymentStatus === "failed" ||
+        booking?.paymentStatus === "pending")
     );
   }, [booking?.status, booking?.paymentStatus]);
 
@@ -355,11 +357,10 @@ export default function UserBookingDetailsPage() {
         {/* ACTION MESSAGE */}
         {actionMessage && (
           <div
-            className={`rounded-2xl px-5 py-4 text-sm font-medium ${
-              booking.status === "cancelled"
+            className={`rounded-2xl px-5 py-4 text-sm font-medium ${booking.status === "cancelled"
                 ? "bg-green-50 text-green-700 border border-green-200"
                 : "bg-red-50 text-red-700 border border-red-200"
-            }`}
+              }`}
           >
             {actionMessage}
           </div>
@@ -389,21 +390,21 @@ export default function UserBookingDetailsPage() {
               </div>
 
               <div className="grid sm:grid-cols-2 gap-4">
-                <DetailCard icon={ClipboardList}     label="Booking ID"    value={booking.id} />
-                <DetailCard icon={BriefcaseBusiness} label="Service"       value={service?.title || "-"} />
-                <DetailCard icon={User}              label="Provider"      value={provider?.businessName || "-"} />
-                <DetailCard icon={MapPin}            label="Location"      value={provider?.location || "-"} />
-                <DetailCard icon={CalendarDays}      label="Date"          value={formatDate(booking.date)} />
-                <DetailCard icon={Clock3}            label="Time"          value={booking.time || formatTime(booking.date)} />
-                <DetailCard icon={CircleDollarSign}  label="Price"         value={`$${booking.price}`} />
-                <DetailCard icon={CircleDollarSign}  label="Payment"       value={booking.paymentStatus ?? "unpaid"} />
+                <DetailCard icon={ClipboardList} label="Booking ID" value={booking.id} />
+                <DetailCard icon={BriefcaseBusiness} label="Service" value={service?.title || "-"} />
+                <DetailCard icon={User} label="Provider" value={provider?.businessName || "-"} />
+                <DetailCard icon={MapPin} label="Location" value={provider?.location || "-"} />
+                <DetailCard icon={CalendarDays} label="Date" value={formatDate(booking.date)} />
+                <DetailCard icon={Clock3} label="Time" value={booking.time || formatTime(booking.date)} />
+                <DetailCard icon={CircleDollarSign} label="Price" value={`$${booking.price}`} />
+                <DetailCard icon={CircleDollarSign} label="Payment" value={booking.paymentStatus ?? "unpaid"} />
                 {booking.paidAt && (
-                  <DetailCard icon={CheckCircle2}    label="Paid At"       value={formatDate(booking.paidAt)} />
+                  <DetailCard icon={CheckCircle2} label="Paid At" value={formatDate(booking.paidAt)} />
                 )}
-                <DetailCard icon={User}              label="Booked By"     value={user?.name || "-"} />
-                <DetailCard icon={Mail}              label="User Email"    value={user?.email || "-"} />
-                <DetailCard icon={CalendarDays}      label="Created At"    value={formatDate(booking.createdAt)} />
-                <DetailCard icon={RefreshCcw}        label="Updated At"    value={formatDate(booking.updatedAt)} />
+                <DetailCard icon={User} label="Booked By" value={user?.name || "-"} />
+                <DetailCard icon={Mail} label="User Email" value={user?.email || "-"} />
+                <DetailCard icon={CalendarDays} label="Created At" value={formatDate(booking.createdAt)} />
+                <DetailCard icon={RefreshCcw} label="Updated At" value={formatDate(booking.updatedAt)} />
               </div>
             </div>
 
