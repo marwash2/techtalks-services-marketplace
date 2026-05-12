@@ -1,5 +1,4 @@
-import { BriefcaseBusiness, MapPin } from "lucide-react";
-
+import { BriefcaseBusiness, MapPin, Star, BadgeCheck } from "lucide-react";
 import ProviderCard from "@/components/providers/ProviderCard";
 import { getAllProviders } from "@/services/provider.service";
 
@@ -24,69 +23,84 @@ export default async function ProvidersPage() {
   } catch (error) {
     console.error("Error fetching providers:", error);
     return (
-      <div className="flex justify-center items-center py-20">
-        <p className="text-red-600">Failed to load providers. Please try again later.</p>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+        <div className="rounded-[24px] border border-rose-200 bg-white px-8 py-10 text-center shadow-sm max-w-md w-full">
+          <p className="text-sm font-semibold text-rose-600 mb-2">
+            Failed to load
+          </p>
+          <p className="text-slate-500 text-sm">
+            Could not load providers. Please try again later.
+          </p>
+        </div>
       </div>
     );
   }
 
-  if (!providers) {
-    return (
-      <div className="flex justify-center items-center py-20">
-        <p className="text-slate-600">Loading providers...</p>
-      </div>
-    );
-  }
+  const verifiedCount = providers.filter((p) => p.isVerified).length;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-sm">
-        <div className="bg-gradient-to-r from-sky-50 via-white to-blue-50 p-6 overflow-hidden">
-          {" "}
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-slate-400">
-            Find Providers
-          </p>
-          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-slate-900">
-            Browse trusted providers
-          </h1>
-          <p className="mt-4 max-w-2xl text-base leading-8 text-slate-600">
-            Open any provider profile to view their company info, description,
-            location, and services.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3 text-sm text-slate-600">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 ring-1 ring-slate-200">
-              <BriefcaseBusiness className="h-4 w-4 text-blue-600" />
-              {providers.length} provider{providers.length === 1 ? "" : "s"}
-            </span>
-            <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 ring-1 ring-slate-200">
-              <MapPin className="h-4 w-4 text-amber-500" />
-              Public profile pages enabled
-            </span>
-          </div>
-        </div>
-      </section>
+    <div className="min-h-screen bg-slate-50">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 space-y-8">
 
-      {providers.length === 0 ? (
-        <section className="mt-8 rounded-[32px] border border-dashed border-slate-300 bg-slate-50 px-6 py-14 text-center">
-          <h2 className="text-2xl font-semibold text-slate-900">
-            No providers found
-          </h2>
-          <p className="mt-3 text-sm leading-7 text-slate-600">
-            There are no provider profiles in the database yet. Once a provider
-            is created, it will appear here automatically.
-          </p>
-        </section>
-      ) : (
-        <section className="mt-8 grid gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 items-stretch">
-          {providers.map((provider) => (
-            <div key={provider.id} className="h-full">
-              <div className="h-full flex flex-col">
-                <ProviderCard provider={provider} />
-              </div>
+        {/* ── Hero banner ── */}
+        <section className="rounded-[28px] border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <div className="bg-gradient-to-br from-sky-50 via-white to-blue-50 px-8 py-10">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-blue-600 mb-2">
+              Marketplace
+            </p>
+            <h1 className="text-4xl font-semibold tracking-tight text-slate-900">
+              Browse trusted providers
+            </h1>
+            <p className="mt-3 max-w-xl text-sm leading-7 text-slate-500">
+              Discover verified service professionals. Open any profile to view
+              their services, location, and reviews.
+            </p>
+
+            {/* Stat pills */}
+            <div className="mt-6 flex flex-wrap gap-3">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-medium text-slate-600 ring-1 ring-slate-200 shadow-sm">
+                <BriefcaseBusiness className="h-3.5 w-3.5 text-blue-600" />
+                {providers.length} provider{providers.length === 1 ? "" : "s"}
+              </span>
+              {verifiedCount > 0 && (
+                <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-medium text-slate-600 ring-1 ring-slate-200 shadow-sm">
+                  <BadgeCheck className="h-3.5 w-3.5 text-emerald-500" />
+                  {verifiedCount} verified
+                </span>
+              )}
+              <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-medium text-slate-600 ring-1 ring-slate-200 shadow-sm">
+                <MapPin className="h-3.5 w-3.5 text-amber-500" />
+                Multiple locations
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-medium text-slate-600 ring-1 ring-slate-200 shadow-sm">
+                <Star className="h-3.5 w-3.5 text-violet-500" />
+                Rated &amp; reviewed
+              </span>
             </div>
-          ))}
+          </div>
         </section>
-      )}
+
+        {/* ── Grid or empty state ── */}
+        {providers.length === 0 ? (
+          <section className="rounded-[28px] border border-dashed border-slate-200 bg-white px-8 py-20 text-center shadow-sm">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100">
+              <BriefcaseBusiness className="h-6 w-6 text-slate-400" />
+            </div>
+            <h2 className="text-lg font-semibold text-slate-900">
+              No providers yet
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500 max-w-sm mx-auto">
+              Provider profiles will appear here once they complete onboarding.
+            </p>
+          </section>
+        ) : (
+          <section className="grid gap-5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+            {providers.map((provider) => (
+              <ProviderCard key={provider.id} provider={provider} />
+            ))}
+          </section>
+        )}
+      </div>
     </div>
   );
 }
