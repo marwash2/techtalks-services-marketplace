@@ -142,6 +142,7 @@ export async function createCategory(input: CreateCategoryInput) {
       slug,
       description: input.description,
       icon:        input.icon,
+      isActive:    input.isActive ?? true,
       parentId:    input.parentId ?? null,
     });
 

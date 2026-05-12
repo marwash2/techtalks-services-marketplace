@@ -72,9 +72,9 @@ function ServicesContent({ slug }: { slug: string }) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-      {services.map((service) => (
+      {services.map((service, index) => (
         <ServiceCard
-          key={service._id}
+          key={service._id ?? `${service.title}-${index}`}
           service={{
             _id: service._id,
             title: service.title,

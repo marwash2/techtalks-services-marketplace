@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   Bell,
   Briefcase,
+  FolderTree,
 } from "lucide-react";
 
 const navItems = [
@@ -28,6 +29,7 @@ const navItems = [
       { name: "Providers",         href: "/admin/providers",           icon: UserCheck,       sub: false },
       { name: "Pending Approvals", href: "/admin/providers/approvals", icon: Clock,           sub: true  },
       { name: "Services",          href: "/admin/services",            icon: Briefcase,       sub: false },
+      { name: "Categories",        href: "/admin/categories",          icon: FolderTree,      sub: false },
       { name: "Analytics",         href: "/admin/analytics",           icon: BarChart3,       sub: false },
       { name: "Reports",           href: "/admin/reports",             icon: FileBarChart,    sub: false },
     ],

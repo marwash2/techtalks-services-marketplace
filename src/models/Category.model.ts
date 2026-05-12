@@ -26,6 +26,11 @@ const CategorySchema = new Schema<ICategory>(
       required: true,
       trim: true,
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
     parentId: {
       type: Schema.Types.ObjectId,
       ref: "Category",
