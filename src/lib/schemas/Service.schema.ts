@@ -21,7 +21,12 @@ const serviceSchema = new mongoose.Schema<IService>(
     isActive: { type: Boolean, default: true },
     tags: { type: [String], default: [] },
     availability: { type: String, required: true },
-    location: { type: String },
+    locationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Location",
+      default: null,
+      index: true,
+    },
     averageRating: { type: Number, default: 0, min: 0, max: 5 },
     reviewCount: { type: Number, default: 0, min: 0 },
     favoritesCount: { type: Number, default: 0, min: 0 },

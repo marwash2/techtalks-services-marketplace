@@ -3,11 +3,11 @@ import { notFound } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
-  BadgeCheck,
   BriefcaseBusiness,
   MapPin,
-  MessageSquareText,
+  ShieldCheck,
   Star,
+  ChevronRight,
 } from "lucide-react";
 
 import { PAGINATION } from "@/constants/config";
@@ -68,7 +68,7 @@ function getProviderAvatar(provider: ProviderDTO) {
   return null;
 }
 
-function formatCurrency(value: number) {
+function formatCurrency(value: number): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -92,7 +92,7 @@ export default async function ProviderDetailsPage(
     throw error;
   }
 
-  const { services } = (await getAllServices(1, PAGINATION.MAX_LIMIT, {
+  const result = (await getAllServices(1, PAGINATION.MAX_LIMIT, {
     providerId: id,
   })) as { services: ServiceDTO[] };
 
@@ -343,8 +343,10 @@ export default async function ProviderDetailsPage(
                   <p className="text-xs text-slate-400 mt-0.5">
                     {provider.businessName || "Independent Provider"}
                   </p>
+                  <p className="text-sm font-bold text-slate-900">{totalReviews} reviews</p>
                 </div>
               </div>
+            </section>
 
               <p className="text-xs leading-6 text-slate-500 mb-5">
                 {provider.description ||
@@ -419,6 +421,69 @@ export default async function ProviderDetailsPage(
                       {provider.rating
                         ? `${provider.rating.toFixed(1)} · ${provider.totalReviews || 0} reviews`
                         : "No reviews yet"}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {services.map((service) => (
+                    <ServiceCard
+                      key={service.id}
+                      service={service}
+                      providerLocation={provider.location}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+
+          {/* Sidebar */}
+          <aside>
+            <div className="bg-white border border-slate-200 rounded-2xl p-6">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-5">
+                Quick Details
+              </p>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-[18px] h-[18px] text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 font-semibold">Location</p>
+                    <p className="text-sm font-bold text-slate-900">{locationDisplay}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <ShieldCheck className="w-[18px] h-[18px] text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 font-semibold">Verification</p>
+                    <p className="text-sm font-bold text-slate-900">{verificationDisplay}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <BriefcaseBusiness className="w-[18px] h-[18px] text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 font-semibold">Starting From</p>
+                    <p className="text-sm font-bold text-slate-900">{minPriceDisplay}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Star className="w-[18px] h-[18px] text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-400 font-semibold">Rating</p>
+                    <p className="text-sm font-bold text-slate-900">
+                      {provider.rating ? provider.rating.toFixed(1) + " / 5" : "No ratings yet"}
                     </p>
                   </div>
                 </div>

@@ -136,7 +136,6 @@ export default function ProviderSidebar() {
       {isOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/40 lg:hidden"
-          onClick={close}
           aria-hidden="true"
         />
       )}
@@ -168,7 +167,6 @@ export default function ProviderSidebar() {
               <Link
                 key={link.path}
                 href={link.path}
-                onClick={close}
                 className={`relative flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
                   isActive
                     ? "bg-blue-50 text-blue-600"
@@ -224,7 +222,6 @@ export default function ProviderSidebar() {
                 <Link
                   href="/provider/profile"
                   onClick={() => {
-                    close();
                     setIsDropdownOpen(false);
                   }}
                   className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
@@ -235,7 +232,6 @@ export default function ProviderSidebar() {
                 <Link
                   href="/provider/settings"
                   onClick={() => {
-                    close();
                     setIsDropdownOpen(false);
                   }}
                   className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"

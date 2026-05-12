@@ -36,7 +36,13 @@ export function toProviderDTO(provider: ProviderDocument) {
 
   return {
     id: provider._id.toString(),
-    userId: normalizedUserId,
+    userId: isPopulatedUser(provider.userId)
+      ? {
+          id: provider.userId._id.toString(),
+          name: provider.userId.name,
+          email: provider.userId.email,
+        }
+      : provider.userId != null ? provider.userId.toString() : null,
     businessName: provider.businessName,
     description: provider.description,
     location: provider.location,

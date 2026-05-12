@@ -18,11 +18,11 @@ const bookingSchema = new mongoose.Schema(
       required: true,
     },
     date: {
-      type: String,   // "2025-05-20" — simple date, no timezone issues
+      type: String,
       required: true,
     },
     time: {
-      type: String,   // "10:00 AM" — separate time slot
+      type: String,
       required: true,
     },
     price: {
@@ -31,9 +31,26 @@ const bookingSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "confirmed", "completed", "cancelled"],
+      enum: ["pending", "confirmed", "pending_payment", "completed", "cancelled"],
       default: "pending",
     },
+
+    // ── Payment fields ────────────────────────────────────────────────────────
+    paymentStatus: {
+      type: String,
+      enum: ["unpaid", "pending", "paid", "failed", "refunded"],
+      default: "unpaid",
+    },
+    paymentIntentId: {
+      type: String,
+      default: null,
+    },
+    paidAt: {
+      type: Date,
+      default: null,
+    },
+    // ─────────────────────────────────────────────────────────────────────────
+
     notes: {
       type: String,
       default: null,
@@ -41,5 +58,18 @@ const bookingSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// ── Prevents double-booking the same slot at the DB level ─────────────────────
+// Partial filter means cancelled/completed bookings don't block the slot.
+bookingSchema.index(
+  { serviceId: 1, date: 1, time: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      status: { $in: ["pending", "confirmed", "pending_payment"] },
+    },
+  }
+);
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default bookingSchema;
