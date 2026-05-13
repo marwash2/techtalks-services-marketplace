@@ -17,6 +17,7 @@ import {
   CircleDashed,
   BadgeCheck,
   CreditCard,
+  CircleDollarSign,
   ShieldAlert,
   ShieldCheck,
   CheckCheck,
@@ -89,6 +90,8 @@ function getNotificationStyle(type?: string) {
       return { icon: CreditCard,     iconColor: "text-amber-600",   bg: "bg-amber-50",   unreadDot: "bg-amber-500"   };
     case "payment_refunded":
       return { icon: CreditCard,     iconColor: "text-purple-600",  bg: "bg-purple-50",  unreadDot: "bg-purple-500"  };
+    case "earning_received":
+      return { icon: CircleDollarSign, iconColor: "text-emerald-700", bg: "bg-emerald-50", unreadDot: "bg-emerald-500" };
     case "system":
       return { icon: Bell,           iconColor: "text-indigo-600",  bg: "bg-indigo-50",  unreadDot: "bg-indigo-500"  };
     case "booking":
