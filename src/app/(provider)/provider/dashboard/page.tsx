@@ -17,8 +17,11 @@ import {
   Briefcase,
   Plus,
   CheckCircle,
+  AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
+
+// Types 
 
 interface DashboardProvider {
   _id: string;
@@ -40,6 +43,9 @@ interface DashboardStats {
   totalEarnings: number;
   averageRating: number;
   totalReviews: number;
+  pendingCount: number;
+  completedThisWeek: number;
+  earningsThisWeek: number;
 }
 
 interface RecentBookingItem {
@@ -101,11 +107,22 @@ interface LeanService {
   isActive?: boolean;
 }
 
+//  Helpers 
+
 function toISOString(value: Date | string | undefined): string {
   if (value instanceof Date) return value.toISOString();
   if (typeof value === "string") return value;
   return new Date().toISOString();
 }
+
+function isThisWeek(dateStr: string): boolean {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  return d >= weekAgo && d <= now;
+}
+
+//  Data fetching 
 
 async function getDashboardData(userId: string): Promise<{
   provider: DashboardProvider | null;
@@ -118,19 +135,22 @@ async function getDashboardData(userId: string): Promise<{
 
   const providerDoc = await Provider.findOne({ userId }).lean();
   const leanProvider = providerDoc as unknown as LeanProvider | null;
-  const services = providerDoc
-    ? await Service.find({ providerId: leanProvider?._id }).lean()
+
+  const services = leanProvider
+    ? await Service.find({ providerId: leanProvider._id }).lean()
     : [];
-  const bookings = providerDoc
-    ? await Booking.find({ providerId: leanProvider?._id })
+
+  const bookings = leanProvider
+    ? await Booking.find({ providerId: leanProvider._id })
         .populate("userId", "name")
         .populate("serviceId", "title")
         .sort({ createdAt: -1 })
-        .limit(5)
+        .limit(10)
         .lean()
     : [];
-  const pendingBookings = providerDoc
-    ? await Booking.find({ providerId: leanProvider?._id, status: "pending" })
+
+  const pendingBookings = leanProvider
+    ? await Booking.find({ providerId: leanProvider._id, status: "pending" })
         .populate("userId", "name")
         .populate("serviceId", "title")
         .sort({ createdAt: -1 })
@@ -160,10 +180,18 @@ async function getDashboardData(userId: string): Promise<{
 
   const leanBookings = bookings as unknown as LeanBooking[];
   const leanServices = services as unknown as LeanService[];
+  const leanPendingBookings = pendingBookings as unknown as LeanBooking[];
 
-  const totalEarnings = leanBookings
-    .filter((b) => b.status === "completed")
-    .reduce((sum, b) => sum + (b.price ?? 0), 0);
+  const completed = leanBookings.filter((b) => b.status === "completed");
+  const totalEarnings = completed.reduce((sum, b) => sum + (b.price ?? 0), 0);
+
+  const completedThisWeek = completed.filter((b) =>
+    isThisWeek(toISOString(b.date ?? b.createdAt))
+  );
+  const earningsThisWeek = completedThisWeek.reduce(
+    (sum, b) => sum + (b.price ?? 0),
+    0
+  );
 
   const reviews = leanProvider?.reviews ?? [];
   const averageRating =
@@ -171,18 +199,19 @@ async function getDashboardData(userId: string): Promise<{
       ? reviews.reduce((sum, r) => sum + (r.rating ?? 0), 0) / reviews.length
       : 0;
 
-  const leanPendingBookings = pendingBookings as unknown as LeanBooking[];
-
   return {
     provider,
     stats: {
-      totalServices: leanServices.length,
+      totalServices: leanServices.filter((s) => s.isActive !== false).length,
       totalBookings: leanBookings.length,
       totalEarnings,
+      earningsThisWeek,
       averageRating: Math.round(averageRating * 10) / 10,
       totalReviews: reviews.length,
+      pendingCount: leanPendingBookings.length,
+      completedThisWeek: completedThisWeek.length,
     },
-    recentBookings: leanBookings.slice(0, 3).map((b) => ({
+    recentBookings: leanBookings.slice(0, 5).map((b) => ({
       _id: b._id.toString(),
       userId: b.userId,
       date: toISOString(b.date ?? b.createdAt),
@@ -217,19 +246,28 @@ async function getDashboardData(userId: string): Promise<{
   };
 }
 
+//  Page component
+
 export default async function ProviderDashboard() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
     return (
-      <div className="min-h-screen bg-slate-50 py-14 px-4 text-center sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-3xl rounded-[28px] border border-slate-200 bg-white p-10 shadow-sm">
-          <h1 className="text-2xl font-semibold text-slate-900">
-            Unable to load dashboard
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+        <div className="w-full max-w-md rounded-[24px] border border-slate-200 bg-white p-10 shadow-sm text-center">
+          <AlertTriangle className="mx-auto h-8 w-8 text-amber-400 mb-4" />
+          <h1 className="text-lg font-semibold text-slate-900">
+            Session expired
           </h1>
-          <p className="mt-4 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-slate-500">
             Please sign in again to access your provider dashboard.
           </p>
+          <Link
+            href="/auth/signin"
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+          >
+            Sign in
+          </Link>
         </div>
       </div>
     );
@@ -247,88 +285,135 @@ export default async function ProviderDashboard() {
     );
   }
 
-  const { stats, recentBookings, pendingRequests, activeServices } = data;
+  const { provider, stats, recentBookings, pendingRequests, activeServices } =
+    data;
 
   return (
     <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-8">
-        {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+        {/* ── Header ── */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-sky-600">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-blue-600 mb-1.5">
               Provider dashboard
             </p>
-            <h1 className="mt-2 text-3xl font-semibold text-slate-950 sm:text-4xl">
-              Welcome back,
+            <h1 className="text-3xl font-semibold text-slate-950 sm:text-4xl">
+              Welcome back
             </h1>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              {data.provider.businessName} - Manage your services and bookings.
+            <p className="mt-1.5 text-sm text-slate-500 leading-6">
+              {provider.businessName}
+              {provider.location && ` · ${provider.location}`}
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex items-center gap-3 pt-1">
             <Link
-              href="/provider/services"
-              className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+              href="/provider/availability"
+              className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+            >
+              <Calendar className="h-4 w-4 text-slate-400" />
+              Availability
+            </Link>
+            <Link
+              href="/provider/services/new"
+              className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200"
             >
               <Plus className="h-4 w-4" />
-              Add Service
+              Add service
             </Link>
           </div>
         </div>
 
-        {/* Success Banner */}
-        <div className="rounded-[28px] border border-emerald-200 bg-emerald-50 px-6 py-5 text-sm text-emerald-900 shadow-sm sm:px-8">
-          <div className="flex items-start gap-3">
-            <CheckCircle className="mt-0.5 h-5 w-5 flex-shrink-0" />
+        {/* ── Verified / pending banner ── */}
+        {provider.isVerified ? (
+          <div className="flex items-start gap-3 rounded-[20px] border border-emerald-200 bg-emerald-50 px-6 py-4 text-sm shadow-sm">
+            <CheckCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-emerald-500" />
             <div>
-              <p className="font-medium">Your provider profile is complete.</p>
-              <p className="mt-1 leading-6 text-slate-700">
-                You can now add services, manage bookings, and receive requests
-                from customers.
+              <p className="font-semibold text-emerald-800">
+                Your profile is verified and live
+              </p>
+              <p className="mt-0.5 text-emerald-700/80 text-xs leading-5">
+                Customers can discover and book your services. Keep your
+                availability up to date.
               </p>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-start gap-3 rounded-[20px] border border-amber-200 bg-amber-50 px-6 py-4 text-sm shadow-sm">
+            <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-500" />
+            <div>
+              <p className="font-semibold text-amber-800">
+                Profile under review
+              </p>
+              <p className="mt-0.5 text-amber-700/80 text-xs leading-5">
+                Your profile is being reviewed. You&apos;ll be notified once
+                it&apos;s approved and visible to customers.
+              </p>
+            </div>
+          </div>
+        )}
 
-        {/* Stats Grid */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {/* ── Stats grid ── */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatsCard
-            title="Active Services"
+            title="Active services"
             value={stats.totalServices}
             icon={Briefcase}
             iconColor="text-blue-600"
             bgColor="bg-blue-50"
+            delta={stats.totalServices > 0 ? `${stats.totalServices} listed` : undefined}
           />
           <StatsCard
-            title="Total Bookings"
+            title="Total bookings"
             value={stats.totalBookings}
             icon={Calendar}
-            iconColor="text-green-600"
-            bgColor="bg-green-50"
+            iconColor="text-emerald-600"
+            bgColor="bg-emerald-50"
+            delta={
+              stats.completedThisWeek > 0
+                ? `${stats.completedThisWeek} completed this week`
+                : undefined
+            }
           />
           <StatsCard
-            title="Total Earnings"
+            title="Total earnings"
             value={`$${stats.totalEarnings.toFixed(2)}`}
             icon={DollarSign}
-            iconColor="text-yellow-600"
-            bgColor="bg-yellow-50"
+            iconColor="text-amber-600"
+            bgColor="bg-amber-50"
+            delta={
+              stats.earningsThisWeek > 0
+                ? `$${stats.earningsThisWeek.toFixed(0)} this week`
+                : undefined
+            }
           />
           <StatsCard
             title={`Rating (${stats.totalReviews} reviews)`}
-            value={stats.averageRating}
+            value={stats.averageRating || "—"}
             icon={Star}
-            iconColor="text-purple-600"
-            bgColor="bg-purple-50"
+            iconColor="text-violet-600"
+            bgColor="bg-violet-50"
+            delta={
+              stats.averageRating >= 4.5
+                ? "Excellent standing"
+                : stats.averageRating >= 3.5
+                ? "Good standing"
+                : stats.totalReviews === 0
+                ? "No reviews yet"
+                : undefined
+            }
           />
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid gap-8 lg:grid-cols-3">
+        {/* ── Main content ── */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Left column: pending + recent */}
           <div className="lg:col-span-2 space-y-6">
             <PendingRequests requests={pendingRequests} />
             <RecentBookings bookings={recentBookings} />
           </div>
 
+          {/* Right column: quick actions + services */}
           <div className="space-y-6">
             <QuickActions />
             <ServicesPreview services={activeServices} />

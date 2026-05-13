@@ -3,6 +3,17 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+import {
+  BriefcaseBusiness,
+  DollarSign,
+  Clock3,
+  Plus,
+  Loader2,
+  Pencil,
+  Trash2,
+  AlertTriangle,
+} from "lucide-react";
+
 type Service = {
   id: string;
   title: string;
@@ -14,26 +25,38 @@ type Service = {
 };
 
 export default function ProviderServicesPage() {
-  const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [services, setServices] = useState<
+    Service[]
+  >([]);
 
-  // Delete modal state
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+  const [loading, setLoading] =
+    useState(true);
 
-  // Fetch provider services
+  const [showDeleteModal, setShowDeleteModal] =
+    useState(false);
+
+  const [selectedServiceId, setSelectedServiceId] =
+    useState<string | null>(null);
+
   const fetchServices = async () => {
     try {
-      const res = await fetch("/api/services?dashboard=true", {
-        credentials: "include",
-      });
+      const res = await fetch(
+        "/api/services?dashboard=true",
+        {
+          credentials: "include",
+        }
+      );
 
       const data = await res.json();
-      console.log("Fetched provider services:", data);
 
-      setServices(data.data?.services || []);
+      setServices(
+        data.data?.services || []
+      );
     } catch (err) {
-      console.error("Failed to fetch services", err);
+      console.error(
+        "Failed to fetch services",
+        err
+      );
     } finally {
       setLoading(false);
     }
@@ -43,233 +66,309 @@ export default function ProviderServicesPage() {
     fetchServices();
   }, []);
 
-  // Confirm delete service
   const confirmDeleteService = async () => {
     if (!selectedServiceId) return;
 
     try {
-      const res = await fetch(`/api/services/${selectedServiceId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        console.error("Delete API Error:", errorData);
-        throw new Error(errorData.message || "Delete failed");
-      }
-
-      // Remove deleted service from UI instantly
-      setServices((prev) =>
-        prev.filter((service) => service.id !== selectedServiceId)
+      const res = await fetch(
+        `/api/services/${selectedServiceId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
       );
 
-      // Close modal
-      setShowDeleteModal(false);
-      setSelectedServiceId(null);
+      if (!res.ok) {
+        const errorData =
+          await res.json();
 
+        throw new Error(
+          errorData.message ||
+            "Delete failed"
+        );
+      }
+
+      setServices((prev) =>
+        prev.filter(
+          (service) =>
+            service.id !==
+            selectedServiceId
+        )
+      );
+
+      setShowDeleteModal(false);
+
+      setSelectedServiceId(null);
     } catch (err: any) {
-      console.error(err);
-      alert(err.message || "Failed to delete service");
+      alert(
+        err.message ||
+          "Failed to delete service"
+      );
     }
   };
-console.log(services);
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8">
+
+      <div className="mx-auto max-w-7xl space-y-8">
 
         {/* HEADER */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+
           <div>
-            <h1 className="text-4xl font-bold text-gray-900">
-              Services Management
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-blue-600 mb-1.5">
+              Provider
+            </p>
+
+            <h1 className="text-3xl font-semibold text-slate-950">
+              Services
             </h1>
 
-            <p className="text-gray-500 mt-2">
-              Manage your services, pricing, and availability
+            <p className="mt-1.5 text-sm text-slate-500 leading-6 max-w-xl">
+              Manage your services,
+              pricing, and booking
+              details.
             </p>
           </div>
 
           <Link
             href="/provider/services/new"
-            className="mt-4 md:mt-0 inline-flex items-center bg-blue-600 text-white px-5 py-3 rounded-xl hover:bg-blue-700 transition"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
           >
-            + Add New Service
+            <Plus className="h-4 w-4" />
+            Add Service
           </Link>
         </div>
 
         {/* STATS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-2xl shadow-sm border p-5">
-            <p className="text-gray-500">Total Services</p>
-            <h3 className="text-3xl font-bold">{services.length}</h3>
-          </div>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
 
-          <div className="bg-white rounded-2xl shadow-sm border p-5">
-            <p className="text-gray-500">Active Services</p>
-            <h3 className="text-3xl font-bold text-green-600">
-              {services.length}
-            </h3>
-          </div>
+          <StatCard
+            title="Total Services"
+            value={services.length}
+            icon={
+              <BriefcaseBusiness className="h-5 w-5 text-blue-600" />
+            }
+          />
 
-          <div className="bg-white rounded-2xl shadow-sm border p-5">
-            <p className="text-gray-500">Starting Price</p>
-            <h3 className="text-3xl font-bold text-blue-600">
-              $
-              {services.length > 0
-                ? Math.min(...services.map((s) => s.price))
-                : 0}
-            </h3>
-          </div>
+          <StatCard
+            title="Active Services"
+            value={services.length}
+            icon={
+              <BriefcaseBusiness className="h-5 w-5 text-emerald-600" />
+            }
+          />
+
+          <StatCard
+            title="Starting Price"
+            value={`$${
+              services.length > 0
+                ? Math.min(
+                    ...services.map(
+                      (s) => s.price
+                    )
+                  )
+                : 0
+            }`}
+            icon={
+              <DollarSign className="h-5 w-5 text-indigo-600" />
+            }
+          />
         </div>
 
-        {/* TABLE */}
-        <div className="bg-white rounded-3xl shadow-sm border overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
+        {/* SERVICES */}
+        <div className="rounded-[22px] border border-slate-200 bg-white shadow-sm overflow-hidden">
 
-              {/* TABLE HEADER */}
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="text-left p-5 font-semibold">Service</th>
-                  <th className="text-left p-5 font-semibold">Category</th>
-                  <th className="text-left p-5 font-semibold">Price</th>
-                  <th className="text-left p-5 font-semibold">Duration</th>
-                  <th className="text-left p-5 font-semibold">Actions</th>
-                </tr>
-              </thead>
+          {/* HEADER */}
+          <div className="border-b border-slate-100 px-6 py-5">
 
-              {/* TABLE BODY */}
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="text-center p-8 text-gray-400"
-                    >
-                      Loading services...
-                    </td>
-                  </tr>
-                ) : services.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="text-center p-8 text-gray-400"
-                    >
-                      No services found
-                    </td>
-                  </tr>
-                ) : (
-                  services.map((service) => (
-                    <tr
-                      key={service.id}
-                      className="border-t hover:bg-gray-50 transition"
-                    >
-                      {/* Service Name */}
-                      <td className="p-5 font-medium">
+            <h2 className="text-base font-semibold text-slate-900">
+              All Services
+            </h2>
+
+            <p className="mt-1 text-sm text-slate-500">
+              View and manage your
+              available services.
+            </p>
+          </div>
+
+          {/* CONTENT */}
+          <div className="divide-y divide-slate-100">
+
+            {loading ? (
+              <div className="flex min-h-[320px] items-center justify-center">
+                <div className="flex items-center gap-3 text-sm font-medium text-slate-500">
+                  <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                  Loading services...
+                </div>
+              </div>
+            ) : services.length === 0 ? (
+              <div className="px-6 py-16 text-center">
+
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100">
+                  <BriefcaseBusiness className="h-6 w-6 text-slate-400" />
+                </div>
+
+                <h3 className="text-base font-semibold text-slate-900">
+                  No services yet
+                </h3>
+
+                <p className="mt-2 text-sm text-slate-500">
+                  Start by creating your
+                  first service.
+                </p>
+              </div>
+            ) : (
+              services.map((service) => (
+                <div
+                  key={service.id}
+                  className="flex flex-col gap-5 px-6 py-5 transition hover:bg-slate-50 lg:flex-row lg:items-center lg:justify-between"
+                >
+
+                  {/* LEFT */}
+                  <div className="flex-1">
+
+                    <div className="flex flex-wrap items-center gap-3 mb-2">
+
+                      <h3 className="text-lg font-semibold text-slate-900">
                         {service.title}
-                      </td>
+                      </h3>
 
-                      {/* Category */}
-                      <td className="p-5">
-                        {service.category?.name || "N/A"}
-                      </td>
+                      <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                        {service.category
+                          ?.name ||
+                          "Uncategorized"}
+                      </span>
+                    </div>
 
-                      {/* Price */}
-                      <td className="p-5 text-blue-600 font-semibold">
+                    <div className="flex flex-wrap gap-5 text-sm text-slate-500">
+
+                      <div className="flex items-center gap-1.5">
+                        <DollarSign className="h-4 w-4 text-blue-500" />
                         ${service.price}
-                      </td>
+                      </div>
 
-                      {/* Duration */}
-                      <td className="p-5">
-                        {service.duration} mins
-                      </td>
+                      <div className="flex items-center gap-1.5">
+                        <Clock3 className="h-4 w-4 text-indigo-500" />
+                        {
+                          service.duration
+                        }{" "}
+                        mins
+                      </div>
+                    </div>
+                  </div>
 
-                      {/* Actions */}
-                      <td className="p-5">
-                        <div className="flex gap-3">
+                  {/* ACTIONS */}
+                  <div className="flex flex-wrap gap-2">
 
-                          {/* Edit Button */}
-                          <Link
-                            href={`/provider/services/edit_page/${service.id}`}
-                            className="px-4 py-2 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition cursor-pointer"
-                          >
-                            Edit
-                          </Link>
+                    <Link
+                      href={`/provider/services/edit_page/${service.id}`}
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Edit
+                    </Link>
 
-                          {/* Delete Button */}
-                          <button
-                            onClick={() => {
-                              setSelectedServiceId(service.id);
-                              setShowDeleteModal(true);
-                            }}
-                            className="bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200 transition cursor-pointer  "
-                          >
-                            Delete
-                          </button>
+                    <button
+                      onClick={() => {
+                        setSelectedServiceId(
+                          service.id
+                        );
 
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-
-            </table>
+                        setShowDeleteModal(
+                          true
+                        );
+                      }}
+                      className="inline-flex items-center gap-2 rounded-xl border border-rose-200 bg-white px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
 
-      {/* PROFESSIONAL CUTE DELETE MODAL */}
+      {/* DELETE MODAL */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 text-center border border-gray-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
 
-            {/* Cute warning icon */}
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center text-3xl">
-                🗑️
-              </div>
+          <div className="w-full max-w-md rounded-[22px] border border-slate-200 bg-white p-7 shadow-xl">
+
+            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100">
+              <AlertTriangle className="h-6 w-6 text-rose-600" />
             </div>
 
-            {/* Modal title */}
-            <h2 className="text-2xl font-bold text-gray-800 mb-3">
+            <h2 className="text-xl font-semibold text-slate-900">
               Delete Service
             </h2>
 
-            {/* Modal description */}
-            <p className="text-gray-600 leading-relaxed mb-6">
-              Are you sure you want to permanently delete this service?
-              <br />
-              This action cannot be undone.
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Are you sure you want to
+              permanently delete this
+              service? This action cannot
+              be undone.
             </p>
 
-            {/* Modal buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-end">
 
-              {/* Cancel */}
               <button
                 onClick={() => {
-                  setShowDeleteModal(false);
-                  setSelectedServiceId(null);
+                  setShowDeleteModal(
+                    false
+                  );
+
+                  setSelectedServiceId(
+                    null
+                  );
                 }}
-                className="px-5 py-3 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-100 transition cursor-pointer"
+                className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
               >
-                Keep Service
+                Cancel
               </button>
 
-              {/* Confirm Delete */}
               <button
-                onClick={confirmDeleteService}
-                className="px-5 py-3 rounded-xl bg-red-600 text-white hover:bg-red-700 transition cursor-pointer"
+                onClick={
+                  confirmDeleteService
+                }
+                className="rounded-xl bg-rose-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-rose-700"
               >
-                Yes, Delete
+                Delete Service
               </button>
-
             </div>
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function StatCard({
+  title,
+  value,
+  icon,
+}: {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-[22px] border border-slate-200 bg-white px-5 py-5 shadow-sm">
+
+      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100">
+        {icon}
+      </div>
+
+      <h3 className="text-3xl font-semibold text-slate-900">
+        {value}
+      </h3>
+
+      <p className="mt-1 text-sm text-slate-500">
+        {title}
+      </p>
     </div>
   );
 }

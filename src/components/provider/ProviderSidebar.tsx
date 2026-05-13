@@ -152,7 +152,7 @@ export default function ProviderSidebar() {
             isOpen ? "left-49" : "left-10"
           }`}
           aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
-        >
+      >
           <ChevronLeft
             className={`h-5 w-5 transition-transform ${isOpen ? "" : "-rotate-180"}`}
           />

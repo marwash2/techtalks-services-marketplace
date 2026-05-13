@@ -1,19 +1,11 @@
 import Link from "next/link";
-import {
-  ArrowRight,
-  Calendar,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  User,
-  MessageSquare,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 interface Booking {
   _id: string;
   userId?: { name?: string } | string;
   serviceTitle: string;
-  date: Date | string;
+  date: string;
   price: number;
   status: string;
 }
@@ -22,172 +14,126 @@ interface RecentBookingsProps {
   bookings: Booking[];
 }
 
-export default function RecentBookings({ bookings }: RecentBookingsProps) {
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "pending":
-        return <Clock className="h-3 w-3 text-yellow-500" />;
-      case "confirmed":
-        return <CheckCircle className="h-3 w-3 text-green-500" />;
-      case "completed":
-        return <CheckCircle className="h-3 w-3 text-green-500" />;
-      case "cancelled":
-        return <AlertCircle className="h-3 w-3 text-red-500" />;
-      default:
-        return <Clock className="h-3 w-3 text-gray-500" />;
-    }
-  };
+const statusConfig: Record<
+  string,
+  { label: string; classes: string }
+> = {
+  completed: {
+    label: "Completed",
+    classes: "bg-emerald-50 text-emerald-700",
+  },
+  confirmed: {
+    label: "Confirmed",
+    classes: "bg-sky-50 text-sky-700",
+  },
+  "in-progress": {
+    label: "In progress",
+    classes: "bg-blue-50 text-blue-700",
+  },
+  pending: {
+    label: "Pending",
+    classes: "bg-amber-50 text-amber-700",
+  },
+  cancelled: {
+    label: "Cancelled",
+    classes: "bg-rose-50 text-rose-600",
+  },
+};
 
-  return (
-    <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-slate-950">
-            Recent Bookings
-          </h3>
-          <p className="text-sm text-slate-600">
-            Your recent bookings will appear here.
-          </p>
-        </div>
-        <Link
-          href="/provider/bookings"
-          className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
-        >
-          View all
-          <ArrowRight className="h-4 w-4" />
-        </Link>
-      </div>
-
-      {bookings.length === 0 ? (
-        <div className="mt-6 rounded-2xl border-2 border-dashed border-slate-200 p-8 text-center">
-          <MessageSquare className="mx-auto h-12 w-12 text-slate-400" />
-          <h3 className="mt-4 text-sm font-medium text-slate-900">
-            No bookings yet
-          </h3>
-          <p className="mt-2 text-sm text-slate-600">
-            Your recent bookings will appear here once customers start booking
-            your services.
-          </p>
-        </div>
-      ) : (
-        <div className="mt-6 space-y-4">
-          {bookings.map((booking) => (
-            <div
-              key={booking._id}
-              className="rounded-3xl border border-slate-200 p-4"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
-                    <User className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">
-                      {booking.userId && typeof booking.userId === "object"
-                        ? booking.userId.name
-                        : "Customer"}
-                    </p>
-                    <p className="text-xs text-slate-600">
-                      {booking.serviceTitle}
-                    </p>
-                  </div>
-                </div>
-                <span className="font-semibold text-blue-500 ">
-                  ${booking.price}
-                </span>
-              </div>
-
-              <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                <span className="inline-flex items-center gap-1">
-                  <Calendar className="h-3.5 w-3.5" />
-                  {new Date(booking.date).toLocaleDateString()}
-                </span>
-                <span className="inline-flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5" />
-                  {new Date(booking.date).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-                <span className="rounded-full bg-yellow-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-yellow-700">
-                  {booking.status}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+function getInitials(name?: string): string {
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 }
 
-{
-  /*} <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-slate-950">
-          Recent Bookings
-        </h2>
+function getUserName(userId?: { name?: string } | string): string {
+  if (!userId) return "Customer";
+  if (typeof userId === "object" && userId.name) return userId.name;
+  return "Customer";
+}
+
+function formatDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+const avatarColors = [
+  "bg-sky-100 text-sky-700",
+  "bg-violet-100 text-violet-700",
+  "bg-teal-100 text-teal-700",
+  "bg-amber-100 text-amber-700",
+  "bg-rose-100 text-rose-600",
+];
+
+export default function RecentBookings({ bookings }: RecentBookingsProps) {
+  return (
+    <div className="rounded-[22px] border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+        <h2 className="text-sm font-semibold text-slate-900">Recent bookings</h2>
         <Link
           href="/provider/bookings"
-          className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors"
         >
-          View all
-          <ArrowRight className="h-4 w-4" />
+          View all <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>
 
       {bookings.length === 0 ? (
-        <div className="mt-6 rounded-2xl border-2 border-dashed border-slate-200 p-8 text-center">
-          <Calendar className="mx-auto h-12 w-12 text-slate-400" />
-          <h3 className="mt-4 text-sm font-medium text-slate-900">
-            No bookings yet
-          </h3>
-          <p className="mt-2 text-sm text-slate-600">
-            Your recent bookings will appear here once customers start booking
-            your services.
-          </p>
+        <div className="px-6 py-12 text-center">
+          <p className="text-sm text-slate-400">No bookings yet.</p>
         </div>
       ) : (
-        <div className="mt-6 space-y-4">
-          {bookings.map((booking) => (
-            <div
-              key={booking._id}
-              className="flex items-center gap-4 rounded-2xl border border-slate-200 p-4"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
-                <span className="text-sm font-medium text-slate-600">
-                  {typeof booking.userId === "object" && booking.userId?.name
-                    ? booking.userId.name.charAt(0).toUpperCase()
-                    : "C"}
-                </span>
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-slate-900">
-                  {typeof booking.userId === "object" && booking.userId?.name
-                    ? booking.userId.name
-                    : "Customer"}
-                </p>
-                <p className="text-xs text-slate-600">
-                  {new Date(booking.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-medium text-slate-900">
-                  ${booking.price}
-                </p>
-                <div className="flex items-center gap-1">
-                  {getStatusIcon(booking.status)}
-                  <span className="text-xs capitalize text-slate-600">
-                    {booking.status}
+        <ul>
+          {bookings.map((booking, i) => {
+            const name = getUserName(booking.userId);
+            const initials = getInitials(name);
+            const colorClass = avatarColors[i % avatarColors.length];
+            const status =
+              statusConfig[booking.status] ?? {
+                label: booking.status,
+                classes: "bg-slate-100 text-slate-500",
+              };
+
+            return (
+              <li
+                key={booking._id}
+                className="flex items-center gap-4 px-6 py-4 border-b border-slate-50 last:border-b-0 hover:bg-slate-50/60 transition-colors"
+              >
+                <div
+                  className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 ${colorClass}`}
+                >
+                  {initials}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-900 truncate">
+                    {booking.serviceTitle}
+                  </p>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {name} · {formatDate(booking.date)}
+                  </p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-sm font-semibold text-slate-900">
+                    ${booking.price.toFixed(2)}
+                  </p>
+                  <span
+                    className={`mt-1 inline-block text-[11px] font-medium px-2 py-0.5 rounded-full ${status.classes}`}
+                  >
+                    {status.label}
                   </span>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              </li>
+            );
+          })}
+        </ul>
       )}
     </div>
   );
-}
-*/
 }
