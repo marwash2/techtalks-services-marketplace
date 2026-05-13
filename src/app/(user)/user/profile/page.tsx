@@ -262,7 +262,7 @@ export default function UserProfilePage() {
                   {
                     icon: Settings,
                     title: "Settings",
-                    href: "/settings",
+                    href: "/user/settings",
                   },
                 ].map((item) => (
                   <Link
