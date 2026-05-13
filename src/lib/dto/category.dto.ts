@@ -5,6 +5,7 @@ interface CategoryDocument {
   name: string;
   description?: string | null;
   icon: string;
+  isActive?: boolean;
   slug: string;
   parentId?: Types.ObjectId | null;
   createdAt?: Date;
@@ -17,6 +18,7 @@ export interface CategoryDTO {
   name: string;
   description?: string | null;
   icon: string;
+  isActive: boolean;
   slug: string;
   parentId?: string | null;
   serviceCount?: number;
@@ -29,6 +31,7 @@ export function toCategoryDTO(category: CategoryDocument): CategoryDTO {
     name:         category.name,
     description:  category.description,
     icon:         category.icon,
+    isActive:     category.isActive ?? true,
     slug:         category.slug,
     parentId:     category.parentId?.toString() ?? null,
     serviceCount: category.serviceCount,

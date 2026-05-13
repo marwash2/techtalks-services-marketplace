@@ -35,6 +35,8 @@ export const createCategorySchema = z.object({
     .string()
     .regex(/^[a-f\d]{24}$/i, "Invalid parent category ID")
     .optional(),
+
+  isActive: z.boolean().optional(),
 });
 
 export const updateCategorySchema = z.object({
@@ -71,6 +73,8 @@ export const updateCategorySchema = z.object({
     .string()
     .regex(/^[a-f\d]{24}$/i, "Invalid parent category ID")
     .optional(),
+
+  isActive: z.boolean().optional(),
 }).refine(
   (data) => Object.keys(data).length > 0,
   { message: "At least one field must be provided" }

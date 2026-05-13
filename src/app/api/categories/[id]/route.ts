@@ -20,8 +20,14 @@ export const PUT = withApiHandler(async (req, { params }) => {
   const { id }    = await params;
   const body      = await req.json();
   const validated = updateCategorySchema.parse(body);
+  const normalizedInput = {
+    ...validated,
+    ...(Object.prototype.hasOwnProperty.call(body ?? {}, "isActive")
+      ? { isActive: body.isActive === false ? false : true }
+      : {}),
+  };
 
-  const category = await categoryService.updateCategory(id, validated);
+  const category = await categoryService.updateCategory(id, normalizedInput);
   return Response.json(successResponse(category, MESSAGES.SUCCESS.UPDATE));
 });
 
