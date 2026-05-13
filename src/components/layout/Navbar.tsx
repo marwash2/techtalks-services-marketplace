@@ -120,10 +120,7 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-        {/* LEFT: Notification + Logo */}
-        <div className="flex items-center gap-4 ">
-          {/* Notification bell for logged-in users */}
-
+        <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center">
             <Image src="/logo-icon.png" alt="Logo" width={150} height={80} />
           </Link>
@@ -158,7 +155,7 @@ export default function Navbar() {
             <>
               <BecomeProviderButtons
                 value="Become a Provider"
-                classes="text-sm text-slate-600 hover:text-blue-600 bg-gray-50 transition border border-gray-200 px-4 py-2 rounded-full  "
+                classes="text-sm text-slate-600 hover:text-blue-600 bg-gray-50 transition border border-gray-200 px-4 py-2 rounded-full"
               />
 
               <Link
@@ -177,8 +174,6 @@ export default function Navbar() {
               {user?.role === "admin" && (
                 <span className="text-sm text-gray-500">Admin Panel</span>
               )}
-
-  
             </>
           )}
         </div>
@@ -196,8 +191,6 @@ export default function Navbar() {
             )}
           </button>
         )}
-
-        {hasSidebar && <div className="md:hidden w-8" />}
       </div>
 
       {!hasSidebar && (
