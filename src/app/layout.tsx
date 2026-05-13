@@ -6,6 +6,7 @@ config.autoAddCss = false;
 import { SidebarProvider } from "@/components/layout/SidebarContext";
 import SessionProviderWrapper from "@/components/providers/SessionProviderWrapper";
 import NavbarFooterWrapper from "@/components/layout/NavbarFooterWrapper";
+import ThemeInitializer from "@/components/providers/ThemeInitializer";
 
 export const metadata: Metadata = {
   title: "Khidmati | Services Marketplace",
@@ -16,8 +17,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-gray-100 text-gray-900">
+      <body className="bg-[var(--background)] text-[var(--foreground)]">
         <SessionProviderWrapper>
+          <ThemeInitializer />
           <SidebarProvider>
             <NavbarFooterWrapper>{children}</NavbarFooterWrapper>
           </SidebarProvider>

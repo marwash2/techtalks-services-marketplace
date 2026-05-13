@@ -18,8 +18,13 @@ import { useSidebar } from "@/components/layout/SidebarContext";
 export default function Footer() {
   const pathname = usePathname();
   const { isOpen } = useSidebar();
-  const isProviderRoute = pathname.startsWith("/provider");
-  const marginClass = isProviderRoute ? (isOpen ? "lg:ml-64" : "lg:ml-16") : "";
+  const hasSidebarRoute =
+    pathname.startsWith("/provider") || pathname.startsWith("/user");
+  const marginClass = hasSidebarRoute
+    ? isOpen
+      ? "lg:ml-54"
+      : "lg:ml-15"
+    : "";
 
   return (
     <footer
