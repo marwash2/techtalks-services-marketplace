@@ -8,13 +8,15 @@ import { useSession, signOut } from "next-auth/react";
 import { LogOut, Menu, X } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import BecomeProviderButtons from "./BecomeProviderButtons";
+import { readUserPreferences } from "@/lib/user-preferences";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const { data: session } = useSession();
-  const { toggle } = useSidebar();
+  const { isOpen } = useSidebar();
   const previousUnreadRef = useRef(0);
   const initializedRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -57,8 +59,20 @@ export default function Navbar() {
   };
 
   useEffect(() => {
+    const syncPrefs = () => {
+      const prefs = readUserPreferences(session?.user?.id);
+      setNotificationsEnabled(prefs.notificationsEnabled);
+    };
+    syncPrefs();
+    window.addEventListener("user-preferences-changed", syncPrefs);
+    return () =>
+      window.removeEventListener("user-preferences-changed", syncPrefs);
+  }, [session?.user?.id]);
+
+  useEffect(() => {
     const userId = session?.user?.id;
-    if (!userId) {
+    if (!userId || !notificationsEnabled) {
+      setUnreadCount(0);
       previousUnreadRef.current = 0;
       initializedRef.current = false;
       return;
@@ -115,10 +129,14 @@ export default function Navbar() {
       );
       window.clearInterval(interval);
     };
-  }, [session?.user?.id]);
+  }, [session?.user?.id, notificationsEnabled]);
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
+    <header
+      className={`sticky top-0 z-50 border-b border-[var(--border-color)] bg-[color:color-mix(in_srgb,var(--surface-1)_85%,transparent)] backdrop-blur-md transition-all duration-300 ${
+        hasSidebar ? (isOpen ? "lg:ml-54" : "lg:ml-15") : ""
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/" className="flex items-center">
@@ -134,7 +152,7 @@ export default function Navbar() {
                 href={link.path}
                 className={`
                   relative font-medium transition duration-300
-                  text-gray-700 hover:text-blue-600
+                  text-[var(--foreground)] hover:text-blue-600
                   after:content-[''] after:absolute after:left-0 after:-bottom-1
                   after:h-[2px] after:w-0 after:bg-blue-600
                   after:transition-all after:duration-300
@@ -196,7 +214,7 @@ export default function Navbar() {
       {!hasSidebar && (
         <div
           className={`
-            md:hidden overflow-hidden transition-all duration-300 border-t bg-white
+            md:hidden overflow-hidden border-t border-[var(--border-color)] bg-[var(--surface-1)] transition-all duration-300
             ${menuOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}
           `}
         >

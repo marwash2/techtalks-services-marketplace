@@ -7,7 +7,6 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   BriefcaseBusiness,
   CalendarDays,
-  CircleUserRound,
   Heart,
   Bot,
   Sparkles,
@@ -146,7 +145,7 @@ export default function UserSidebar() {
 
       window.clearInterval(interval);
     };
-  }, [session?.user?.id]);
+  }, [session?.user?.id, notificationsEnabled]);
 
   return (
     <>

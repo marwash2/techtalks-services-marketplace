@@ -15,14 +15,14 @@ export type BookingStatusValue = (typeof BOOKING_STATUS_VALUES)[number];
 // ─── Transition Map ───────────────────────────────────────────────────────────
 //
 //  pending         → confirmed | cancelled
-//  confirmed       → pending_payment | cancelled
+//  confirmed       → pending_payment | completed | cancelled
 //  pending_payment → completed | cancelled
 //  completed       → (terminal)
 //  cancelled       → (terminal)
 //
 export const ALLOWED_TRANSITIONS: Record<BookingStatusValue, BookingStatusValue[]> = {
   [BOOKING_STATUS.PENDING]:   [BOOKING_STATUS.CONFIRMED, BOOKING_STATUS.CANCELLED],
-  [BOOKING_STATUS.CONFIRMED]: ["pending_payment", BOOKING_STATUS.CANCELLED],
+  [BOOKING_STATUS.CONFIRMED]: ["pending_payment", BOOKING_STATUS.COMPLETED, BOOKING_STATUS.CANCELLED],
   pending_payment:             [BOOKING_STATUS.COMPLETED, BOOKING_STATUS.CANCELLED],
   [BOOKING_STATUS.COMPLETED]: [],
   [BOOKING_STATUS.CANCELLED]: [],
