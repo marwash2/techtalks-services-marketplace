@@ -335,7 +335,7 @@ export default function UserServicesPage() {
       <Suspense fallback={<div>Loading...</div>}>
         <div className="flex flex-col gap-6 lg:flex-row">
           {isMobileFiltersOpen && (
-            <div className="fixed inset-0 z-[100] flex lg:hidden">
+            <div className="fixed inset-0 z-[100] flex">
               <div
                 className="fixed inset-0 bg-slate-900/50"
                 onClick={() => setIsMobileFiltersOpen(false)}

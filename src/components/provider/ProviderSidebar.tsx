@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useSidebar } from "@/components/layout/SidebarContext";
 import { useEffect, useRef, useState } from "react";
+import { readUserPreferences } from "@/lib/user-preferences";
 
 const providerLinks = [
   {
@@ -63,9 +64,10 @@ const providerLinks = [
 export default function ProviderSidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const { isOpen, close, toggle } = useSidebar();
+  const { isOpen, toggle } = useSidebar();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -83,8 +85,20 @@ export default function ProviderSidebar() {
   }, []);
 
   useEffect(() => {
+    const syncPrefs = () => {
+      const prefs = readUserPreferences(session?.user?.id);
+      setNotificationsEnabled(prefs.notificationsEnabled);
+    };
+    syncPrefs();
+    window.addEventListener("user-preferences-changed", syncPrefs);
+    return () =>
+      window.removeEventListener("user-preferences-changed", syncPrefs);
+  }, [session?.user?.id]);
+
+  useEffect(() => {
     const userId = session?.user?.id;
-    if (!userId) {
+    if (!userId || !notificationsEnabled) {
+      setUnreadCount(0);
       return;
     }
 
@@ -129,7 +143,7 @@ export default function ProviderSidebar() {
       );
       window.clearInterval(interval);
     };
-  }, [session?.user?.id]);
+  }, [session?.user?.id, notificationsEnabled]);
 
   return (
     <>
@@ -141,14 +155,14 @@ export default function ProviderSidebar() {
       )}
 
       <aside
-        className={`fixed top-19 left-0 z-50 h-[calc(100vh-4rem)] w-64 border-r border-slate-200 bg-white shadow-sm transition-all duration-300 flex flex-col ${
+        className={`fixed top-19 left-0 z-50 h-[calc(100vh-4rem)] w-64 border-r border-[var(--border-color)] bg-[var(--surface-1)] shadow-sm transition-all duration-300 flex flex-col ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0 ${isOpen ? "lg:w-54" : "lg:w-15"}`}
       >
         <button
           type="button"
           onClick={toggle}
-          className={`fixed top-2 z-60 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 ${
+          className={`fixed top-2 z-60 flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--surface-1)] text-[var(--foreground)]/80 shadow-sm transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] ${
             isOpen ? "left-49" : "left-10"
           }`}
           aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
@@ -197,7 +211,7 @@ export default function ProviderSidebar() {
           })}
         </nav>
 
-        <div className="border-t border-slate-200 px-2 py-4">
+        <div className="border-t border-[var(--border-color)] px-2 py-4">
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen((prev) => !prev)}
@@ -218,7 +232,7 @@ export default function ProviderSidebar() {
             </button>
 
             {isDropdownOpen && (
-              <div className="absolute bottom-full left-0 right-0 z-10 mb-2 rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+              <div className="absolute bottom-full left-0 right-0 z-10 mb-2 rounded-lg border border-[var(--border-color)] bg-[var(--surface-1)] py-1 shadow-lg">
                 <Link
                   href="/provider/profile"
                   onClick={() => {

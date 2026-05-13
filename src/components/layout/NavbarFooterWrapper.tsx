@@ -12,7 +12,7 @@ export default function NavbarFooterWrapper({ children }: { children: React.Reac
   return (
     <>
       {!isAdmin && <Navbar />}
-      <main className="bg-white">{children}</main>
+      <main className="bg-[var(--surface-1)]">{children}</main>
       {!isAdmin && <Footer />}
     </>
   );
