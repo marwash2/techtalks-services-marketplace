@@ -13,7 +13,7 @@ type CreateProviderInput = {
   location: string;
   rating?: number;
   isVerified?: boolean;
-  providerStatus?: "pending" | "approved" | "rejected"; // add this
+  providerStatus?: "pending" | "approved" | "rejected";
   totalReviews?: number;
   avatar?: string | null;
 };
@@ -102,11 +102,14 @@ export async function getAllProviders(
   await connectDB();
 
   const skip = (page - 1) * limit;
+
+  // ✅ Added "_id" so userId._id is returned and can be matched to session
   const providers = await Provider.find()
-    .populate("userId", "name email")
+    .populate("userId", "name email _id")
     .skip(skip)
     .limit(limit)
     .exec();
+
   const total = await Provider.countDocuments();
 
   return {
@@ -139,8 +142,11 @@ export async function createProvider(providerData: CreateProviderInput) {
   const existingProvider = await Provider.findOne({ userId });
   if (existingProvider) {
     const existingStatus =
-      (existingProvider as { providerStatus?: "pending" | "approved" | "rejected" })
-        .providerStatus ?? "pending";
+      (
+        existingProvider as {
+          providerStatus?: "pending" | "approved" | "rejected";
+        }
+      ).providerStatus ?? "pending";
 
     if (existingStatus !== "rejected") {
       throw new ApiError("User already has a provider account", 409);
@@ -164,7 +170,10 @@ export async function createProvider(providerData: CreateProviderInput) {
         link: "/provider/dashboard",
       });
     } catch (notificationError) {
-      console.error("[createProvider] notification error (re-apply):", notificationError);
+      console.error(
+        "[createProvider] notification error (re-apply):",
+        notificationError
+      );
     }
 
     return toProviderDTO(existingProvider);
@@ -192,7 +201,11 @@ export async function createProvider(providerData: CreateProviderInput) {
 export async function getProviderById(id: string) {
   await connectDB();
 
-  const provider = await Provider.findById(id).populate("userId", "name email");
+  // ✅ Added "_id" so userId._id is returned on provider detail pages
+  const provider = await Provider.findById(id).populate(
+    "userId",
+    "name email _id"
+  );
   if (!provider) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
 
   return toProviderDTO(provider);
@@ -216,7 +229,10 @@ export async function updateProvider(
   try {
     await notifyProviderOnUpdate(existingProvider, provider);
   } catch (notificationError) {
-    console.error(`[updateProvider] notification error for provider ${id}:`, notificationError);
+    console.error(
+      `[updateProvider] notification error for provider ${id}:`,
+      notificationError
+    );
   }
 
   return toProviderDTO(provider);
@@ -243,7 +259,10 @@ export async function deleteProvider(id: string) {
       });
     }
   } catch (notificationError) {
-    console.error(`[deleteProvider] notification error for provider ${id}:`, notificationError);
+    console.error(
+      `[deleteProvider] notification error for provider ${id}:`,
+      notificationError
+    );
   }
 
   return toProviderDTO(provider);

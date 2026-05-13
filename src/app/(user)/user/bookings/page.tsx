@@ -315,17 +315,15 @@ export default function UserBookingsPage() {
               <button
                 key={f.value}
                 onClick={() => setActiveFilter(f.value)}
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all border ${
-                  isActive
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all border ${isActive
                     ? "bg-blue-600 text-white border-blue-600"
                     : "bg-white text-[#4b6fa8] border-blue-200 hover:bg-blue-50"
-                }`}
+                  }`}
               >
                 {f.label}
                 <span
-                  className={`text-xs px-2 py-0.5 rounded-full ${
-                    isActive ? "bg-blue-500 text-white" : "bg-blue-50 text-[#4b6fa8]"
-                  }`}
+                  className={`text-xs px-2 py-0.5 rounded-full ${isActive ? "bg-blue-500 text-white" : "bg-blue-50 text-[#4b6fa8]"
+                    }`}
                 >
                   {count}
                 </span>
@@ -368,14 +366,14 @@ export default function UserBookingsPage() {
             const needsPayment =
               booking.status === "confirmed" &&
               (booking.paymentStatus === "unpaid" ||
-                booking.paymentStatus === "failed");
+                booking.paymentStatus === "failed" ||
+                booking.paymentStatus === "pending");
 
             return (
               <div
                 key={booking.id}
-                className={`bg-white border-[1.5px] border-blue-100 rounded-3xl p-6 hover:shadow-md transition ${
-                  booking.status === "cancelled" ? "opacity-60" : ""
-                }`}
+                className={`bg-white border-[1.5px] border-blue-100 rounded-3xl p-6 hover:shadow-md transition ${booking.status === "cancelled" ? "opacity-60" : ""
+                  }`}
               >
                 {/* TOP */}
                 <div className="flex flex-wrap items-start justify-between gap-4">
@@ -409,15 +407,14 @@ export default function UserBookingsPage() {
                     {booking.paymentStatus &&
                       booking.paymentStatus !== "unpaid" && (
                         <span
-                          className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${
-                            booking.paymentStatus === "paid"
+                          className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${booking.paymentStatus === "paid"
                               ? "bg-emerald-100 text-emerald-700"
                               : booking.paymentStatus === "failed"
-                              ? "bg-red-100 text-red-700"
-                              : booking.paymentStatus === "pending"
-                              ? "bg-amber-100 text-amber-700"
-                              : "bg-gray-100 text-gray-500"
-                          }`}
+                                ? "bg-red-100 text-red-700"
+                                : booking.paymentStatus === "pending"
+                                  ? "bg-amber-100 text-amber-700"
+                                  : "bg-gray-100 text-gray-500"
+                            }`}
                         >
                           {booking.paymentStatus === "paid"
                             ? "✓ Paid"

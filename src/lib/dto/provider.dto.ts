@@ -26,7 +26,7 @@ function isPopulatedUser(value: unknown): value is PopulatedUser {
 export function toProviderDTO(provider: ProviderDocument) {
   const normalizedUserId = isPopulatedUser(provider.userId)
     ? {
-        id: provider.userId._id.toString(),
+        _id: provider.userId._id.toString(),
         name: provider.userId.name,
         email: provider.userId.email,
       }

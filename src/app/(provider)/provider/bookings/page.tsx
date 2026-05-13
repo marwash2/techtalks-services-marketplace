@@ -2,8 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import ProviderSidebar from "@/components/provider/ProviderSidebar";
-import { CalendarDays,CheckCircle2,Clock3,Search,XCircle,Eye,} from "lucide-react";
+
+import {
+  CalendarDays,
+  CheckCircle2,
+  Clock3,
+  Search,
+  XCircle,
+  Eye,
+  Loader2,
+} from "lucide-react";
 
 type BookingStatus =
   | "pending"
@@ -12,7 +20,7 @@ type BookingStatus =
   | "done"
   | "cancelled";
 
-  type Booking = {
+type Booking = {
   id?: string;
   _id: string;
   userId: any;
@@ -40,33 +48,40 @@ const tabs = [
   "cancelled",
 ];
 
-function truncateNote(text?: string, wordLimit = 20, charLimit = 120) {
+function truncateNote(
+  text?: string,
+  limit = 80
+) {
   if (!text) return "No notes";
-  const trimmed = text.trim();
-  const words = trimmed.split(/\s+/);
-
-  if (words.length > wordLimit) {
-    return `${words.slice(0, wordLimit).join(" ")}...`;
-  }
-  if (trimmed.length > charLimit) {
-    return `${trimmed.slice(0, charLimit)}...`;
-  }
-  return trimmed;
+  return text.length > limit
+    ? `${text.slice(0, limit)}...`
+    : text;
 }
 
 export default function ProviderBookingsPage() {
   const { data: session } = useSession();
 
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("all");
-  const [search, setSearch] = useState("");
-  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [bookings, setBookings] = useState<
+    Booking[]
+  >([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [activeTab, setActiveTab] =
+    useState("all");
+
+  const [search, setSearch] =
+    useState("");
+
+  const [selectedBooking, setSelectedBooking] =
+    useState<Booking | null>(null);
 
   const providerId = session?.user?.id;
 
   async function fetchBookings() {
     if (!providerId) return;
+
     try {
       setLoading(true);
 
@@ -79,8 +94,8 @@ export default function ProviderBookingsPage() {
 
       setBookings(
         data.data?.bookings ||
-        data.bookings ||
-        []
+          data.bookings ||
+          []
       );
     } catch (error) {
       console.error(error);
@@ -88,7 +103,8 @@ export default function ProviderBookingsPage() {
       setLoading(false);
     }
   }
-    useEffect(() => {
+
+  useEffect(() => {
     fetchBookings();
   }, [providerId]);
 
@@ -97,35 +113,49 @@ export default function ProviderBookingsPage() {
     status: BookingStatus
   ) {
     try {
-      if (!bookingId) return;
-      const res = await fetch(`/api/bookings/${bookingId}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, actor: "provider" }),
-      });
+      const res = await fetch(
+        `/api/bookings/${bookingId}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            status,
+            actor: "provider",
+          }),
+        }
+      );
+
       const data = await res.json();
+
       if (!res.ok || !data.success) {
-        console.error(data.message || "Failed to update booking status");
         return;
       }
 
       setBookings((prev) =>
-        prev.map((b) => ((b.id || b._id) === bookingId ? { ...b, status } : b))
+        prev.map((b) =>
+          (b.id || b._id) === bookingId
+            ? { ...b, status }
+            : b
+        )
       );
     } catch (error) {
       console.error(error);
     }
   }
- const filteredBookings = useMemo(() => {
+
+  const filteredBookings = useMemo(() => {
     let result = bookings;
 
     if (activeTab !== "all") {
-      result = result.filter(
-        booking =>
-          activeTab === "completed"
-            ? booking.status === "completed" ||
-              booking.status === "done"
-            : booking.status === activeTab
+      result = result.filter((booking) =>
+        activeTab === "completed"
+          ? booking.status ===
+              "completed" ||
+            booking.status === "done"
+          : booking.status === activeTab
       );
     }
 
@@ -143,182 +173,213 @@ export default function ProviderBookingsPage() {
   const stats = {
     total: bookings.length,
     pending: bookings.filter(
-      b => b.status === "pending"
+      (b) => b.status === "pending"
     ).length,
     confirmed: bookings.filter(
-      b => b.status === "confirmed"
+      (b) => b.status === "confirmed"
     ).length,
     completed: bookings.filter(
-      b =>
+      (b) =>
         b.status === "completed" ||
         b.status === "done"
     ).length,
-    cancelled: bookings.filter(
-      b => b.status === "cancelled"
-    ).length,
   };
-   return (
-    <div className="min-h-screen bg-slate-50 p-4 lg:p-8">
-      <div className="mx-auto flex max-w-7xl gap-6">
 
-        <ProviderSidebar />
+  return (
+    <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-8">
 
-        <main className="flex-1 rounded-3xl bg-white p-6 shadow-sm">
-          <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">
-                Bookings
-              </h1>
-              <p className="text-slate-500">
-                Manage and respond to booking requests
-              </p>
-            </div>
-          </div>
+        {/* HEADER */}
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-blue-600 mb-1.5">
+            Provider
+          </p>
 
-          {/* stat cards */}
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5 mb-8">
+          <h1 className="text-3xl font-semibold text-slate-950">
+            Bookings
+          </h1>
 
-            <StatCard
-              title="Total Bookings"
-              value={stats.total}
-              icon={<CalendarDays className="h-5 w-5" />}
-            />
+          <p className="mt-1.5 text-sm text-slate-500 leading-6 max-w-xl">
+            Manage booking requests and
+            respond to client appointments.
+          </p>
+        </div>
 
-            <StatCard
-              title="Pending"
-              value={stats.pending}
-              icon={<Clock3 className="h-5 w-5" />}
-            />
+        {/* STATS */}
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
-            <StatCard
-              title="Accepted"
-              value={stats.confirmed}
-              icon={<CheckCircle2 className="h-5 w-5" />}
-            />
-            <StatCard
-              title="Completed"
-              value={stats.completed}
-              icon={<CheckCircle2 className="h-5 w-5" />}
-            />
+          <StatCard
+            title="Total"
+            value={stats.total}
+            icon={
+              <CalendarDays className="h-5 w-5 text-blue-600" />
+            }
+          />
 
-            <StatCard
-              title="Cancelled"
-              value={stats.cancelled}
-              icon={<XCircle className="h-5 w-5" />}
-            />
-          </div>
+          <StatCard
+            title="Pending"
+            value={stats.pending}
+            icon={
+              <Clock3 className="h-5 w-5 text-amber-600" />
+            }
+          />
 
-          {/* tabs and search*/}
-          <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <StatCard
+            title="Confirmed"
+            value={stats.confirmed}
+            icon={
+              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+            }
+          />
 
-            <div className="flex flex-wrap gap-3">
+          <StatCard
+            title="Completed"
+            value={stats.completed}
+            icon={
+              <CheckCircle2 className="h-5 w-5 text-indigo-600" />
+            }
+          />
+        </div>
+
+        {/* FILTERS */}
+        <div className="rounded-[22px] border border-slate-200 bg-white shadow-sm p-5">
+
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+
+            {/* tabs */}
+            <div className="flex flex-wrap gap-2">
               {tabs.map((tab) => (
-              <button
-                key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={
-                    activeTab === tab
-                      ? "rounded-full bg-slate-950 px-5 py-2 text-sm font-medium text-white"
-                      : "rounded-full bg-slate-100 px-5 py-2 text-sm font-medium text-slate-600"
+                <button
+                  key={tab}
+                  onClick={() =>
+                    setActiveTab(tab)
                   }
+                  className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
+                    activeTab === tab
+                      ? "bg-blue-600 text-white"
+                      : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                  }`}
                 >
                   {tab === "all"
-                    ? "All Bookings"
+                    ? "All"
                     : tab}
                 </button>
               ))}
             </div>
+
+            {/* search */}
             <div className="relative w-full max-w-md">
               <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
+
               <input
                 value={search}
                 onChange={(e) =>
                   setSearch(e.target.value)
                 }
                 placeholder="Search bookings..."
-                className="w-full rounded-xl border border-slate-200 py-3 pl-10 pr-4 outline-none"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
+        </div>
 
-            {/* table header */}
-          <div className="hidden rounded-2xl bg-slate-100 px-6 py-4 lg:grid lg:grid-cols-5 text-sm font-semibold text-slate-600">
-            <div>Client</div>
-            <div>Service</div>
-            <div>Date</div>
-            <div>Status</div>
-            <div>Actions</div>
-          </div>
+        {/* BOOKINGS */}
+        <div className="space-y-4">
 
-           {/* bookings */}
-          <div className="mt-4 space-y-4">
-
-            {loading && (
-              <div className="rounded-2xl bg-white p-8 text-center text-slate-400">
+          {loading && (
+            <div className="flex min-h-[300px] items-center justify-center rounded-[22px] border border-slate-200 bg-white shadow-sm">
+              <div className="flex items-center gap-3 text-sm font-medium text-slate-500">
+                <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
                 Loading bookings...
               </div>
-            )}
+            </div>
+          )}
 
-            {!loading && filteredBookings.length===0 && (
-              <div className="rounded-2xl border bg-white p-8 text-center text-slate-400">
-                No bookings found
+          {!loading &&
+            filteredBookings.length ===
+              0 && (
+              <div className="rounded-[22px] border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
+                <CalendarDays className="mx-auto h-8 w-8 text-slate-300 mb-4" />
+
+                <h2 className="text-base font-semibold text-slate-900">
+                  No bookings found
+                </h2>
+
+                <p className="mt-2 text-sm text-slate-500">
+                  Bookings will appear here
+                  once clients start booking.
+                </p>
               </div>
             )}
-            {filteredBookings.map((booking) => (
-              <BookingRow
-                key={booking.id || booking._id}
+
+          {filteredBookings.map(
+            (booking) => (
+              <BookingCard
+                key={
+                  booking.id ||
+                  booking._id
+                }
                 booking={booking}
-                onViewDetails={() => setSelectedBooking(booking)}
+                onViewDetails={() =>
+                  setSelectedBooking(
+                    booking
+                  )
+                }
                 onAccept={() =>
                   updateStatus(
-                    booking.id || booking._id,
+                    booking.id ||
+                      booking._id,
                     "confirmed"
                   )
                 }
                 onReject={() =>
                   updateStatus(
-                    booking.id || booking._id,
+                    booking.id ||
+                      booking._id,
                     "cancelled"
                   )
                 }
                 onComplete={() =>
                   updateStatus(
-                    booking.id || booking._id,
+                    booking.id ||
+                      booking._id,
                     "completed"
                   )
                 }
               />
-            ))}
-
-          </div>
-
-          {selectedBooking && (
-            <BookingDetailsModal
-              booking={selectedBooking}
-              onClose={() => setSelectedBooking(null)}
-            />
+            )
           )}
-        </main>
+        </div>
+
+        {selectedBooking && (
+          <BookingDetailsModal
+            booking={selectedBooking}
+            onClose={() =>
+              setSelectedBooking(null)
+            }
+          />
+        )}
       </div>
     </div>
   );
 }
+
 function StatCard({
   title,
   value,
   icon,
 }: {
-  title:string;
-  value:number;
-  icon:React.ReactNode;
+  title: string;
+  value: number;
+  icon: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100">
+    <div className="rounded-[22px] border border-slate-200 bg-white px-5 py-5 shadow-sm">
+      <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100">
         {icon}
       </div>
 
-      <h3 className="text-3xl font-bold">
+      <h3 className="text-3xl font-semibold text-slate-900">
         {value}
       </h3>
 
@@ -328,19 +389,24 @@ function StatCard({
     </div>
   );
 }
-function StatusBadge({status}:{status:BookingStatus}) {
-  const styles={
+
+function StatusBadge({
+  status,
+}: {
+  status: BookingStatus;
+}) {
+  const styles = {
     pending:
       "bg-amber-100 text-amber-700",
     confirmed:
       "bg-emerald-100 text-emerald-700",
     completed:
-      "bg-violet-100 text-violet-700",
-    done:
-      "bg-violet-100 text-violet-700",
+      "bg-indigo-100 text-indigo-700",
+    done: "bg-indigo-100 text-indigo-700",
     cancelled:
       "bg-red-100 text-red-700",
   };
+
   return (
     <span
       className={`rounded-full px-3 py-1 text-xs font-semibold ${styles[status]}`}
@@ -349,118 +415,128 @@ function StatusBadge({status}:{status:BookingStatus}) {
     </span>
   );
 }
-function BookingRow({
- booking,
- onViewDetails,
- onAccept,
- onReject,
- onComplete,
+
+function BookingCard({
+  booking,
+  onViewDetails,
+  onAccept,
+  onReject,
+  onComplete,
 }: {
- booking: Booking;
- onViewDetails: ()=>void;
- onAccept: ()=>void;
- onReject: ()=>void;
- onComplete: ()=>void;
+  booking: Booking;
+  onViewDetails: () => void;
+  onAccept: () => void;
+  onReject: () => void;
+  onComplete: () => void;
 }) {
   const userName =
-    booking.userId && typeof booking.userId === "object"
-      ? booking.userId.name || booking.userId.email || booking.userId._id
+    booking.userId &&
+    typeof booking.userId === "object"
+      ? booking.userId.name ||
+        booking.userId.email
       : booking.userId;
+
   const serviceTitle =
     booking.service?.title ||
-    (booking.serviceId && typeof booking.serviceId === "object"
-      ? booking.serviceId.title || booking.serviceId._id
+    (booking.serviceId &&
+    typeof booking.serviceId ===
+      "object"
+      ? booking.serviceId.title
       : booking.serviceId);
 
-    return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+  return (
+    <div className="rounded-[22px] border border-slate-200 bg-white px-5 py-5 shadow-sm transition hover:border-blue-200">
 
-      <div className="grid gap-6 lg:grid-cols-5 lg:items-center">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
 
-        {/* client */}
-        <div>
-          <p className="font-semibold text-slate-900">
-            Client Booking
-          </p>
-          <p className="mt-1 text-sm text-slate-500">
-            User: {String(userName ?? "-")}
-          </p>
-        </div>
+        {/* LEFT */}
+        <div className="flex-1">
 
-         {/* service */}
-        <div>
-          <p className="font-semibold">
-            {serviceTitle ? String(serviceTitle) : "Service"}
-          </p>
+          <div className="flex flex-wrap items-center gap-3 mb-3">
+            <h2 className="text-lg font-semibold text-slate-900">
+              {serviceTitle || "Service"}
+            </h2>
 
-          <p className="mt-2 text-sm text-slate-500">
-            Notes:
-            <span className="ml-1 inline-block max-w-full break-words align-top whitespace-pre-wrap">
-              {truncateNote(booking.notes, 20, 120)}
-            </span>
-          </p>
-        </div>
+            <StatusBadge
+              status={booking.status}
+            />
+          </div>
 
-         {/* date */}
-        <div>
-          <p className="font-medium">
-            {new Date(
-              booking.date
-            ).toLocaleDateString()}
-          </p>
+          <div className="space-y-1.5 text-sm text-slate-500">
+            <p>
+              Client:{" "}
+              <span className="text-slate-700 font-medium">
+                {String(userName || "-")}
+              </span>
+            </p>
 
-          <p className="mt-2 text-sm text-slate-500">
-            ${booking.price}
-          </p>
-        </div>
+            <p>
+              Date:{" "}
+              <span className="text-slate-700 font-medium">
+                {new Date(
+                  booking.date
+                ).toLocaleDateString()}
+              </span>
+            </p>
 
-         {/* status */}
-        <div>
-          <StatusBadge
-            status={booking.status}
-          />
-        </div>
+            <p>
+              Price:{" "}
+              <span className="text-slate-700 font-medium">
+                ${booking.price}
+              </span>
+            </p>
 
-         {/* actions */}
-        <div className="flex flex-col items-start gap-2 lg:items-end">
-          <button onClick={onViewDetails} className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 cursor-pointer">
-            <span className="inline-flex items-center gap-2">
-              <Eye className="h-4 w-4" />
-              View Details
-            </span>
-          </button>
-
-          <div className="flex flex-wrap gap-2">
-
-            {booking.status === "pending" && (
-              <>
-                <button
-                  onClick={onAccept}
-                  className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300"
-                >
-                  Accept
-                </button>
-
-                <button
-                  onClick={onReject}
-                  className="rounded-xl border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-600 shadow-sm transition hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-rose-200"
-                >
-                  Reject
-                </button>
-              </>
-            )}
-
-            {booking.status === "confirmed" && (
-              <button
-                onClick={onComplete}
-                className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
-              >
-                Complete
-              </button>
-            )}
+            <p className="max-w-2xl">
+              Notes:{" "}
+              <span className="text-slate-700">
+                {truncateNote(
+                  booking.notes
+                )}
+              </span>
+            </p>
           </div>
         </div>
 
+        {/* RIGHT */}
+        <div className="flex flex-wrap gap-2 lg:flex-col lg:items-end">
+
+          <button
+            onClick={onViewDetails}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+          >
+            <Eye className="h-4 w-4" />
+            Details
+          </button>
+
+          {booking.status ===
+            "pending" && (
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={onAccept}
+                className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition"
+              >
+                Accept
+              </button>
+
+              <button
+                onClick={onReject}
+                className="rounded-xl border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 transition"
+              >
+                Reject
+              </button>
+            </div>
+          )}
+
+          {booking.status ===
+            "confirmed" && (
+            <button
+              onClick={onComplete}
+              className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition"
+            >
+              Complete
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -473,59 +549,79 @@ function BookingDetailsModal({
   booking: Booking;
   onClose: () => void;
 }) {
-  const userName =
-    booking.userId && typeof booking.userId === "object"
-      ? booking.userId.name || booking.userId.email || booking.userId._id
-      : booking.userId;
-  const userEmail =
-    booking.userId && typeof booking.userId === "object"
-      ? booking.userId.email
-      : "";
-  const serviceTitle =
-    booking.service?.title ||
-    (booking.serviceId && typeof booking.serviceId === "object"
-      ? booking.serviceId.title || booking.serviceId._id
-      : booking.serviceId);
-  const servicePrice =
-    booking.service?.price ??
-    (booking.serviceId && typeof booking.serviceId === "object" ? booking.serviceId.price : booking.price);
-  const serviceDuration =
-    booking.service?.duration ??
-    (booking.serviceId && typeof booking.serviceId === "object" ? booking.serviceId.duration : "");
-
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-slate-900">Booking Details</h3>
-          <button onClick={onClose} className="rounded-md px-2 py-1 text-slate-100 bg-red-500 hover:bg-red-700 cursor-pointer">
-            X
+
+      <div className="w-full max-w-xl rounded-[22px] border border-slate-200 bg-white p-6 shadow-xl">
+
+        <div className="mb-6 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-slate-900">
+            Booking Details
+          </h3>
+
+          <button
+            onClick={onClose}
+            className="rounded-xl border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
+          >
+            Close
           </button>
         </div>
-        <div className="grid grid-cols-1 gap-3 text-sm text-slate-700 md:grid-cols-2">
-          <p><span className="font-semibold">Client:</span> {String(userName ?? "-")}</p>
-          <p><span className="font-semibold">Client Email:</span> {String(userEmail || "-")}</p>
-          <p><span className="font-semibold">Service:</span> {String(serviceTitle ?? "-")}</p>
-          <p><span className="font-semibold">Status:</span> {booking.status}</p>
-          <p><span className="font-semibold">Date:</span> {new Date(booking.date).toLocaleDateString()}</p>
-          <p><span className="font-semibold">Time:</span> {String(booking.time || "-")}</p>
-          <p><span className="font-semibold">Price:</span> ${String(servicePrice ?? "-")}</p>
-          <p><span className="font-semibold">Duration:</span> {String(serviceDuration || "-")} min</p>
-          <p className="md:col-span-2">
-            <span className="font-semibold">Notes:</span>
-            <span className="mt-1 block max-h-28 overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-slate-50 p-2">
-              {booking.notes || "-"}
-            </span>
-          </p>
-          <p><span className="font-semibold">Created:</span> {booking.createdAt ? new Date(booking.createdAt).toLocaleString() : "-"}</p>
-          <p><span className="font-semibold">Updated:</span> {booking.updatedAt ? new Date(booking.updatedAt).toLocaleString() : "-"}</p>
+
+        <div className="grid gap-4 text-sm text-slate-600 sm:grid-cols-2">
+
+          <DetailItem
+            label="Status"
+            value={booking.status}
+          />
+
+          <DetailItem
+            label="Date"
+            value={new Date(
+              booking.date
+            ).toLocaleDateString()}
+          />
+
+          <DetailItem
+            label="Time"
+            value={booking.time || "-"}
+          />
+
+          <DetailItem
+            label="Price"
+            value={`$${booking.price}`}
+          />
+
+          <div className="sm:col-span-2">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Notes
+            </p>
+
+            <div className="rounded-xl bg-slate-50 p-4 text-slate-700">
+              {booking.notes || "No notes"}
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
+function DetailItem({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div>
+      <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-400">
+        {label}
+      </p>
 
-
-
-
+      <p className="font-medium text-slate-800">
+        {value}
+      </p>
+    </div>
+  );
+}

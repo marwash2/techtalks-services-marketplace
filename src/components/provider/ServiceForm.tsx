@@ -3,6 +3,20 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import {
+  BriefcaseBusiness,
+  Clock3,
+  DollarSign,
+  ImageIcon,
+  Loader2,
+  MapPin,
+  Save,
+  Tag,
+  Text,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
+
 type Category = {
   _id?: string;
   id?: string;
@@ -25,13 +39,13 @@ export default function ServiceForm({
 
   const [loading, setLoading] =
     useState(false);
+
   const [toast, setToast] =
     useState<{
       type: "success" | "error";
       message: string;
     } | null>(null);
 
-  /* ---------------- FORM STATE ---------------- */
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -43,7 +57,7 @@ export default function ServiceForm({
     image: "",
   });
 
-  /* ---------------- FETCH CATEGORIES ---------------- */
+  /* FETCH CATEGORIES */
   useEffect(() => {
     const fetchCategories =
       async () => {
@@ -57,53 +71,33 @@ export default function ServiceForm({
               }
             );
 
-          if (!res.ok) {
-            throw new Error(
-              "Failed to fetch categories"
-            );
-          }
-
           const data =
             await res.json();
-
-          console.log(
-            "Fetched categories:",
-            data
-          );
 
           setCategories(
             data.data
               ?.categories || []
           );
         } catch (err) {
-          console.error(
-            "Failed to fetch categories:",
-            err
-          );
+          console.error(err);
         }
       };
 
     fetchCategories();
   }, []);
 
-  /* ---------------- FETCH SERVICE FOR EDIT ---------------- */
+  /* FETCH SERVICE FOR EDIT */
   useEffect(() => {
     if (
       mode !== "edit" ||
       !serviceId
-    ) {
+    )
       return;
-    }
 
     const fetchService =
       async () => {
         try {
           setLoading(true);
-
-          console.log(
-            "Fetching service ID:",
-            serviceId
-          );
 
           const res =
             await fetch(
@@ -114,101 +108,42 @@ export default function ServiceForm({
               }
             );
 
-          if (!res.ok) {
-            let errorMessage =
-              "Failed to fetch service";
-
-            try {
-              const errorData =
-                await res.json();
-
-              console.error(
-                "Fetch service error:",
-                errorData
-              );
-
-              errorMessage =
-                errorData.error ||
-                errorData.message ||
-                errorMessage;
-            } catch {
-              console.error(
-                "Could not parse fetch error"
-              );
-            }
-
-            throw new Error(
-              errorMessage
-            );
-          }
-
           const data =
             await res.json();
-
-          console.log(
-            "Fetched service:",
-            data
-          );
 
           const service =
             data.data?.service;
 
-          if (!service) {
-            throw new Error(
-              "Service not found"
-            );
-          }
+          if (!service) return;
 
-          /* ---------------- PREFILL FORM ---------------- */
           setForm({
             title:
-              service.title ||
-              "",
-
+              service.title || "",
             description:
               service.description ||
               "",
-
             categoryId:
               service.category?._id ||
-              service.category?.id ||
-              service.categoryId?._id ||
-              service.categoryId?.id ||
               service.categoryId ||
               "",
-
             price: String(
               service.price || ""
             ),
-
             duration: String(
               service.duration ||
                 ""
             ),
-
             availability:
               service.availability ||
               "",
-
             location:
               service.location ||
               "",
-
             image:
-              service.image ||
-              "",
+              service.image || "",
           });
         } catch (err) {
-          console.error(
-            "Edit fetch error:",
-            err
-          );
-
-          alert(
-            err instanceof Error
-              ? err.message
-              : "Failed to load service details"
-          );
+          console.error(err);
         } finally {
           setLoading(false);
         }
@@ -217,7 +152,7 @@ export default function ServiceForm({
     fetchService();
   }, [mode, serviceId]);
 
-  /* ---------------- SUBMIT ---------------- */
+  /* SUBMIT */
   const handleSubmit = async (
     e: React.FormEvent
   ) => {
@@ -228,34 +163,17 @@ export default function ServiceForm({
 
       const payload = {
         ...form,
-
-        categoryId:
-          form.categoryId,
-
         image:
           form.image.trim()
             ? form.image
             : null,
-
         price: Number(
           form.price
         ),
-
         duration: Number(
           form.duration
         ),
-
-        availability:
-          form.availability.trim(),
-
-        location:
-          form.location.trim(),
       };
-
-      console.log(
-        "Submitting payload:",
-        payload
-      );
 
       const endpoint =
         mode === "create"
@@ -267,25 +185,17 @@ export default function ServiceForm({
           ? "POST"
           : "PUT";
 
-      console.log(
-        "Submitting to:",
-        endpoint
-      );
-
       const res =
         await fetch(
           endpoint,
           {
             method,
-
             credentials:
               "include",
-
             headers: {
               "Content-Type":
                 "application/json",
             },
-
             body: JSON.stringify(
               payload
             ),
@@ -293,40 +203,15 @@ export default function ServiceForm({
         );
 
       if (!res.ok) {
-        let errorMessage =
-          "Failed to save service";
-
-        try {
-          const errorData =
-            await res.json();
-
-          console.error(
-            "Save error:",
-            errorData
-          );
-
-          errorMessage =
-            errorData.error ||
-            errorData.message ||
-            errorMessage;
-        } catch {
-          console.error(
-            "Could not parse backend error response"
-          );
-        }
+        const errorData =
+          await res.json();
 
         throw new Error(
-          errorMessage
+          errorData.error ||
+            "Failed to save service"
         );
       }
 
-      const result =
-        await res.json();
-
-      console.log(
-        "Service saved successfully:",
-        result
-      );
       window.dispatchEvent(
         new Event(
           "notifications-updated"
@@ -336,9 +221,9 @@ export default function ServiceForm({
       setToast({
         type: "success",
         message:
-          mode === "edit"
-            ? "Service updated successfully"
-            : "Service created successfully",
+          mode === "create"
+            ? "Service created successfully"
+            : "Service updated successfully",
       });
 
       setTimeout(() => {
@@ -347,232 +232,368 @@ export default function ServiceForm({
         );
       }, 700);
     } catch (err) {
-      console.error(
-        "Submit error:",
-        err
-      );
-
       setToast({
         type: "error",
         message:
           err instanceof Error
             ? err.message
-            : "Something went wrong while saving",
+            : "Something went wrong",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  /* ---------------- UI ---------------- */
   return (
-    <div className="max-w-3xl mx-auto bg-white p-8 rounded-2xl shadow border">
-      {toast && (
-        <div
-          className={`mb-4 rounded-lg px-4 py-3 text-sm font-medium ${
-            toast.type === "success"
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-red-50 text-red-700 border border-red-200"
-          }`}
-        >
-          {toast.message}
+    <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8">
+
+      <div className="mx-auto max-w-4xl space-y-8">
+
+        {/* HEADER */}
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-blue-600 mb-1.5">
+            Provider
+          </p>
+
+          <h1 className="text-3xl font-semibold text-slate-950">
+            {mode === "create"
+              ? "Create Service"
+              : "Edit Service"}
+          </h1>
+
+          <p className="mt-1.5 text-sm text-slate-500 leading-6 max-w-2xl">
+            Add and manage your
+            service information,
+            pricing, and booking
+            details.
+          </p>
         </div>
-      )}
-      <h1 className="text-3xl font-bold mb-6">
-        {mode === "create"
-          ? "Add New Service"
-          : "Edit Service"}
-      </h1>
 
-      <form
-        onSubmit={
-          handleSubmit
-        }
-        className="space-y-5"
-      >
-        {/* TITLE */}
-        <input
-          type="text"
-          placeholder="Service Title"
-          value={form.title}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              title:
-                e.target
-                  .value,
-            })
-          }
-          className="w-full border rounded-lg p-3"
-          required
-        />
+        {/* ALERTS */}
+        {toast && (
+          <div
+            className={`flex items-start gap-3 rounded-[18px] border px-5 py-4 text-sm ${
+              toast.type === "success"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                : "border-rose-200 bg-rose-50 text-rose-700"
+            }`}
+          >
+            {toast.type ===
+            "success" ? (
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+            ) : (
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            )}
 
-        {/* DESCRIPTION */}
-        <textarea
-          placeholder="Description"
-          value={
-            form.description
-          }
-          onChange={(e) =>
-            setForm({
-              ...form,
-              description:
-                e.target
-                  .value,
-            })
-          }
-          className="w-full border rounded-lg p-3"
-        />
+            <span>
+              {toast.message}
+            </span>
+          </div>
+        )}
 
-        {/* CATEGORY */}
-        <select
-          value={
-            form.categoryId
-          }
-          onChange={(e) =>
-            setForm({
-              ...form,
-              categoryId:
-                e.target
-                  .value,
-            })
-          }
-          className="w-full border rounded-lg p-3"
-          required
-        >
-          <option value="">
-            Select Category
-          </option>
+        {/* FORM */}
+        <div className="rounded-[22px] border border-slate-200 bg-white shadow-sm overflow-hidden">
 
-          {categories.map(
-            (category) => (
-              <option
-                key={
-                  category._id ||
-                  category.id
+          {/* FORM HEADER */}
+          <div className="border-b border-slate-100 px-6 py-5">
+
+            <h2 className="text-base font-semibold text-slate-900">
+              Service Details
+            </h2>
+
+            <p className="mt-1 text-sm text-slate-500">
+              Fill in the information
+              below to publish your
+              service.
+            </p>
+          </div>
+
+          {/* FORM BODY */}
+          <form
+            onSubmit={
+              handleSubmit
+            }
+            className="space-y-6 px-6 py-6"
+          >
+
+            {/* TITLE */}
+            <FormField
+              label="Service Title"
+              icon={
+                <BriefcaseBusiness className="h-4 w-4" />
+              }
+            >
+              <input
+                type="text"
+                value={form.title}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    title:
+                      e.target
+                        .value,
+                  })
                 }
+                placeholder="Enter service title"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                required
+              />
+            </FormField>
+
+            {/* DESCRIPTION */}
+            <FormField
+              label="Description"
+              icon={
+                <Text className="h-4 w-4" />
+              }
+            >
+              <textarea
+                rows={5}
                 value={
-                  category._id ||
-                  category.id
+                  form.description
+                }
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    description:
+                      e.target
+                        .value,
+                  })
+                }
+                placeholder="Describe your service"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </FormField>
+
+            {/* GRID */}
+            <div className="grid gap-6 md:grid-cols-2">
+
+              {/* CATEGORY */}
+              <FormField
+                label="Category"
+                icon={
+                  <Tag className="h-4 w-4" />
                 }
               >
-                {
-                  category.name
+                <select
+                  value={
+                    form.categoryId
+                  }
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      categoryId:
+                        e.target
+                          .value,
+                    })
+                  }
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  required
+                >
+                  <option value="">
+                    Select category
+                  </option>
+
+                  {categories.map(
+                    (
+                      category
+                    ) => (
+                      <option
+                        key={
+                          category._id ||
+                          category.id
+                        }
+                        value={
+                          category._id ||
+                          category.id
+                        }
+                      >
+                        {
+                          category.name
+                        }
+                      </option>
+                    )
+                  )}
+                </select>
+              </FormField>
+
+              {/* PRICE */}
+              <FormField
+                label="Price"
+                icon={
+                  <DollarSign className="h-4 w-4" />
                 }
-              </option>
-            )
-          )}
-        </select>
+              >
+                <input
+                  type="number"
+                  value={
+                    form.price
+                  }
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      price:
+                        e.target
+                          .value,
+                    })
+                  }
+                  placeholder="0"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  required
+                />
+              </FormField>
 
-        {/* PRICE */}
-        <input
-          type="number"
-          placeholder="Price"
-          value={
-            form.price
-          }
-          onChange={(e) =>
-            setForm({
-              ...form,
-              price:
-                e.target
-                  .value,
-            })
-          }
-          className="w-full border rounded-lg p-3"
-          required
-        />
+              {/* DURATION */}
+              <FormField
+                label="Duration"
+                icon={
+                  <Clock3 className="h-4 w-4" />
+                }
+              >
+                <input
+                  type="number"
+                  value={
+                    form.duration
+                  }
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      duration:
+                        e.target
+                          .value,
+                    })
+                  }
+                  placeholder="Duration in minutes"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  required
+                />
+              </FormField>
 
-        {/* DURATION */}
-        <input
-          type="number"
-          placeholder="Duration (minutes)"
-          value={
-            form.duration
-          }
-          onChange={(e) =>
-            setForm({
-              ...form,
-              duration:
-                e.target
-                  .value,
-            })
-          }
-          className="w-full border rounded-lg p-3"
-          required
-        />
+              {/* LOCATION */}
+              <FormField
+                label="Location"
+                icon={
+                  <MapPin className="h-4 w-4" />
+                }
+              >
+                <input
+                  type="text"
+                  value={
+                    form.location
+                  }
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      location:
+                        e.target
+                          .value,
+                    })
+                  }
+                  placeholder="Beirut, Lebanon"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                />
+              </FormField>
+            </div>
 
-        {/* AVAILABILITY */}
-        <input
-          type="text"
-          placeholder="Availability (e.g. Mon-Fri 9AM-5PM)"
-          value={
-            form.availability
-          }
-          onChange={(e) =>
-            setForm({
-              ...form,
-              availability:
-                e.target
-                  .value,
-            })
-          }
-          className="w-full border rounded-lg p-3"
-          required
-        />
+            {/* AVAILABILITY */}
+            <FormField
+              label="Availability"
+              icon={
+                <Clock3 className="h-4 w-4" />
+              }
+            >
+              <input
+                type="text"
+                value={
+                  form.availability
+                }
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    availability:
+                      e.target
+                        .value,
+                  })
+                }
+                placeholder="Mon-Fri 9AM-5PM"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                required
+              />
+            </FormField>
 
-        {/* LOCATION */}
-        <input
-          type="text"
-          placeholder="Location (e.g. Beirut, Lebanon)"
-          value={
-            form.location
-          }
-          onChange={(e) =>
-            setForm({
-              ...form,
-              location:
-                e.target
-                  .value,
-            })
-          }
-          className="w-full border rounded-lg p-3"
-        />
+            {/* IMAGE */}
+            <FormField
+              label="Image URL"
+              icon={
+                <ImageIcon className="h-4 w-4" />
+              }
+            >
+              <input
+                type="text"
+                value={
+                  form.image
+                }
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    image:
+                      e.target
+                        .value,
+                  })
+                }
+                placeholder="https://example.com/image.jpg"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </FormField>
 
-        {/* IMAGE */}
-        <input
-          type="text"
-          placeholder="Image URL (optional)"
-          value={
-            form.image
-          }
-          onChange={(e) =>
-            setForm({
-              ...form,
-              image:
-                e.target
-                  .value,
-            })
-          }
-          className="w-full border rounded-lg p-3"
-        />
+            {/* SUBMIT */}
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
 
-        {/* SUBMIT */}
-        <button
-          type="submit"
-          disabled={
-            loading
-          }
-          className="w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 disabled:bg-gray-400"
-        >
-          {loading
-            ? "Saving..."
-            : mode ===
-              "create"
-            ? "Add Service"
-            : "Update Service"}
-        </button>
-      </form>
+                {loading
+                  ? "Saving..."
+                  : mode ===
+                    "create"
+                  ? "Create Service"
+                  : "Update Service"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FormField({
+  label,
+  icon,
+  children,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+        <span className="text-slate-400">
+          {icon}
+        </span>
+
+        {label}
+      </label>
+
+      {children}
     </div>
   );
 }

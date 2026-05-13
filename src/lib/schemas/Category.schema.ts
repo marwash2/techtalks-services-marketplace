@@ -7,6 +7,7 @@ export const CategorySchema = new Schema<ICategory>(
     slug: { type: String, required: true, unique: true },
     description: { type: String, default: null },
     icon: { type: String, required: true },
+    isActive: { type: Boolean, default: true },
     parentId: { 
       type: Schema.Types.ObjectId, 
       ref: "Category", 

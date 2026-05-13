@@ -28,8 +28,12 @@ export const POST = withApiHandler(async (req) => {
 
   const body      = await req.json();
   const validated = createCategorySchema.parse(body);
+  const normalizedInput = {
+    ...validated,
+    isActive: body?.isActive === false ? false : true,
+  };
 
-  const category = await categoryService.createCategory(validated);
+  const category = await categoryService.createCategory(normalizedInput);
   return Response.json(
     successResponse(category, MESSAGES.SUCCESS.CREATE),
     { status: 201 }

@@ -192,15 +192,6 @@ export default function NotificationsView() {
     <div className="min-h-screen bg-[#f0f6ff]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
 
-        {/* BACK BUTTON */}
-        <button
-          onClick={() => router.push("/user/dashboard")}
-          className="inline-flex items-center gap-2 bg-white border-[1.5px] border-blue-100 hover:border-blue-200 rounded-2xl px-4 py-3 text-sm font-semibold text-[#1e3a5f] transition hover:bg-blue-50"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Dashboard
-        </button>
-
         {/* HERO */}
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-100 via-blue-50 to-indigo-100 border-[1.5px] border-blue-200 p-8 md:p-10">
           <div className="pointer-events-none absolute -top-16 -right-16 w-56 h-56 rounded-full bg-blue-300/20 blur-3xl" />
