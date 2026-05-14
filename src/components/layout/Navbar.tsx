@@ -16,7 +16,7 @@ export default function Navbar() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const { data: session } = useSession();
-  const { isOpen } = useSidebar();
+  const { isOpen, toggle } = useSidebar();
   const previousUnreadRef = useRef(0);
   const initializedRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -139,7 +139,16 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         {/* LEFT: Notification + Logo */}
-        <div className="flex items-center gap-4 ">
+        <div className="flex items-center gap-3 ">
+          {hasSidebar && (
+            <button
+              className="lg:hidden text-2xl text-gray-700 cursor-pointer"
+              onClick={toggle}
+              aria-label="Toggle sidebar menu"
+            >
+              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          )}
           {/* Notification bell for logged-in users */}
 
           <Link href="/" className="flex items-center">
@@ -176,7 +185,7 @@ export default function Navbar() {
             <>
               <BecomeProviderButtons
                 value="Become a Provider"
-                classes="text-sm text-slate-600 hover:text-blue-600 bg-gray-50 transition border border-gray-200 px-4 py-2 rounded-full  "
+                classes="text-sm text-slate-600 hover:text-blue-600 bg-gray-50 transition border border-gray-200 px-4 py-2 rounded-full"
               />
 
               <Link
@@ -195,8 +204,6 @@ export default function Navbar() {
               {user?.role === "admin" && (
                 <span className="text-sm text-gray-500">Admin Panel</span>
               )}
-
-  
             </>
           )}
         </div>
@@ -215,7 +222,6 @@ export default function Navbar() {
           </button>
         )}
 
-        {hasSidebar && <div className="md:hidden w-8" />}
       </div>
 
       {!hasSidebar && (

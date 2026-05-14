@@ -19,11 +19,16 @@ import {
   BriefcaseBusiness,
   AlertCircle,
   CheckCircle2,
+  Pencil,
+  X,
+  Check,
+  Camera,
+  Phone,
+  MapPin,
 } from "lucide-react";
 
 export default function UserProfilePage() {
   const { data: session } = useSession();
-
   const user = session?.user;
   const [avatar, setAvatar] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -150,7 +155,6 @@ export default function UserProfilePage() {
                 )}
               </div>
 
-              {/* USER INFO */}
               <div>
                 <span className="inline-flex items-center gap-1.5 text-blue-600 font-bold text-xs uppercase tracking-widest mb-4">
                   <User className="w-3 h-3" />
@@ -163,7 +167,7 @@ export default function UserProfilePage() {
                     fontFamily: "'DM Serif Display', serif",
                   }}
                 >
-                  {user?.name || "User"}
+                  {form.name || user?.name || "User"}
                 </h1>
 
                 <p className="text-[#4b6fa8] text-sm leading-relaxed mb-5">
@@ -171,13 +175,11 @@ export default function UserProfilePage() {
                   services.
                 </p>
 
-                {/* STATUS PILLS */}
                 <div className="flex flex-wrap gap-2.5">
                   <span className="inline-flex items-center gap-2 bg-white border-[1.5px] border-blue-200 rounded-full px-4 py-2 text-sm font-medium text-[#1e3a5f]">
                     <BadgeCheck className="w-4 h-4 text-green-500" />
                     Verified Account
                   </span>
-
                   <span className="inline-flex items-center gap-2 bg-white border-[1.5px] border-blue-200 rounded-full px-4 py-2 text-sm font-medium text-[#1e3a5f]">
                     <Sparkles className="w-4 h-4 text-indigo-500" />
                     Active Member
@@ -208,27 +210,9 @@ export default function UserProfilePage() {
         {/* STATS */}
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
-            {
-              icon: CalendarDays,
-              label: "Bookings",
-              value: "12",
-              color: "text-blue-500",
-              bg: "bg-blue-50",
-            },
-            {
-              icon: Heart,
-              label: "Favorites",
-              value: "8",
-              color: "text-rose-500",
-              bg: "bg-rose-50",
-            },
-            {
-              icon: Clock3,
-              label: "Upcoming",
-              value: "3",
-              color: "text-green-500",
-              bg: "bg-green-50",
-            },
+            { icon: CalendarDays, label: "Bookings", value: "12", color: "text-blue-500", bg: "bg-blue-50" },
+            { icon: Heart, label: "Favorites", value: "8", color: "text-rose-500", bg: "bg-rose-50" },
+            { icon: Clock3, label: "Upcoming", value: "3", color: "text-green-500", bg: "bg-green-50" },
           ].map((item) => (
             <div
               key={item.label}
@@ -268,7 +252,6 @@ export default function UserProfilePage() {
                 <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center">
                   <User className="w-5 h-5 text-blue-600" />
                 </div>
-
                 <div>
                   <h2
                     className="text-2xl text-[#1e3a5f]"
@@ -278,9 +261,8 @@ export default function UserProfilePage() {
                   >
                     Account Information
                   </h2>
-
                   <p className="text-sm text-[#6b93c4]">
-                    Your basic account details
+                    {editing ? "Update your details below" : "Your basic account details"}
                   </p>
                 </div>
               </div>
@@ -314,7 +296,6 @@ export default function UserProfilePage() {
                 <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center">
                   <Sparkles className="w-5 h-5 text-indigo-600" />
                 </div>
-
                 <div>
                   <h2
                     className="text-2xl text-[#1e3a5f]"
@@ -324,35 +305,16 @@ export default function UserProfilePage() {
                   >
                     Quick Access
                   </h2>
-
-                  <p className="text-sm text-[#6b93c4]">
-                    Navigate through your account
-                  </p>
+                  <p className="text-sm text-[#6b93c4]">Navigate through your account</p>
                 </div>
               </div>
 
               <div className="grid sm:grid-cols-2 gap-4">
                 {[
-                  {
-                    icon: CalendarDays,
-                    title: "My Bookings",
-                    href: "/user/bookings",
-                  },
-                  {
-                    icon: Heart,
-                    title: "Favorites",
-                    href: "/user/favorites",
-                  },
-                  {
-                    icon: BriefcaseBusiness,
-                    title: "Browse Services",
-                    href: "/services",
-                  },
-                  {
-                    icon: Settings,
-                    title: "Settings",
-                    href: "/user/settings",
-                  },
+                  { icon: CalendarDays, title: "My Bookings", href: "/user/bookings" },
+                  { icon: Heart, title: "Favorites", href: "/user/favorites" },
+                  { icon: BriefcaseBusiness, title: "Browse Services", href: "/services" },
+                  { icon: Settings, title: "Settings", href: "/user/settings" },
                 ].map((item) => (
                   <Link
                     key={item.title}
@@ -369,7 +331,6 @@ export default function UserProfilePage() {
                           {item.title}
                         </span>
                       </div>
-
                       <ChevronRight className="w-4 h-4 text-blue-400" />
                     </div>
                   </Link>
@@ -378,7 +339,7 @@ export default function UserProfilePage() {
             </div>
           </div>
 
-          {/* RIGHT SIDE */}
+          {/* RIGHT */}
           <div className="space-y-5">
             {/* PROFILE CARD */}
             <div className="bg-white border-[1.5px] border-blue-100 rounded-3xl p-7">
@@ -410,7 +371,6 @@ export default function UserProfilePage() {
 
                     <span className="font-semibold">Verified Account</span>
                   </div>
-
                   <p className="text-sm text-[#6b93c4] leading-relaxed">
                     Your account is active and verified.
                   </p>
@@ -424,23 +384,38 @@ export default function UserProfilePage() {
   );
 }
 
-function InfoCard({
+function InfoCard({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+  return (
+    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5">
+      <div className="flex items-center gap-2 mb-3 text-blue-600">
+        <Icon className="w-4 h-4" />
+        <span className="text-xs font-semibold uppercase tracking-widest">{label}</span>
+      </div>
+      <p className="text-sm font-medium text-[#1e3a5f] break-words">{value}</p>
+    </div>
+  );
+}
+
+function EditField({
   icon: Icon,
   label,
   value,
+  onChange,
+  placeholder,
+  type = "text",
 }: {
   icon: any;
   label: string;
   value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  type?: string;
 }) {
   return (
     <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5">
       <div className="flex items-center gap-2 mb-3 text-blue-600">
         <Icon className="w-4 h-4" />
-
-        <span className="text-xs font-semibold uppercase tracking-widest">
-          {label}
-        </span>
+        <span className="text-xs font-semibold uppercase tracking-widest">{label}</span>
       </div>
 
       <p className="text-sm font-medium text-[#1e3a5f] break-words">{value}</p>
