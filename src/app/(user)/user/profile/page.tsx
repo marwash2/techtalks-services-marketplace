@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
@@ -24,6 +23,8 @@ import {
   Camera,
   Phone,
   MapPin,
+  AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
 
 export default function UserProfilePage() {
@@ -595,36 +596,3 @@ function EditField({
   );
 }
 
-function EditField({
-  icon: Icon,
-  label,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
-}: {
-  icon: any;
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  type?: string;
-}) {
-  return (
-    <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 focus-within:border-blue-400 transition">
-      <div className="flex items-center gap-2 mb-3 text-blue-600">
-        <Icon className="w-4 h-4" />
-        <span className="text-xs font-semibold uppercase tracking-widest">
-          {label}
-        </span>
-      </div>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full bg-transparent text-sm font-medium text-[#1e3a5f] placeholder:text-[#8aa6ca] outline-none"
-      />
-    </div>
-  );
-}
