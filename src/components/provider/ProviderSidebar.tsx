@@ -64,7 +64,10 @@ const providerLinks = [
 export default function ProviderSidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const { isOpen, toggle } = useSidebar();
+  const { isOpen, toggle, close } = useSidebar();
+  const closeOnMobile = () => {
+    if (window.innerWidth < 1024) close();
+  };
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -150,6 +153,7 @@ export default function ProviderSidebar() {
       {isOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+          onClick={closeOnMobile}
           aria-hidden="true"
         />
       )}
@@ -162,7 +166,7 @@ export default function ProviderSidebar() {
         <button
           type="button"
           onClick={toggle}
-          className={`fixed top-2 z-60 flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--surface-1)] text-[var(--foreground)]/80 shadow-sm transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] ${
+          className={`fixed top-2 z-60 hidden h-9 w-9 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--surface-1)] text-[var(--foreground)]/80 shadow-sm transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] lg:flex ${
             isOpen ? "left-49" : "left-10"
           }`}
           aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
@@ -181,6 +185,7 @@ export default function ProviderSidebar() {
               <Link
                 key={link.path}
                 href={link.path}
+                onClick={closeOnMobile}
                 className={`relative flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
                   isActive
                     ? "bg-blue-50 text-blue-600"
