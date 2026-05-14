@@ -87,6 +87,7 @@ export function toServiceDTO(service: ServiceDocument) {
   const providerId = service.providerId;
   const categoryId = service.categoryId;
   const locationId = service.locationId;
+  const locationRef = toLocationDTO(locationId);
 
   return {
     id: service._id.toString(),
@@ -119,8 +120,8 @@ export function toServiceDTO(service: ServiceDocument) {
     /* NEW REQUIRED FIELDS */
     availability: service.availability || "",
 
-    location: formatLocationRef(locationId) || service.location || "",
-    locationId: toLocationDTO(locationId),
+    location: formatLocationRef(locationRef) || service.location || "",
+    locationId: locationRef,
 
     image: service.image || null,
 
