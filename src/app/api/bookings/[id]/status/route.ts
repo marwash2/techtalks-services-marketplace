@@ -50,6 +50,13 @@ const STATUS_NOTIFICATION_COPY: Record<
     providerMessage: "This booking is currently pending.",
     notificationType: "booking_pending",
   },
+  pending_payment: {
+    userTitle: "Awaiting Payment",
+    userMessage: "Your booking is waiting for payment confirmation.",
+    providerTitle: "Awaiting Payment",
+    providerMessage: "This booking is waiting for customer payment confirmation.",
+    notificationType: "booking_pending_payment",
+  },
   confirmed: {
     userTitle: "Booking Confirmed",
     userMessage: "Your booking has been confirmed by the provider.",
