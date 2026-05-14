@@ -7,8 +7,9 @@ import { ChatHistory } from "@/models/ChatHistory.model";
 // GET /api/chat-history/[id] — load a specific conversation
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -17,7 +18,7 @@ export async function GET(
   await connectDB();
 
   const chat = await ChatHistory.findOne({
-    _id: params.id,
+    _id: id,
     userId: session.user.id,
   }).lean();
 
@@ -31,8 +32,9 @@ export async function GET(
 // DELETE /api/chat-history/[id] — delete a conversation
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -40,7 +42,7 @@ export async function DELETE(
 
   await connectDB();
 
-  await ChatHistory.deleteOne({ _id: params.id, userId: session.user.id });
+  await ChatHistory.deleteOne({ _id: id, userId: session.user.id });
 
   return NextResponse.json({ success: true });
 }
