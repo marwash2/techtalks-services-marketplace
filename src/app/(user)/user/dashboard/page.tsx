@@ -327,12 +327,12 @@ export default function UserDashboardPage() {
                 </h3>
 
                 <p className="text-sm text-blue-100 leading-relaxed mb-6">
-                  Our support team is available anytime for assistance.
+                  Our AI Assistant is available anytime for help.
                 </p>
 
-                <Link href="/support">
+                <Link href="/user/ai-assistant">
                   <button className="w-full bg-white text-blue-700 hover:bg-blue-50 transition rounded-2xl py-3 text-sm font-semibold">
-                    Contact Support
+                    Contact AI Assistant
                   </button>
                 </Link>
 

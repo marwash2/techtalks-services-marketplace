@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
 import UploadPhoto from "@/components/upload/UploadPhoto";
 
 import {
@@ -21,9 +20,10 @@ import {
   Pencil,
   X,
   Check,
-  Camera,
   Phone,
   MapPin,
+  AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
 
 export default function UserProfilePage() {
@@ -77,10 +77,7 @@ export default function UserProfilePage() {
 
   useEffect(() => {
     if (!avatarFile) return;
-
     uploadAvatar(avatarFile);
-
-    // prevent re-trigger loops
     setAvatarFile(null);
   }, [avatarFile]);
 
@@ -124,18 +121,12 @@ export default function UserProfilePage() {
         ? `${url}&t=${Date.now()}`
         : `${url}?t=${Date.now()}`;
 
-      // ✅ 1. update UI
       setAvatar(finalUrl);
 
-      // ✅ 2. SAVE TO DATABASE (THIS WAS MISSING)
       await fetch(`/api/users/${user.id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          avatar: finalUrl,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatar: finalUrl }),
       });
 
       setSuccessMsg("Avatar updated successfully");
@@ -156,9 +147,7 @@ export default function UserProfilePage() {
 
       const res = await fetch(`/api/users/${user.id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: form.name,
           email: form.email,
@@ -222,7 +211,7 @@ export default function UserProfilePage() {
                     userInitial
                   )}
                 </div>
-                <div className="absolute -bottom-2 -right-2 ">
+                <div className="absolute -bottom-2 -right-2">
                   <UploadPhoto
                     file={avatarFile}
                     setFile={setAvatarFile}
@@ -248,8 +237,7 @@ export default function UserProfilePage() {
                 </h1>
 
                 <p className="text-[#4b6fa8] text-sm leading-relaxed mb-5">
-                  Manage your account and access your bookings and saved
-                  services.
+                  Manage your account and access your bookings and saved services.
                 </p>
 
                 <div className="flex flex-wrap gap-2.5">
@@ -337,9 +325,7 @@ export default function UserProfilePage() {
               className="bg-white border-[1.5px] border-blue-100 rounded-3xl p-6"
             >
               <div className="flex items-center justify-between mb-5">
-                <div
-                  className={`w-12 h-12 rounded-2xl ${item.bg} flex items-center justify-center`}
-                >
+                <div className={`w-12 h-12 rounded-2xl ${item.bg} flex items-center justify-center`}>
                   <item.icon className={`w-5 h-5 ${item.color}`} />
                 </div>
                 <span className="text-xs uppercase tracking-widest text-[#8aa6ca] font-semibold">
@@ -374,9 +360,7 @@ export default function UserProfilePage() {
                     Account Information
                   </h2>
                   <p className="text-sm text-[#6b93c4]">
-                    {editing
-                      ? "Update your details below"
-                      : "Your basic account details"}
+                    {editing ? "Update your details below" : "Your basic account details"}
                   </p>
                 </div>
               </div>
@@ -467,25 +451,15 @@ export default function UserProfilePage() {
                   >
                     Quick Access
                   </h2>
-                  <p className="text-sm text-[#6b93c4]">
-                    Navigate through your account
-                  </p>
+                  <p className="text-sm text-[#6b93c4]">Navigate through your account</p>
                 </div>
               </div>
 
               <div className="grid sm:grid-cols-2 gap-4">
                 {[
-                  {
-                    icon: CalendarDays,
-                    title: "My Bookings",
-                    href: "/user/bookings",
-                  },
+                  { icon: CalendarDays, title: "My Bookings", href: "/user/bookings" },
                   { icon: Heart, title: "Favorites", href: "/user/favorites" },
-                  {
-                    icon: BriefcaseBusiness,
-                    title: "Browse Services",
-                    href: "/services",
-                  },
+                  { icon: BriefcaseBusiness, title: "Browse Services", href: "/services" },
                   { icon: Settings, title: "Settings", href: "/user/settings" },
                 ].map((item) => (
                   <Link
@@ -498,9 +472,7 @@ export default function UserProfilePage() {
                         <div className="w-11 h-11 rounded-2xl bg-blue-50 flex items-center justify-center">
                           <item.icon className="w-5 h-5 text-blue-600" />
                         </div>
-                        <span className="font-medium text-[#1e3a5f]">
-                          {item.title}
-                        </span>
+                        <span className="font-medium text-[#1e3a5f]">{item.title}</span>
                       </div>
                       <ChevronRight className="w-4 h-4 text-blue-400" />
                     </div>
@@ -527,9 +499,7 @@ export default function UserProfilePage() {
 
                 <h2
                   className="text-2xl text-[#1e3a5f] mb-1"
-                  style={{
-                    fontFamily: "'DM Serif Display', serif",
-                  }}
+                  style={{ fontFamily: "'DM Serif Display', serif" }}
                 >
                   {user?.name || "User"}
                 </h2>
@@ -539,7 +509,6 @@ export default function UserProfilePage() {
                 <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5">
                   <div className="flex items-center justify-center gap-2 text-blue-600 mb-2">
                     <ShieldCheck className="w-5 h-5" />
-
                     <span className="font-semibold">Verified Account</span>
                   </div>
                   <p className="text-sm text-[#6b93c4] leading-relaxed">
@@ -555,7 +524,15 @@ export default function UserProfilePage() {
   );
 }
 
-function InfoCard({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+function InfoCard({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: any;
+  label: string;
+  value: string;
+}) {
   return (
     <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5">
       <div className="flex items-center gap-2 mb-3 text-blue-600">
@@ -583,40 +560,10 @@ function EditField({
   type?: string;
 }) {
   return (
-    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5">
-      <div className="flex items-center gap-2 mb-3 text-blue-600">
-        <Icon className="w-4 h-4" />
-        <span className="text-xs font-semibold uppercase tracking-widest">
-          {label}
-        </span>
-      </div>
-      <p className="text-sm font-medium text-[#1e3a5f] break-words">{value}</p>
-    </div>
-  );
-}
-
-function EditField({
-  icon: Icon,
-  label,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
-}: {
-  icon: any;
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  type?: string;
-}) {
-  return (
     <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 focus-within:border-blue-400 transition">
       <div className="flex items-center gap-2 mb-3 text-blue-600">
         <Icon className="w-4 h-4" />
-        <span className="text-xs font-semibold uppercase tracking-widest">
-          {label}
-        </span>
+        <span className="text-xs font-semibold uppercase tracking-widest">{label}</span>
       </div>
       <input
         type={type}
