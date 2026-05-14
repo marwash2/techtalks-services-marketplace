@@ -68,7 +68,10 @@ export default function UserSidebar() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { isOpen, toggle } = useSidebar();
+  const { isOpen, toggle, close } = useSidebar();
+  const closeOnMobile = () => {
+    if (window.innerWidth < 1024) close();
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -147,6 +150,7 @@ export default function UserSidebar() {
       {isOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+          onClick={closeOnMobile}
           aria-hidden="true"
         />
       )}
@@ -159,7 +163,7 @@ export default function UserSidebar() {
         <button
           type="button"
           onClick={toggle}
-          className={`fixed top-2 z-60 flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--surface-1)] text-[var(--foreground)]/80 shadow-sm transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] ${
+          className={`fixed top-2 z-60 hidden h-9 w-9 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--surface-1)] text-[var(--foreground)]/80 shadow-sm transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] lg:flex ${
             isOpen ? "left-49" : "left-10"
           }`}
           aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
@@ -186,8 +190,10 @@ export default function UserSidebar() {
                     event.preventDefault();
                     router.push("/user/dashboard");
                     router.refresh();
+                    closeOnMobile();
                     return;
                   }
+                  closeOnMobile();
                 }}
                 className={`relative flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
                   isActive

@@ -335,19 +335,19 @@ export default function UserServicesPage() {
       <Suspense fallback={<div>Loading...</div>}>
         <div className="flex flex-col gap-6 lg:flex-row">
           {isMobileFiltersOpen && (
-            <div className="fixed inset-0 z-[100] flex">
+            <div className="fixed inset-0 z-[100] pt-16">
               <div
                 className="fixed inset-0 bg-slate-900/50"
                 onClick={() => setIsMobileFiltersOpen(false)}
               />
-              <div className="relative mr-auto h-full w-full max-w-xs bg-white">
+              <div className="relative mr-auto h-[calc(100vh-4rem)] w-64 overflow-hidden border-r border-slate-200 bg-white shadow-xl">
                 <div className="flex items-center justify-between border-b p-4">
                   <h2 className="font-semibold">Filters</h2>
                   <button onClick={() => setIsMobileFiltersOpen(false)}>
                     <X className="cursor-pointer" />
                   </button>
                 </div>
-                <div className="p-4">
+                <div className="h-[calc(100%-65px)] overflow-y-auto p-4">
                   <Filters onClose={() => setIsMobileFiltersOpen(false)} />
                 </div>
               </div>
