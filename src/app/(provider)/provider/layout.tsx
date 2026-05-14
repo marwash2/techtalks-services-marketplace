@@ -86,7 +86,6 @@ export default async function ProviderLayout({
   return (
     <>
       <ProviderSidebar />
-      <ProviderMobileHeader /> {/* Add the mobile header for approved providers */}
       <ProviderContentWrapper>
         <div className="mx-auto max-w-7xl ">
           <div className="min-w-0">{children}</div>
