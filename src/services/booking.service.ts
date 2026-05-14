@@ -46,13 +46,14 @@ export async function getAllBookings(
         .select("_id")
         .lean();
     }
-    if (!provider?._id) {
+    const providerDoc = Array.isArray(provider) ? provider[0] : provider;
+    if (!providerDoc?._id) {
       return {
         bookings: [],
         pagination: { page, limit, total: 0, pages: 0 },
       };
     }
-    query.providerId = String(provider._id);
+    query.providerId = String(providerDoc._id);
   }
   if (filters.status) query.status = filters.status;
 
