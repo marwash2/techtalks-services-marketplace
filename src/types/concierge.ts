@@ -13,6 +13,15 @@ export interface Service {
   tags: string[];
   availability: string;
   location?: string;
+  locationId?:
+    | string
+    | {
+        _id?: string;
+        id?: string;
+        name?: string;
+        region?: string | null;
+      }
+    | null;
   isActive: boolean;
   providerId?: {
     _id: string;

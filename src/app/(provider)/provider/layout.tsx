@@ -31,8 +31,11 @@ export default async function ProviderLayout({
   await connectDB();
   const provider = await Provider.findOne({ userId: session.user.id }).lean();
   const providerStatus =
-    (provider as { providerStatus?: "pending" | "approved" | "rejected" } | null)
-      ?.providerStatus ?? null;
+    (
+      provider as {
+        providerStatus?: "pending" | "approved" | "rejected";
+      } | null
+    )?.providerStatus ?? null;
 
   if (!provider) {
     return (
@@ -82,7 +85,7 @@ export default async function ProviderLayout({
     <>
       <ProviderSidebar />
       <ProviderContentWrapper>
-        <div className="mx-auto max-w-7xl py-8">
+        <div className="mx-auto max-w-7xl ">
           <div className="min-w-0">{children}</div>
         </div>
       </ProviderContentWrapper>

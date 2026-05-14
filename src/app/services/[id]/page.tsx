@@ -19,6 +19,7 @@ import {
   Sparkles,
   Star,
 } from "lucide-react";
+import { getServiceLocation } from "@/utils/service-location";
 
 interface ServiceDetail {
   _id: string;
@@ -28,6 +29,16 @@ interface ServiceDetail {
   price: number;
   duration: number;
   image?: string;
+  location?: string | null;
+  locationId?:
+    | string
+    | {
+        _id?: string;
+        id?: string;
+        name?: string;
+        region?: string | null;
+      }
+    | null;
   tags?: string[];
   averageRating?: number;
   reviewCount?: number;
@@ -230,6 +241,7 @@ export default function Page() {
     ? providerReviews
     : providerReviews.slice(0, 3);
   const image = service.image || "/hero.jpg";
+  const serviceLocation = getServiceLocation(service, "Not specified");
   const providerRating =
     providerAverageRating || service.providerId?.rating || 0;
   const providerReviewsTotal =
@@ -474,13 +486,11 @@ export default function Page() {
                 </div>
 
                 <div className="flex gap-3">
-                  <MessageCircle className="mt-1 h-5 w-5 text-slate-500" />
+                  <MapPin className="mt-1 h-5 w-5 text-slate-500" />
                   <div>
-                    <p className="font-semibold text-slate-900">
-                      Response time
-                    </p>
+                    <p className="font-semibold text-slate-900">Location</p>
                     <p className="mt-1 text-sm text-slate-500">
-                      Usually within 30 minutes
+                      {serviceLocation}
                     </p>
                   </div>
                 </div>

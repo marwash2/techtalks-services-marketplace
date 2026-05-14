@@ -11,6 +11,7 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
+import { getServiceLocation } from "@/utils/service-location";
 
 export default function ManageServicesPage() {
   const [services, setServices] = useState<any[]>([]);
@@ -96,9 +97,9 @@ export default function ManageServicesPage() {
             const categoryName =
               service.category?.name || service.categoryId?.name || "Service";
             const location =
+              getServiceLocation(service, "") ||
               service.provider?.location ||
               service.providerId?.location ||
-              service.location ||
               "Location not available";
             const providerName =
               service.provider?.businessName ||

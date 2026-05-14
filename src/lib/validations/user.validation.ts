@@ -16,8 +16,15 @@ export const updateUserSchema = z.object({
     .min(VALIDATION.NAME_MIN_LENGTH)
     .max(VALIDATION.NAME_MAX_LENGTH)
     .optional(),
+
   email: z.string().email("Invalid email format").optional(),
+
   role: z.enum(["user", "provider", "admin"]).optional(),
+
+  avatar: z.string().url("Invalid avatar URL").optional(),
+
+  phone: z.string().optional(),
+  bio: z.string().optional(),
 });
 
 export const loginSchema = z.object({

@@ -1,4 +1,5 @@
 import { Types } from "mongoose";
+import { formatLocationRef } from "@/utils/service-location";
 
 interface PopulatedProvider {
   _id: Types.ObjectId;
@@ -17,12 +18,19 @@ interface PopulatedCategory {
   name: string;
 }
 
+interface PopulatedLocation {
+  _id: Types.ObjectId;
+  name: string;
+  region?: string | null;
+}
+
 interface ServiceDocument {
   _id: Types.ObjectId;
 
   providerId: Types.ObjectId | PopulatedProvider | null | undefined;
 
   categoryId: Types.ObjectId | PopulatedCategory | null | undefined;
+  locationId?: Types.ObjectId | PopulatedLocation | null | undefined;
 
   title: string;
   description?: string;
@@ -60,9 +68,25 @@ function toIdString(value: Types.ObjectId | null | undefined) {
   return value ? value.toString() : null;
 }
 
+function toLocationDTO(
+  value: Types.ObjectId | PopulatedLocation | null | undefined,
+) {
+  if (!value) return null;
+  if (typeof value === "object" && "name" in value) {
+    return {
+      _id: value._id.toString(),
+      name: value.name,
+      region: value.region ?? null,
+    };
+  }
+
+  return value.toString();
+}
+
 export function toServiceDTO(service: ServiceDocument) {
   const providerId = service.providerId;
   const categoryId = service.categoryId;
+  const locationId = service.locationId;
 
   return {
     id: service._id.toString(),
@@ -95,7 +119,8 @@ export function toServiceDTO(service: ServiceDocument) {
     /* NEW REQUIRED FIELDS */
     availability: service.availability || "",
 
-    location: service.location || "",
+    location: formatLocationRef(locationId) || service.location || "",
+    locationId: toLocationDTO(locationId),
 
     image: service.image || null,
 

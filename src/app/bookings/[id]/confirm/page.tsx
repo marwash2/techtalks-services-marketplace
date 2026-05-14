@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { getServiceLocation } from "@/utils/service-location";
 
 interface Service {
   id: string;
@@ -11,6 +12,16 @@ interface Service {
   description: string;
   price: number;
   duration: number;
+  location?: string | null;
+  locationId?:
+    | string
+    | {
+        _id?: string;
+        id?: string;
+        name?: string;
+        region?: string | null;
+      }
+    | null;
   provider?: {
     id?: string;
     _id?: string;
@@ -126,6 +137,7 @@ export default function ConfirmBookingPage() {
 
   const providerName = service.provider?.userId?.name ?? service.provider?.businessName ?? service.providerId?.businessName ?? "Provider";
   const providerLocation = service.provider?.location ?? service.providerId?.location;
+  const serviceLocation = getServiceLocation(service, providerLocation || "");
 
   const formattedDate = new Date(date).toLocaleDateString("en-US", {
     weekday: "long",
@@ -191,8 +203,8 @@ export default function ConfirmBookingPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
               <span>{providerName}</span>
-              {providerLocation && <span className="text-gray-400">·</span>}
-              {providerLocation && <span>{providerLocation}</span>}
+              {serviceLocation && <span className="text-gray-400">·</span>}
+              {serviceLocation && <span>{serviceLocation}</span>}
             </div>
           )}
         </div>

@@ -1,7 +1,9 @@
 import { groq } from "@/lib/groq";
 import { SYSTEM_PROMPT } from "@/lib/ai-prompt";
 import { Service } from "@/models/Service.model";
+import { Location } from "@/models/Location.model";
 import { connectDB } from "@/lib/db";
+import { formatLocationRef } from "@/utils/service-location";
 import mongoose from "mongoose";
 
 export interface ChatMessage {
@@ -27,19 +29,32 @@ async function retrieveContext(message: string) {
     .filter((t) => t.length >= 3)
     .slice(0, 8);
 
+  const matchingLocationIds = tokens.length
+    ? await Location.find({
+        isActive: true,
+        $or: tokens.map((t) => ({ name: new RegExp(t, "i") })),
+      })
+        .select("_id")
+        .lean()
+    : [];
+
   const query = tokens.length
     ? {
         isActive: true,
-        $or: tokens.flatMap((t) => {
-          const r = new RegExp(t, "i");
-          return [
-            { title: r },
-            { description: r },
-            { tags: r },
-            { location: r },
-            { availability: r },
-          ];
-        }),
+        $or: [
+          ...tokens.flatMap((t) => {
+            const r = new RegExp(t, "i");
+            return [
+              { title: r },
+              { description: r },
+              { tags: r },
+              { availability: r },
+            ];
+          }),
+          ...(matchingLocationIds.length > 0
+            ? [{ locationId: { $in: matchingLocationIds.map((l) => l._id) } }]
+            : []),
+        ],
       }
     : { isActive: true };
 
@@ -49,6 +64,7 @@ async function retrieveContext(message: string) {
       "businessName rating totalReviews isVerified description location", // ← added description + location
     )
     .populate("categoryId", "name")
+    .populate("locationId", "name region")
     .limit(20)
     .lean();
 }
@@ -56,6 +72,9 @@ async function retrieveContext(message: string) {
 function summarize(s: Record<string, unknown>): string {
   const provider = s.providerId as Record<string, unknown> | null;
   const category = s.categoryId as Record<string, unknown> | null;
+  const location = formatLocationRef(
+    s.locationId as Parameters<typeof formatLocationRef>[0],
+  );
 
   return [
     `id:${s._id}`,
@@ -63,7 +82,7 @@ function summarize(s: Record<string, unknown>): string {
     `description:${s.description ?? ""}`,
     `price:$${s.price}`,
     `duration:${s.duration} mins`,
-    `location:${s.location ?? "flexible"}`,
+    `location:${location || s.location || "flexible"}`,
     `tags:${(s.tags as string[])?.join(", ")}`,
     `availability:${s.availability}`,
     `category:${(category as Record<string, unknown>)?.name ?? ""}`,
@@ -131,6 +150,7 @@ export async function processChatMessage(
     ? await Service.find({ _id: { $in: validIds } })
         .populate("providerId", "businessName rating totalReviews isVerified")
         .populate("categoryId", "name")
+        .populate("locationId", "name region")
         .lean()
     : [];
 

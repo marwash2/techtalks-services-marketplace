@@ -185,7 +185,7 @@ export default function Navbar() {
             <>
               <BecomeProviderButtons
                 value="Become a Provider"
-                classes="text-sm text-slate-600 hover:text-blue-600 bg-gray-50 transition border border-gray-200 px-4 py-2 rounded-full  "
+                classes="text-sm text-slate-600 hover:text-blue-600 bg-gray-50 transition border border-gray-200 px-4 py-2 rounded-full"
               />
 
               <Link
@@ -204,8 +204,6 @@ export default function Navbar() {
               {user?.role === "admin" && (
                 <span className="text-sm text-gray-500">Admin Panel</span>
               )}
-
-  
             </>
           )}
         </div>

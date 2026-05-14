@@ -4,6 +4,8 @@ import { MESSAGES, PAGINATION } from "@/constants/config";
 import { ApiError } from "@/lib/api-error";
 import { toUserDTO, toUserListDTO } from "@/lib/dto/user.dto";
 import bcrypt from "bcryptjs";
+import { Provider } from "@/models/Provider.model";
+import { deleteProvider } from "@/services/provider.service";
 
 async function fetchUsers(
   page = 1,
@@ -98,7 +100,14 @@ export async function getUserById(id: string) {
 
 export async function updateUser(
   id: string,
-  userData: Partial<{ name: string; email: string; role: string }>,
+  userData: Partial<{
+    name: string;
+    email: string;
+    role: string;
+    avatar: string;
+    phone: string;
+    bio: string;
+  }>,
 ) {
   await connectDB();
 
@@ -113,6 +122,11 @@ export async function updateUser(
 
 export async function deleteUser(id: string) {
   await connectDB();
+
+  const provider = await Provider.findOne({ userId: id }).select("_id").lean<{ _id: string }>();
+  if (provider?._id) {
+    await deleteProvider(String(provider._id));
+  }
 
   const user = await User.findByIdAndDelete(id);
   if (!user) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);

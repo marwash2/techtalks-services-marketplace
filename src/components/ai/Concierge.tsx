@@ -21,6 +21,7 @@ import type {
   Service,
   Turn,
 } from "@/types/concierge";
+import { getServiceLocation } from "@/utils/service-location";
 
 function useFavorites() {
   const [favoritedIds, setFavoritedIds] = useState<Set<string>>(new Set());
@@ -320,7 +321,7 @@ function Message({
 
   return (
     <div className="space-y-3 animate-in fade-in slide-in-from-bottom-1 duration-300">
-      <div className="bg-slate-100 text-slate-800 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] text-sm leading-relaxed whitespace-pre-wrap">
+      <div className="bg-blue-50  rounded-2xl rounded-tl-sm px-4 py-3 max-w-[85%] text-sm leading-relaxed whitespace-pre-wrap">
         {turn.content}
       </div>
 
@@ -387,6 +388,7 @@ function ServiceCard({
   const isFavorited = favoritedIds.has(service._id);
   const isToggling = toggling.has(service._id);
   const provider = service.providerId;
+  const serviceLocation = getServiceLocation(service, "");
 
   return (
     <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden hover:border-blue-300 hover:shadow-sm transition-all">
@@ -436,10 +438,10 @@ function ServiceCard({
             <Clock className="w-3 h-3" />
             {service.duration} min
           </span>
-          {service.location && (
+          {serviceLocation && (
             <span className="inline-flex items-center gap-1 text-xs text-slate-600 bg-slate-100 rounded-full px-2.5 py-1">
               <MapPin className="w-3 h-3" />
-              {service.location}
+              {serviceLocation}
             </span>
           )}
         </div>
