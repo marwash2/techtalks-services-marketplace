@@ -3,104 +3,86 @@
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+
 import {
   BriefcaseBusiness,
   CalendarDays,
   Heart,
-  House,
   Bot,
   Sparkles,
   Bell,
   ChevronLeft,
   LogOut,
-  User,
-  Settings,
-  ChevronDown,
+  Menu,
 } from "lucide-react";
+
 import { useSidebar } from "@/components/layout/SidebarContext";
-import { useEffect, useRef, useState } from "react";
-import { readUserPreferences } from "@/lib/user-preferences";
+
+import { useEffect, useState } from "react";
 
 const userLinks = [
-  {
-    name: "Home",
-    path: "/",
-    icon: House,
-  },
   {
     name: "Dashboard",
     path: "/user/dashboard",
     icon: Sparkles,
   },
+
   {
     name: "AI Assistant",
     path: "/user/ai-assistant",
     icon: Bot,
   },
+
   {
     name: "Services",
     path: "/user/services",
     icon: BriefcaseBusiness,
   },
+
   {
     name: "Bookings",
     path: "/user/bookings",
     icon: CalendarDays,
   },
+
   {
     name: "Notifications",
     path: "/user/notifications",
     icon: Bell,
   },
+
   {
     name: "Favorites",
     path: "/user/favorites",
     icon: Heart,
   },
+
+  {
+    name: "Profile",
+    path: "/user/profile",
+    icon: CircleUserRound,
+  },
 ];
 
 export default function UserSidebar() {
   const pathname = usePathname();
+
   const router = useRouter();
-  const { data: session } = useSession();
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { isOpen, toggle } = useSidebar();
+  const { data: session } =
+    useSession();
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsDropdownOpen(false);
-      }
-    };
+  const [unreadCount, setUnreadCount] =
+    useState(0);
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const { isOpen, close, toggle } =
+    useSidebar();
 
   useEffect(() => {
-    const syncPrefs = () => {
-      const prefs = readUserPreferences(session?.user?.id);
-      setNotificationsEnabled(prefs.notificationsEnabled);
-    };
-    syncPrefs();
-    window.addEventListener("user-preferences-changed", syncPrefs);
-    return () =>
-      window.removeEventListener("user-preferences-changed", syncPrefs);
-  }, [session?.user?.id]);
+    const userId =
+      session?.user?.id;
 
-  useEffect(() => {
-    const userId = session?.user?.id;
-    if (!userId || !notificationsEnabled) {
-      setUnreadCount(0);
-      return;
-    }
+    if (!userId) return;
 
     let isMounted = true;
 
@@ -112,38 +94,64 @@ export default function UserSidebar() {
             cache: "no-store",
           },
         );
+
         if (!res.ok) return;
-        const data = await res.json();
-        const items = data?.data?.notifications ?? [];
+
+        const data =
+          await res.json();
+
+        const items =
+          data?.data?.notifications ??
+          [];
+
         const unread = items.filter(
-          (item: { isRead?: boolean }) => !item.isRead,
+          (item: {
+            isRead?: boolean;
+          }) => !item.isRead,
         ).length;
-        if (isMounted) setUnreadCount(unread);
+
+        if (isMounted)
+          setUnreadCount(unread);
       } catch {
         // no-op
       }
     };
 
-    const handleNotificationsUpdated = () => {
-      void loadUnread();
-    };
+    const handleNotificationsUpdated =
+      () => {
+        void loadUnread();
+      };
 
-    window.addEventListener("notifications-updated", handleNotificationsUpdated);
+    window.addEventListener(
+      "notifications-updated",
+      handleNotificationsUpdated,
+    );
+
     void loadUnread();
-    const interval = window.setInterval(loadUnread, 5000);
+
+    const interval =
+      window.setInterval(
+        loadUnread,
+        5000,
+      );
 
     return () => {
       isMounted = false;
+
       window.removeEventListener(
         "notifications-updated",
         handleNotificationsUpdated,
       );
+
       window.clearInterval(interval);
     };
   }, [session?.user?.id, notificationsEnabled]);
 
   return (
     <>
+      {/* MOBILE HEADER — hamburger only, no logo (logo lives in the navbar) */}
+      
+
       {isOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/40 lg:hidden"
@@ -152,40 +160,69 @@ export default function UserSidebar() {
       )}
 
       <aside
-        className={`fixed top-19 left-0 z-50 h-[calc(100vh-4rem)] w-64 border-r border-[var(--border-color)] bg-[var(--surface-1)] shadow-sm transition-all duration-300 flex flex-col ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 ${isOpen ? "lg:w-54" : "lg:w-15"}`}
+        className={`fixed top-50 left-0 z-50 h-[calc(100vh-4rem)] w-64 border-r border-slate-200 bg-white shadow-sm transition-all duration-300 flex flex-col ${
+          isOpen
+            ? "translate-x-0"
+            : "-translate-x-full"
+        } lg:translate-x-0 ${
+          isOpen
+            ? "lg:w-54"
+            : "lg:w-15"
+        }`}
       >
         <button
           type="button"
           onClick={toggle}
-          className={`fixed top-2 z-60 flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--surface-1)] text-[var(--foreground)]/80 shadow-sm transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] ${
-            isOpen ? "left-49" : "left-10"
+          className={`fixed top-2 z-60 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-900 ${
+            isOpen
+              ? "left-49"
+              : "left-10"
           }`}
-          aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
+          aria-label={
+            isOpen
+              ? "Collapse sidebar"
+              : "Expand sidebar"
+          }
         >
           <ChevronLeft
-            className={`h-5 w-5 transition-transform ${isOpen ? "" : "-rotate-180"}`}
+            className={`h-5 w-5 transition-transform ${
+              isOpen
+                ? ""
+                : "-rotate-180"
+            }`}
           />
         </button>
 
-        <nav className="flex-1 space-y-2 overflow-y-auto px-0 py-2">
+        <nav className="flex-1 space-y-2 overflow-y-auto px-0 py-24 lg:py-2">
           {userLinks.map((link) => {
             const Icon = link.icon;
+
             const isActive =
               link.path === "/"
                 ? pathname === "/"
-                : pathname === link.path || pathname.startsWith(`${link.path}/`);
+                : pathname ===
+                    link.path ||
+                  pathname.startsWith(
+                    `${link.path}/`,
+                  );
 
             return (
               <Link
                 key={link.path}
                 href={link.path}
                 onClick={(event) => {
-                  if (link.name === "Home") {
+                  if (
+                    link.name ===
+                    "Home"
+                  ) {
                     event.preventDefault();
-                    router.push("/user/dashboard");
+
+                    router.push(
+                      "/user/dashboard",
+                    );
+
                     router.refresh();
+
                     return;
                   }
                 }}
@@ -197,75 +234,60 @@ export default function UserSidebar() {
               >
                 <Icon className="h-5 w-5" />
 
-                {link.name === "Notifications" && unreadCount > 0 && !isOpen && (
-                  <span className="absolute left-8 top-2 inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
-                )}
+                {link.name ===
+                  "Notifications" &&
+                  unreadCount > 0 &&
+                  !isOpen && (
+                    <span className="absolute left-8 top-2 inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+                  )}
 
-                <span className={`${isOpen ? "inline" : "hidden"}`}>{link.name}</span>
+                <span
+                  className={`${
+                    isOpen
+                      ? "inline"
+                      : "hidden"
+                  }`}
+                >
+                  {link.name}
+                </span>
 
-                {link.name === "Notifications" && unreadCount > 0 && isOpen && (
-                  <span className="ml-auto inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-semibold text-white">
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </span>
-                )}
+                {link.name ===
+                  "Notifications" &&
+                  unreadCount > 0 &&
+                  isOpen && (
+                    <span className="ml-auto inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-semibold text-white">
+                      {unreadCount > 9
+                        ? "9+"
+                        : unreadCount}
+                    </span>
+                  )}
               </Link>
             );
           })}
         </nav>
 
-        <div className="border-t border-[var(--border-color)] px-2 py-4">
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setIsDropdownOpen((prev) => !prev)}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-3 transition-colors hover:bg-slate-50"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-600">
-                {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
-              </div>
-              <div className={`${isOpen ? "flex-1 text-left" : "hidden"}`}>
-                <p className="text-sm font-medium text-slate-900">
-                  {session?.user?.name || "User"}
-                </p>
-                <p className="text-xs text-slate-500">User</p>
-              </div>
-              <ChevronDown
-                className={`h-4 w-4 text-slate-400 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
-              />
-            </button>
+        <div className="border-t border-slate-200 px-2 py-4">
+          <button
+            type="button"
+            onClick={() =>
+              signOut({
+                callbackUrl: "/",
+              })
+            }
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+          >
+            <LogOut className="h-4 w-4 text-red-600" />
 
-            {isDropdownOpen && (
-              <div className="absolute bottom-full left-0 right-0 z-10 mb-2 rounded-lg border border-[var(--border-color)] bg-[var(--surface-1)] py-1 shadow-lg">
-                <Link
-                  href="/user/profile"
-                  onClick={() => {
-                    setIsDropdownOpen(false);
-                  }}
-                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
-                >
-                  <User className="h-4 w-4" />
-                  <span>Profile</span>
-                </Link>
-                <Link
-                  href="/user/settings"
-                  onClick={() => {
-                    setIsDropdownOpen(false);
-                  }}
-                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
-                >
-                  <Settings className="h-4 w-4" />
-                  <span>Settings</span>
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => signOut({ callbackUrl: "/" })}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
-                >
-                  <LogOut className="h-4 w-4 text-red-600" />
-                  <span>Logout</span>
-                </button>
-              </div>
-            )}
-          </div>
+            <span
+              className={`${
+                isOpen
+                  ? "inline"
+                  : "hidden"
+              }`}
+            >
+              Logout
+            </span>
+          </button>
         </div>
       </aside>
     </>
