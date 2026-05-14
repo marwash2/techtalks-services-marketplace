@@ -29,7 +29,7 @@ export default async function UserLayout({
     <>
       <Toaster position="top-center" reverseOrder={false} />
       <UserSidebar />
-      <UserMobileHeader /> {/* Add the mobile header for users */}
+  
       <UserLayoutClient>{children}</UserLayoutClient>
     </>
   );
