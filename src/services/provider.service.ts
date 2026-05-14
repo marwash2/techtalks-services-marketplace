@@ -1,6 +1,8 @@
 import { connectDB } from "@/lib/db";
 import { Provider } from "@/models/Provider.model";
 import { User } from "@/models/User.model";
+import { Service } from "@/models/Service.model";
+import Booking from "@/models/Booking.model";
 import { MESSAGES, PAGINATION } from "@/constants/config";
 import { ApiError } from "@/lib/api-error";
 import { toProviderDTO, toProviderListDTO } from "@/lib/dto/provider.dto";
@@ -244,6 +246,35 @@ export async function deleteProvider(id: string) {
   const existingProvider = await Provider.findById(id);
   if (!existingProvider) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
 
+  const services = await Service.find({ providerId: existingProvider._id })
+    .select("_id title")
+    .lean<Array<{ _id: unknown; title?: string }>>();
+  const serviceIds = services.map((s) => String(s._id));
+
+  const affectedUserIds =
+    serviceIds.length > 0
+      ? (
+          await Booking.distinct("userId", {
+            serviceId: { $in: serviceIds },
+            status: { $ne: "cancelled" },
+          })
+        )
+          .map((value) => String(value))
+          .filter(Boolean)
+      : [];
+
+  if (serviceIds.length > 0) {
+    await Booking.updateMany(
+      {
+        serviceId: { $in: serviceIds },
+        status: { $in: ["pending", "confirmed", "pending_payment"] },
+      },
+      { $set: { status: "cancelled" } },
+    );
+
+    await Service.deleteMany({ _id: { $in: serviceIds } });
+  }
+
   const provider = await Provider.findByIdAndDelete(id);
   if (!provider) throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
 
@@ -263,6 +294,37 @@ export async function deleteProvider(id: string) {
       `[deleteProvider] notification error for provider ${id}:`,
       notificationError
     );
+  }
+
+  if (affectedUserIds.length > 0) {
+    try {
+      const serviceCount = services.length;
+      const previewTitles = services
+        .map((service) => service.title || "Untitled service")
+        .slice(0, 2)
+        .join(", ");
+      const hasMore = serviceCount > 2 ? " and other services" : "";
+
+      await Promise.all(
+        affectedUserIds.map((userId) =>
+          createNotification({
+            userId,
+            title: "Provider Account Removed",
+            message:
+              serviceCount > 0
+                ? `A provider account was deleted. Your booking for ${previewTitles}${hasMore} was cancelled.`
+                : "A provider account was deleted, and one of your bookings was cancelled.",
+            type: "provider_deleted",
+            link: "/user/bookings",
+          }),
+        ),
+      );
+    } catch (notificationError) {
+      console.error(
+        `[deleteProvider] user notification error for provider ${id}:`,
+        notificationError,
+      );
+    }
   }
 
   return toProviderDTO(provider);

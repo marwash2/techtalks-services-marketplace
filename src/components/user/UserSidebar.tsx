@@ -12,13 +12,16 @@ import {
   Sparkles,
   Bell,
   ChevronLeft,
+  ChevronDown,
   LogOut,
-  Menu,
+  User,
+  Settings,
+  CircleUserRound,
 } from "lucide-react";
 
 import { useSidebar } from "@/components/layout/SidebarContext";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const userLinks = [
   {
@@ -70,9 +73,6 @@ export default function UserSidebar() {
   const router = useRouter();
 
   const { isOpen, toggle, close } = useSidebar();
-  const closeOnMobile = () => {
-    if (window.innerWidth < 1024) close();
-  };
 
   const [unreadCount, setUnreadCount] =
     useState(0);
@@ -149,6 +149,10 @@ export default function UserSidebar() {
     };
   }, [session?.user?.id, notificationsEnabled]);
 
+  function closeOnMobile(): void {
+    if (window.innerWidth < 1024) close();
+  }
+
   return (
     <>
       {/* MOBILE HEADER — hamburger only, no logo (logo lives in the navbar) */}
@@ -163,7 +167,7 @@ export default function UserSidebar() {
       )}
 
       <aside
-        className={`fixed top-50 left-0 z-50 h-[calc(100vh-4rem)] w-64 border-r border-slate-200 bg-white shadow-sm transition-all duration-300 flex flex-col ${
+        className={`fixed top-19 left-0 z-50 h-[calc(100vh-4rem)] w-64 border-r border-[var(--border-color)] bg-[var(--surface-1)] shadow-sm transition-all duration-300 flex flex-col ${
           isOpen
             ? "translate-x-0"
             : "-translate-x-full"
@@ -287,9 +291,55 @@ export default function UserSidebar() {
                   : "hidden"
               }`}
             >
-              Logout
-            </span>
-          </button>
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-600">
+                {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
+              </div>
+              <div className={`${isOpen ? "flex-1 text-left" : "hidden"}`}>
+                <p className="text-sm font-medium text-slate-900">
+                  {session?.user?.name || "User"}
+                </p>
+                <p className="text-xs text-slate-500">User</p>
+              </div>
+              <ChevronDown
+                className={`h-4 w-4 text-slate-400 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+
+            {isDropdownOpen && (
+              <div className="absolute bottom-full left-0 right-0 z-10 mb-2 rounded-lg border border-[var(--border-color)] bg-[var(--surface-1)] py-1 shadow-lg">
+                <Link
+                  href="/user/profile"
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    closeOnMobile();
+                  }}
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                >
+                  <User className="h-4 w-4" />
+                  <span>Profile</span>
+                </Link>
+                <Link
+                  href="/user/settings"
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    closeOnMobile();
+                  }}
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>Settings</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+                >
+                  <LogOut className="h-4 w-4 text-red-600" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </aside>
     </>
