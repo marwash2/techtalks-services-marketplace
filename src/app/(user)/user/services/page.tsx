@@ -15,6 +15,16 @@ type Service = {
   price: number;
   duration: number;
   image?: string | null;
+  location?: string | null;
+  locationId?:
+    | string
+    | {
+        _id?: string;
+        id?: string;
+        name?: string;
+        region?: string | null;
+      }
+    | null;
   providerId?: {
     _id?: string;
     id?: string;
@@ -192,6 +202,8 @@ function ServicesContent() {
                   price: service.price,
                   duration: service.duration,
                   image: service.image,
+                  location: service.location,
+                  locationId: service.locationId,
                   providerId: service.providerId ?? null,
                   categoryId: service.categoryId ?? null,
                 }}

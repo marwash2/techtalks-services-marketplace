@@ -6,6 +6,7 @@ import { updateServiceSchema } from "@/lib/validations/service.validation";
 import { requireAuth } from "@/lib/auth-utils";
 import { createNotification } from "@/services/notification.service";
 import { Category } from "@/models/Category.model";
+import { Location } from "@/models/Location.model";
 import Booking from "@/models/Booking.model";
 
 function describeChanges(
@@ -32,8 +33,16 @@ function describeChanges(
   addChange("Price", beforeService.price, payload.price);
   addChange("Duration", beforeService.duration, payload.duration);
   addChange("Availability", beforeService.availability, payload.availability);
-  addChange("Location", beforeService.location, payload.location);
   addChange("Image", beforeService.image, payload.image);
+  if (payload.locationId !== undefined) {
+    const beforeLocation =
+      (beforeService.locationId as { name?: string } | undefined)?.name ||
+      String(beforeService.locationId ?? "-");
+    const afterLocation = String(payload.locationLabel ?? payload.locationId ?? "-");
+    if (beforeLocation !== afterLocation) {
+      changes.push(`Location: "${beforeLocation}" -> "${afterLocation}"`);
+    }
+  }
   if (payload.categoryId !== undefined) {
     const beforeCategory =
       (beforeService.category as { name?: string } | undefined)?.name ||
@@ -102,9 +111,17 @@ export const PUT = withApiHandler(async (req, { params }) => {
     categoryLabel = (categoryDoc as { name?: string } | null)?.name;
   }
 
+  let locationLabel: string | undefined;
+  if (validated.locationId) {
+    const locationDoc = await Location.findById(validated.locationId)
+      .select("name")
+      .lean();
+    locationLabel = (locationDoc as { name?: string } | null)?.name;
+  }
+
   const changes = describeChanges(
     before as Record<string, unknown>,
-    validated as Record<string, unknown>,
+    { ...(validated as Record<string, unknown>), locationLabel },
     categoryLabel,
   );
   const details =

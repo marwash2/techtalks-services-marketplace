@@ -11,6 +11,16 @@ interface ServiceDTO {
   price: number;
   duration: number;
   image?: string | null;
+  location?: string | null;
+  locationId?:
+    | string
+    | {
+        _id?: string;
+        id?: string;
+        name?: string;
+        region?: string | null;
+      }
+    | null;
   categoryId?:
     | {
         name?: string;
@@ -66,6 +76,8 @@ export default function FeaturedServices() {
             price: service.price,
             duration: service.duration,
             image: service.image,
+            location: service.location,
+            locationId: service.locationId,
             categoryId:
               typeof service.categoryId === "object"
                 ? service.categoryId

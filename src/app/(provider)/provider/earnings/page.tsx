@@ -22,7 +22,9 @@ export default async function ProviderEarningsPage() {
 
   await connectDB();
 
-  const provider = await Provider.findOne({ userId: session.user.id }).select("_id") .lean<{ _id: string }>();
+  const provider = await Provider.findOne({ userId: session.user.id })
+    .select("_id")
+    .lean<{ _id: string }>();
   if (!provider?._id) {
     return null;
   }
@@ -32,16 +34,22 @@ export default async function ProviderEarningsPage() {
     .sort({ createdAt: -1 })
     .lean();
 
-  const bookings: TransactionItem[] = (bookingsRaw as Array<any>).map((booking) => ({
-    id: String(booking._id),
-    serviceTitle:
-      typeof booking.serviceId === "object" && booking.serviceId?.title
-        ? booking.serviceId.title
-        : "Service",
-    date: new Date(booking.createdAt).toISOString(),
-    amount: Number(booking.price ?? 0),
-    status: String(booking.status ?? "pending"),
-  }));
+  const bookings: TransactionItem[] = (bookingsRaw as Array<any>).map(
+    (booking) => ({
+      id: String(booking._id),
+      serviceTitle:
+        typeof booking.serviceId === "object" && booking.serviceId?.title
+          ? booking.serviceId.title
+          : "Service",
+      date: new Date(booking.createdAt).toISOString(),
+      amount: Number(booking.price ?? 0),
+      status: String(booking.status ?? "pending"),
+    }),
+  );
 
-  return <ProviderEarningsDashboard bookings={bookings} />;
+  return (
+    <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8">
+      <ProviderEarningsDashboard bookings={bookings} />
+    </div>
+  );
 }

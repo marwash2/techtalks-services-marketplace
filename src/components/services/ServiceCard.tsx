@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ArrowUpRight, Clock3, Heart, MapPin } from "lucide-react";
 import toast from "react-hot-toast";
 import { Routes } from "@/constants/routes";
+import { getServiceLocation } from "@/utils/service-location";
 
 type ServiceCardProps = {
   service: {
@@ -14,6 +15,16 @@ type ServiceCardProps = {
     price: number;
     duration: number;
     image?: string | null;
+    location?: string | null;
+    locationId?:
+      | string
+      | {
+          _id?: string;
+          id?: string;
+          name?: string;
+          region?: string | null;
+        }
+      | null;
 
     categoryId?: {
       name?: string;
@@ -41,7 +52,10 @@ export default function ServiceCard({
 }: ServiceCardProps) {
   const serviceId = service._id || service._id || "";
   const categoryName = service.categoryId?.name || "Service";
-  const location = service.providerId?.location || "Location not available";
+  const location =
+    getServiceLocation(service, "") ||
+    service.providerId?.location ||
+    "Location not available";
   const [isFavorited, setIsFavorited] = useState(false);
   const [favoriteBusy, setFavoriteBusy] = useState(false);
 
