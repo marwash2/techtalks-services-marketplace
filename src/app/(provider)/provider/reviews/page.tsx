@@ -86,8 +86,8 @@ export default async function ProviderReviewsPage() {
       : 0;
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-emerald-50 p-6 shadow-sm">
+    <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8  ">
+      <section className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-emerald-50 p-6 shadow-sm ">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
           Reputation
         </p>
@@ -117,7 +117,7 @@ export default async function ProviderReviewsPage() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <section className="rounded-3xl border border-slate-200 bg-white shadow-sm ">
         <div className="flex items-center gap-2 border-b border-slate-100 px-6 py-4">
           <MessageSquare className="h-4 w-4 text-emerald-600" />
           <h2 className="text-lg font-semibold text-slate-900">

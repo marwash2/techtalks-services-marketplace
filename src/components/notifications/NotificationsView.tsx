@@ -53,51 +53,151 @@ function getRelativeTime(dateValue?: string) {
 function getNotificationStyle(type?: string) {
   switch (type) {
     case "booking_created":
-      return { icon: CalendarCheck2, iconColor: "text-green-600",   bg: "bg-green-50",   unreadDot: "bg-green-500"   };
+      return {
+        icon: CalendarCheck2,
+        iconColor: "text-green-600",
+        bg: "bg-green-50",
+        unreadDot: "bg-green-500",
+      };
     case "booking_pending":
-      return { icon: CircleDashed,   iconColor: "text-amber-600",   bg: "bg-amber-50",   unreadDot: "bg-amber-500"   };
+      return {
+        icon: CircleDashed,
+        iconColor: "text-amber-600",
+        bg: "bg-amber-50",
+        unreadDot: "bg-amber-500",
+      };
     case "booking_confirmed":
-      return { icon: BadgeCheck,     iconColor: "text-emerald-600", bg: "bg-emerald-50", unreadDot: "bg-emerald-500" };
+      return {
+        icon: BadgeCheck,
+        iconColor: "text-emerald-600",
+        bg: "bg-emerald-50",
+        unreadDot: "bg-emerald-500",
+      };
     case "booking_cancelled":
-      return { icon: CircleX,        iconColor: "text-red-600",     bg: "bg-red-50",     unreadDot: "bg-red-500"     };
+      return {
+        icon: CircleX,
+        iconColor: "text-red-600",
+        bg: "bg-red-50",
+        unreadDot: "bg-red-500",
+      };
     case "booking_completed":
-      return { icon: CircleCheckBig, iconColor: "text-blue-600",    bg: "bg-blue-50",    unreadDot: "bg-blue-500"    };
+      return {
+        icon: CircleCheckBig,
+        iconColor: "text-blue-600",
+        bg: "bg-blue-50",
+        unreadDot: "bg-blue-500",
+      };
     case "booking_reminder_24h":
     case "booking_reminder_6h":
     case "booking_reminder_3h":
-      return { icon: Clock3,         iconColor: "text-cyan-700",    bg: "bg-cyan-50",    unreadDot: "bg-cyan-500"    };
+      return {
+        icon: Clock3,
+        iconColor: "text-cyan-700",
+        bg: "bg-cyan-50",
+        unreadDot: "bg-cyan-500",
+      };
     case "service_updated":
     case "booking_updated":
-      return { icon: RefreshCcw,     iconColor: "text-orange-600",  bg: "bg-orange-50",  unreadDot: "bg-orange-500"  };
+      return {
+        icon: RefreshCcw,
+        iconColor: "text-orange-600",
+        bg: "bg-orange-50",
+        unreadDot: "bg-orange-500",
+      };
     case "service_deleted":
-      return { icon: Trash2,         iconColor: "text-rose-600",    bg: "bg-rose-50",    unreadDot: "bg-rose-500"    };
+      return {
+        icon: Trash2,
+        iconColor: "text-rose-600",
+        bg: "bg-rose-50",
+        unreadDot: "bg-rose-500",
+      };
     case "service_added":
-      return { icon: BadgeCheck,     iconColor: "text-green-600",   bg: "bg-green-50",   unreadDot: "bg-green-500"   };
+      return {
+        icon: BadgeCheck,
+        iconColor: "text-green-600",
+        bg: "bg-green-50",
+        unreadDot: "bg-green-500",
+      };
     case "provider_approval_approved":
     case "provider_verified":
-      return { icon: BadgeCheck,     iconColor: "text-emerald-600", bg: "bg-emerald-50", unreadDot: "bg-emerald-500" };
+      return {
+        icon: BadgeCheck,
+        iconColor: "text-emerald-600",
+        bg: "bg-emerald-50",
+        unreadDot: "bg-emerald-500",
+      };
     case "provider_application_submitted":
-      return { icon: CircleDashed,   iconColor: "text-amber-600",   bg: "bg-amber-50",   unreadDot: "bg-amber-500"   };
+      return {
+        icon: CircleDashed,
+        iconColor: "text-amber-600",
+        bg: "bg-amber-50",
+        unreadDot: "bg-amber-500",
+      };
     case "provider_approval_rejected":
     case "provider_unverified":
     case "provider_deleted":
-      return { icon: CircleX,        iconColor: "text-red-600",     bg: "bg-red-50",     unreadDot: "bg-red-500"     };
+      return {
+        icon: CircleX,
+        iconColor: "text-red-600",
+        bg: "bg-red-50",
+        unreadDot: "bg-red-500",
+      };
     case "payment_success":
-      return { icon: CreditCard,     iconColor: "text-emerald-600", bg: "bg-emerald-50", unreadDot: "bg-emerald-500" };
+      return {
+        icon: CreditCard,
+        iconColor: "text-emerald-600",
+        bg: "bg-emerald-50",
+        unreadDot: "bg-emerald-500",
+      };
     case "payment_failed":
-      return { icon: ShieldAlert,    iconColor: "text-red-600",     bg: "bg-red-50",     unreadDot: "bg-red-500"     };
+      return {
+        icon: ShieldAlert,
+        iconColor: "text-red-600",
+        bg: "bg-red-50",
+        unreadDot: "bg-red-500",
+      };
     case "payment_pending":
-      return { icon: CreditCard,     iconColor: "text-amber-600",   bg: "bg-amber-50",   unreadDot: "bg-amber-500"   };
+      return {
+        icon: CreditCard,
+        iconColor: "text-amber-600",
+        bg: "bg-amber-50",
+        unreadDot: "bg-amber-500",
+      };
     case "payment_refunded":
-      return { icon: CreditCard,     iconColor: "text-purple-600",  bg: "bg-purple-50",  unreadDot: "bg-purple-500"  };
+      return {
+        icon: CreditCard,
+        iconColor: "text-purple-600",
+        bg: "bg-purple-50",
+        unreadDot: "bg-purple-500",
+      };
     case "earning_received":
-      return { icon: CircleDollarSign, iconColor: "text-emerald-700", bg: "bg-emerald-50", unreadDot: "bg-emerald-500" };
+      return {
+        icon: CircleDollarSign,
+        iconColor: "text-emerald-700",
+        bg: "bg-emerald-50",
+        unreadDot: "bg-emerald-500",
+      };
     case "system":
-      return { icon: Bell,           iconColor: "text-indigo-600",  bg: "bg-indigo-50",  unreadDot: "bg-indigo-500"  };
+      return {
+        icon: Bell,
+        iconColor: "text-indigo-600",
+        bg: "bg-indigo-50",
+        unreadDot: "bg-indigo-500",
+      };
     case "booking":
-      return { icon: CalendarCheck2, iconColor: "text-green-600",   bg: "bg-green-50",   unreadDot: "bg-green-500"   };
+      return {
+        icon: CalendarCheck2,
+        iconColor: "text-green-600",
+        bg: "bg-green-50",
+        unreadDot: "bg-green-500",
+      };
     default:
-      return { icon: Clock3,         iconColor: "text-gray-600",    bg: "bg-gray-50",    unreadDot: "bg-gray-500"    };
+      return {
+        icon: Clock3,
+        iconColor: "text-gray-600",
+        bg: "bg-gray-50",
+        unreadDot: "bg-gray-500",
+      };
   }
 }
 
@@ -117,7 +217,7 @@ export default function NotificationsView() {
 
   const unreadCount = useMemo(
     () => items.filter((item) => !item.isRead).length,
-    [items]
+    [items],
   );
 
   const loadNotifications = async () => {
@@ -126,7 +226,7 @@ export default function NotificationsView() {
     try {
       const res = await fetch(
         `/api/notifications?userId=${userId}&page=1&limit=50`,
-        { cache: "no-store" }
+        { cache: "no-store" },
       );
       const data = await res.json();
       setItems(data?.data?.notifications ?? []);
@@ -148,8 +248,8 @@ export default function NotificationsView() {
     });
     setItems((prev) =>
       prev.map((item) =>
-        item.id === notificationId ? { ...item, isRead: true } : item
-      )
+        item.id === notificationId ? { ...item, isRead: true } : item,
+      ),
     );
     window.dispatchEvent(new Event("notifications-updated"));
   };
@@ -162,8 +262,8 @@ export default function NotificationsView() {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ isRead: true }),
-        })
-      )
+        }),
+      ),
     );
     setItems((prev) => prev.map((item) => ({ ...item, isRead: true })));
     window.dispatchEvent(new Event("notifications-updated"));
@@ -182,7 +282,9 @@ export default function NotificationsView() {
       <div className="min-h-screen bg-[#f0f6ff] flex items-center justify-center">
         <div className="bg-white border border-blue-100 rounded-3xl p-10 text-center">
           <Bell className="w-10 h-10 text-blue-400 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-[#1e3a5f] mb-2">Please log in</h2>
+          <h2 className="text-xl font-bold text-[#1e3a5f] mb-2">
+            Please log in
+          </h2>
           <p className="text-sm text-[#6b93c4]">
             You need to log in to access your notifications.
           </p>
@@ -192,9 +294,8 @@ export default function NotificationsView() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f0f6ff]">
+    <div className="min-h-screen bg-blue-25">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-
         {/* HERO */}
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-100 via-blue-50 to-indigo-100 border-[1.5px] border-blue-200 p-8 md:p-10">
           <div className="pointer-events-none absolute -top-16 -right-16 w-56 h-56 rounded-full bg-blue-300/20 blur-3xl" />
@@ -291,7 +392,7 @@ export default function NotificationsView() {
                     className={`p-5 transition border-l-4 ${
                       item.isRead
                         ? "bg-white hover:bg-blue-50/40 border-transparent"
-                        : "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-500"
+                        : "bg-blue-50"
                     }`}
                   >
                     <div className="flex items-start gap-4">
@@ -314,7 +415,9 @@ export default function NotificationsView() {
                             <div className="flex items-center gap-2">
                               <h3
                                 className={`font-semibold ${
-                                  item.isRead ? "text-[#1e3a5f]" : "text-blue-700"
+                                  item.isRead
+                                    ? "text-[#1e3a5f]"
+                                    : "text-blue-700"
                                 }`}
                               >
                                 {item.title}
@@ -327,19 +430,19 @@ export default function NotificationsView() {
                                     item.type === "payment_success"
                                       ? "bg-emerald-100 text-emerald-700"
                                       : item.type === "payment_failed"
-                                      ? "bg-red-100 text-red-700"
-                                      : item.type === "payment_refunded"
-                                      ? "bg-purple-100 text-purple-700"
-                                      : "bg-amber-100 text-amber-700"
+                                        ? "bg-red-100 text-red-700"
+                                        : item.type === "payment_refunded"
+                                          ? "bg-purple-100 text-purple-700"
+                                          : "bg-amber-100 text-amber-700"
                                   }`}
                                 >
                                   {item.type === "payment_success"
                                     ? "Paid"
                                     : item.type === "payment_failed"
-                                    ? "Failed"
-                                    : item.type === "payment_refunded"
-                                    ? "Refunded"
-                                    : "Pending"}
+                                      ? "Failed"
+                                      : item.type === "payment_refunded"
+                                        ? "Refunded"
+                                        : "Pending"}
                                 </span>
                               )}
                             </div>

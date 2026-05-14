@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Star,
 } from "lucide-react";
+import { getServiceLocation } from "@/utils/service-location";
 
 interface ServiceDetail {
   _id: string;
@@ -19,6 +20,16 @@ interface ServiceDetail {
   price: number;
   duration: number;
   image?: string;
+  location?: string | null;
+  locationId?:
+    | string
+    | {
+        _id?: string;
+        id?: string;
+        name?: string;
+        region?: string | null;
+      }
+    | null;
   tags?: string[];
   availability: string;
   categoryId: { name: string };
@@ -179,6 +190,7 @@ export default function AdminServiceDetailsPage() {
     ? providerReviews
     : providerReviews.slice(0, 3);
   const image = service.image || "/hero.jpg";
+  const serviceLocation = getServiceLocation(service, "Not specified");
   const providerRating =
     providerAverageRating || service.providerId?.rating || 0;
   const providerReviewsTotal =
@@ -442,7 +454,7 @@ export default function AdminServiceDetailsPage() {
                   <div>
                     <p className="font-semibold text-slate-900">Location</p>
                     <p className="mt-1 text-sm text-slate-500">
-                      {service.providerId?.location || "Not specified"}
+                      {serviceLocation}
                     </p>
                   </div>
                 </div>

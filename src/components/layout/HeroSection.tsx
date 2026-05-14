@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import AISearchBar from "../search/AiSearch";
 
 type HomeStats = {
   totalServices: number;
@@ -86,27 +87,10 @@ export default function HeroSection() {
 
             <div className="mt-6 flex flex-col gap-3">
               {/* SEARCH BAR */}
-              <div className="flex items-center bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden w-full w-fit">
-                {/* INPUT */}
-                <div className="flex items-center px-4 w-[220px] w-full">
-                  <Search className="h-4 w-4 text-slate-400" />
-                  <input
-                    placeholder="Search for services..."
-                    className="ml-2 py-3 text-sm outline-none w-full"
-                  />
-                </div>
 
-                {/* LOCATION */}
-                <div className="flex items-center px-4 border-l w-[180px]">
-                  <MapPin className="h-4 w-4 text-slate-400" />
-                  <span className="ml-2 text-sm text-slate-500">Lebanon</span>
-                </div>
+              {/* INPUT */}
 
-                {/* BUTTON */}
-                <button className="bg-blue-600 text-white px-6 py-3 text-sm hover:bg-blue-700 cursor-pointer">
-                  Search
-                </button>
-              </div>
+              <AISearchBar />
 
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
                 <div className="flex flex-wrap items-end gap-6 text-sm text-slate-600">

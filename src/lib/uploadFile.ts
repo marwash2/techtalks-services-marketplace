@@ -1,6 +1,18 @@
 import { supabase } from "./supabase";
 
-export async function uploadFile(file: File, bucket: string) {
+export type UploadedFile = {
+  path: string;
+  url: string;
+};
+
+function sanitizeFileName(fileName: string) {
+  return fileName.replace(/[^a-zA-Z0-9._-]/g, "-");
+}
+
+export async function uploadFileWithPath(
+  file: File,
+  bucket: string,
+): Promise<UploadedFile> {
   if (!file) {
     throw new Error("No file");
   }
@@ -13,7 +25,7 @@ export async function uploadFile(file: File, bucket: string) {
     throw new Error("Max size is 5MB");
   }
 
-  const fileName = `${Date.now()}-${file.name}`;
+  const fileName = `${Date.now()}-${sanitizeFileName(file.name)}`;
 
   const { data, error } = await supabase.storage
     .from(bucket)
@@ -36,5 +48,13 @@ export async function uploadFile(file: File, bucket: string) {
     throw new Error("Failed to generate public URL");
   }
 
-  return publicUrlData.publicUrl;
+  return {
+    path: data.path,
+    url: publicUrlData.publicUrl,
+  };
+}
+
+export async function uploadFile(file: File, bucket: string) {
+  const uploaded = await uploadFileWithPath(file, bucket);
+  return uploaded.url;
 }

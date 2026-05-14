@@ -16,6 +16,7 @@ import type { IService } from "@/types/service";
 type ServiceFilters = {
   providerId?: string; // Can be USER ID or PROVIDER ID
   categoryId?: string;
+  locationId?: string;
   search?: string;
   price?: number;
   location?: string;
@@ -30,6 +31,7 @@ type CreateServiceInput = {
   price: number;
   duration: number;
   availability: string;
+  locationId?: string;
   location?: string;
   image?: string | null;
   isActive?: boolean;
@@ -90,6 +92,10 @@ console.log("FILTERS:", filters);
     query.categoryId = filters.categoryId;
   }
 
+  if (filters.locationId) {
+    query.locationId = filters.locationId;
+  }
+
   /* ---------------- PROVIDER FILTER ----------------
      Supports:
      - USER ID
@@ -126,10 +132,11 @@ console.log("FILTERS:", filters);
       "providerId",
       "location businessName userId avatar isVerified createdAt rating totalReviews",
     )
-    .populate("categoryId", "name");
+    .populate("categoryId", "name")
+    .populate("locationId", "name region");
 
   /* ---------------- LOCATION FILTER ---------------- */
-  if (filters.location) {
+  if (filters.location && !filters.locationId) {
     services = services.filter((s) =>
       (s as PopulatedService).providerId?.location
         ?.toLowerCase()
@@ -225,7 +232,8 @@ export async function createService(serviceData: CreateServiceInput) {
       "providerId",
       "businessName location userId avatar isVerified createdAt rating totalReviews",
     )
-    .populate("categoryId", "name");
+    .populate("categoryId", "name")
+    .populate("locationId", "name region");
 
   return toServiceDTO(populatedService);
 }
@@ -242,7 +250,8 @@ export async function getServiceById(id: string) {
       "providerId",
       "businessName location userId avatar isVerified createdAt rating totalReviews",
     )
-    .populate("categoryId", "name");
+    .populate("categoryId", "name")
+    .populate("locationId", "name region");
 
   if (!service) {
     throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);
@@ -313,7 +322,8 @@ export async function updateService(
       "providerId",
       "businessName location userId avatar isVerified createdAt rating totalReviews",
     )
-    .populate("categoryId", "name");
+    .populate("categoryId", "name")
+    .populate("locationId", "name region");
 
   if (!updatedService) {
     throw new ApiError(MESSAGES.ERROR.NOT_FOUND, 404);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -15,6 +15,7 @@ import {
   Text,
   CheckCircle2,
   AlertCircle,
+  UploadCloud,
 } from "lucide-react";
 
 type Category = {
@@ -23,28 +24,31 @@ type Category = {
   name: string;
 };
 
+type LocationOption = {
+  id: string;
+  name: string;
+  region?: string | null;
+};
+
 type ServiceFormProps = {
   mode: "create" | "edit";
   serviceId?: string;
 };
 
-export default function ServiceForm({
-  mode,
-  serviceId,
-}: ServiceFormProps) {
+export default function ServiceForm({ mode, serviceId }: ServiceFormProps) {
   const router = useRouter();
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
-  const [categories, setCategories] =
-    useState<Category[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [locations, setLocations] = useState<LocationOption[]>([]);
 
-  const [loading, setLoading] =
-    useState(false);
+  const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
-  const [toast, setToast] =
-    useState<{
-      type: "success" | "error";
-      message: string;
-    } | null>(null);
+  const [toast, setToast] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -53,109 +57,156 @@ export default function ServiceForm({
     price: "",
     duration: "",
     availability: "",
-    location: "",
+    locationId: "",
     image: "",
   });
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setToast({
+        type: "error",
+        message: "Please select an image file.",
+      });
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setToast({
+        type: "error",
+        message: "Image must be smaller than 5MB.",
+      });
+      e.target.value = "";
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+      setToast(null);
+
+      const uploadForm = new FormData();
+      uploadForm.append("file", file);
+      uploadForm.append("bucket", "services");
+
+      if (mode === "edit" && serviceId) {
+        uploadForm.append("target", "service");
+        uploadForm.append("id", serviceId);
+      }
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: uploadForm,
+        credentials: "include",
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Image upload failed");
+      }
+
+      setForm((current) => ({
+        ...current,
+        image: data.url,
+      }));
+
+      setToast({
+        type: "success",
+        message: "Image uploaded successfully",
+      });
+    } catch (err) {
+      setToast({
+        type: "error",
+        message: err instanceof Error ? err.message : "Image upload failed",
+      });
+    } finally {
+      setUploadingImage(false);
+      e.target.value = "";
+    }
+  };
+
   /* FETCH CATEGORIES */
   useEffect(() => {
-    const fetchCategories =
-      async () => {
-        try {
-          const res =
-            await fetch(
-              "/api/categories",
-              {
-                credentials:
-                  "include",
-              }
-            );
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch("/api/categories", {
+          credentials: "include",
+        });
 
-          const data =
-            await res.json();
+        const data = await res.json();
 
-          setCategories(
-            data.data
-              ?.categories || []
-          );
-        } catch (err) {
-          console.error(err);
-        }
-      };
+        setCategories(data.data?.categories || []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
     fetchCategories();
   }, []);
 
+  /* FETCH LOCATIONS */
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const res = await fetch("/api/locations", {
+          credentials: "include",
+        });
+
+        const data = await res.json();
+        setLocations(data.data || []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchLocations();
+  }, []);
+
   /* FETCH SERVICE FOR EDIT */
   useEffect(() => {
-    if (
-      mode !== "edit" ||
-      !serviceId
-    )
-      return;
+    if (mode !== "edit" || !serviceId) return;
 
-    const fetchService =
-      async () => {
-        try {
-          setLoading(true);
+    const fetchService = async () => {
+      try {
+        setLoading(true);
 
-          const res =
-            await fetch(
-              `/api/services/${serviceId}`,
-              {
-                credentials:
-                  "include",
-              }
-            );
+        const res = await fetch(`/api/services/${serviceId}`, {
+          credentials: "include",
+        });
 
-          const data =
-            await res.json();
+        const data = await res.json();
 
-          const service =
-            data.data?.service;
+        const service = data.data?.service;
 
-          if (!service) return;
+        if (!service) return;
 
-          setForm({
-            title:
-              service.title || "",
-            description:
-              service.description ||
-              "",
-            categoryId:
-              service.category?._id ||
-              service.categoryId ||
-              "",
-            price: String(
-              service.price || ""
-            ),
-            duration: String(
-              service.duration ||
-                ""
-            ),
-            availability:
-              service.availability ||
-              "",
-            location:
-              service.location ||
-              "",
-            image:
-              service.image || "",
-          });
-        } catch (err) {
-          console.error(err);
-        } finally {
-          setLoading(false);
-        }
-      };
+        setForm({
+          title: service.title || "",
+          description: service.description || "",
+          categoryId: service.category?._id || service.categoryId || "",
+          price: String(service.price || ""),
+          duration: String(service.duration || ""),
+          availability: service.availability || "",
+          locationId:
+            service.locationId?._id ||
+            service.locationId ||
+            "",
+          image: service.image || "",
+        });
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
     fetchService();
   }, [mode, serviceId]);
 
   /* SUBMIT */
-  const handleSubmit = async (
-    e: React.FormEvent
-  ) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
@@ -163,60 +214,32 @@ export default function ServiceForm({
 
       const payload = {
         ...form,
-        image:
-          form.image.trim()
-            ? form.image
-            : null,
-        price: Number(
-          form.price
-        ),
-        duration: Number(
-          form.duration
-        ),
+        image: form.image.trim() ? form.image : null,
+        price: Number(form.price),
+        duration: Number(form.duration),
       };
 
       const endpoint =
-        mode === "create"
-          ? "/api/services"
-          : `/api/services/${serviceId}`;
+        mode === "create" ? "/api/services" : `/api/services/${serviceId}`;
 
-      const method =
-        mode === "create"
-          ? "POST"
-          : "PUT";
+      const method = mode === "create" ? "POST" : "PUT";
 
-      const res =
-        await fetch(
-          endpoint,
-          {
-            method,
-            credentials:
-              "include",
-            headers: {
-              "Content-Type":
-                "application/json",
-            },
-            body: JSON.stringify(
-              payload
-            ),
-          }
-        );
+      const res = await fetch(endpoint, {
+        method,
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
       if (!res.ok) {
-        const errorData =
-          await res.json();
+        const errorData = await res.json();
 
-        throw new Error(
-          errorData.error ||
-            "Failed to save service"
-        );
+        throw new Error(errorData.error || "Failed to save service");
       }
 
-      window.dispatchEvent(
-        new Event(
-          "notifications-updated"
-        )
-      );
+      window.dispatchEvent(new Event("notifications-updated"));
 
       setToast({
         type: "success",
@@ -227,17 +250,12 @@ export default function ServiceForm({
       });
 
       setTimeout(() => {
-        router.push(
-          "/provider/services"
-        );
+        router.push("/provider/services");
       }, 700);
     } catch (err) {
       setToast({
         type: "error",
-        message:
-          err instanceof Error
-            ? err.message
-            : "Something went wrong",
+        message: err instanceof Error ? err.message : "Something went wrong",
       });
     } finally {
       setLoading(false);
@@ -246,9 +264,7 @@ export default function ServiceForm({
 
   return (
     <div className="min-h-screen bg-slate-50 py-10 px-4 sm:px-6 lg:px-8">
-
       <div className="mx-auto max-w-4xl space-y-8">
-
         {/* HEADER */}
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-blue-600 mb-1.5">
@@ -256,15 +272,11 @@ export default function ServiceForm({
           </p>
 
           <h1 className="text-3xl font-semibold text-slate-950">
-            {mode === "create"
-              ? "Create Service"
-              : "Edit Service"}
+            {mode === "create" ? "Create Service" : "Edit Service"}
           </h1>
 
           <p className="mt-1.5 text-sm text-slate-500 leading-6 max-w-2xl">
-            Add and manage your
-            service information,
-            pricing, and booking
+            Add and manage your service information, pricing, and booking
             details.
           </p>
         </div>
@@ -278,50 +290,35 @@ export default function ServiceForm({
                 : "border-rose-200 bg-rose-50 text-rose-700"
             }`}
           >
-            {toast.type ===
-            "success" ? (
+            {toast.type === "success" ? (
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
             ) : (
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             )}
 
-            <span>
-              {toast.message}
-            </span>
+            <span>{toast.message}</span>
           </div>
         )}
 
         {/* FORM */}
         <div className="rounded-[22px] border border-slate-200 bg-white shadow-sm overflow-hidden">
-
           {/* FORM HEADER */}
           <div className="border-b border-slate-100 px-6 py-5">
-
             <h2 className="text-base font-semibold text-slate-900">
               Service Details
             </h2>
 
             <p className="mt-1 text-sm text-slate-500">
-              Fill in the information
-              below to publish your
-              service.
+              Fill in the information below to publish your service.
             </p>
           </div>
 
           {/* FORM BODY */}
-          <form
-            onSubmit={
-              handleSubmit
-            }
-            className="space-y-6 px-6 py-6"
-          >
-
+          <form onSubmit={handleSubmit} className="space-y-6 px-6 py-6">
             {/* TITLE */}
             <FormField
               label="Service Title"
-              icon={
-                <BriefcaseBusiness className="h-4 w-4" />
-              }
+              icon={<BriefcaseBusiness className="h-4 w-4" />}
             >
               <input
                 type="text"
@@ -329,9 +326,7 @@ export default function ServiceForm({
                 onChange={(e) =>
                   setForm({
                     ...form,
-                    title:
-                      e.target
-                        .value,
+                    title: e.target.value,
                   })
                 }
                 placeholder="Enter service title"
@@ -341,23 +336,14 @@ export default function ServiceForm({
             </FormField>
 
             {/* DESCRIPTION */}
-            <FormField
-              label="Description"
-              icon={
-                <Text className="h-4 w-4" />
-              }
-            >
+            <FormField label="Description" icon={<Text className="h-4 w-4" />}>
               <textarea
                 rows={5}
-                value={
-                  form.description
-                }
+                value={form.description}
                 onChange={(e) =>
                   setForm({
                     ...form,
-                    description:
-                      e.target
-                        .value,
+                    description: e.target.value,
                   })
                 }
                 placeholder="Describe your service"
@@ -367,74 +353,44 @@ export default function ServiceForm({
 
             {/* GRID */}
             <div className="grid gap-6 md:grid-cols-2">
-
               {/* CATEGORY */}
-              <FormField
-                label="Category"
-                icon={
-                  <Tag className="h-4 w-4" />
-                }
-              >
+              <FormField label="Category" icon={<Tag className="h-4 w-4" />}>
                 <select
-                  value={
-                    form.categoryId
-                  }
+                  value={form.categoryId}
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      categoryId:
-                        e.target
-                          .value,
+                      categoryId: e.target.value,
                     })
                   }
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   required
                 >
-                  <option value="">
-                    Select category
-                  </option>
+                  <option value="">Select category</option>
 
-                  {categories.map(
-                    (
-                      category
-                    ) => (
-                      <option
-                        key={
-                          category._id ||
-                          category.id
-                        }
-                        value={
-                          category._id ||
-                          category.id
-                        }
-                      >
-                        {
-                          category.name
-                        }
-                      </option>
-                    )
-                  )}
+                  {categories.map((category) => (
+                    <option
+                      key={category._id || category.id}
+                      value={category._id || category.id}
+                    >
+                      {category.name}
+                    </option>
+                  ))}
                 </select>
               </FormField>
 
               {/* PRICE */}
               <FormField
                 label="Price"
-                icon={
-                  <DollarSign className="h-4 w-4" />
-                }
+                icon={<DollarSign className="h-4 w-4" />}
               >
                 <input
                   type="number"
-                  value={
-                    form.price
-                  }
+                  value={form.price}
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      price:
-                        e.target
-                          .value,
+                      price: e.target.value,
                     })
                   }
                   placeholder="0"
@@ -444,23 +400,14 @@ export default function ServiceForm({
               </FormField>
 
               {/* DURATION */}
-              <FormField
-                label="Duration"
-                icon={
-                  <Clock3 className="h-4 w-4" />
-                }
-              >
+              <FormField label="Duration" icon={<Clock3 className="h-4 w-4" />}>
                 <input
                   type="number"
-                  value={
-                    form.duration
-                  }
+                  value={form.duration}
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      duration:
-                        e.target
-                          .value,
+                      duration: e.target.value,
                     })
                   }
                   placeholder="Duration in minutes"
@@ -470,49 +417,43 @@ export default function ServiceForm({
               </FormField>
 
               {/* LOCATION */}
-              <FormField
-                label="Location"
-                icon={
-                  <MapPin className="h-4 w-4" />
-                }
-              >
-                <input
-                  type="text"
-                  value={
-                    form.location
-                  }
+              <FormField label="Location" icon={<MapPin className="h-4 w-4" />}>
+                <select
+                  value={form.locationId}
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      location:
-                        e.target
-                          .value,
+                      locationId: e.target.value,
                     })
                   }
-                  placeholder="Beirut, Lebanon"
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                />
+                  required
+                >
+                  <option value="">Select location</option>
+
+                  {locations.map((location) => (
+                    <option key={location.id} value={location.id}>
+                      {location.region
+                        ? `${location.name}, ${location.region}`
+                        : location.name}
+                    </option>
+                  ))}
+                </select>
               </FormField>
             </div>
 
             {/* AVAILABILITY */}
             <FormField
               label="Availability"
-              icon={
-                <Clock3 className="h-4 w-4" />
-              }
+              icon={<Clock3 className="h-4 w-4" />}
             >
               <input
                 type="text"
-                value={
-                  form.availability
-                }
+                value={form.availability}
                 onChange={(e) =>
                   setForm({
                     ...form,
-                    availability:
-                      e.target
-                        .value,
+                    availability: e.target.value,
                   })
                 }
                 placeholder="Mon-Fri 9AM-5PM"
@@ -523,34 +464,59 @@ export default function ServiceForm({
 
             {/* IMAGE */}
             <FormField
-              label="Image URL"
-              icon={
-                <ImageIcon className="h-4 w-4" />
-              }
+              label="Service Image"
+              icon={<ImageIcon className="h-4 w-4" />}
             >
-              <input
-                type="text"
-                value={
-                  form.image
-                }
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    image:
-                      e.target
-                        .value,
-                  })
-                }
-                placeholder="https://example.com/image.jpg"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              />
+              <div className="mb-3 flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:flex-row sm:items-center">
+                <div className="h-28 w-full overflow-hidden rounded-lg bg-white sm:w-40">
+                  {form.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={form.image}
+                      alt="Service preview"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-slate-300">
+                      <ImageIcon className="h-7 w-7" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1">
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    disabled={uploadingImage || loading}
+                    className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {uploadingImage ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <UploadCloud className="h-4 w-4" />
+                    )}
+                    {uploadingImage ? "Uploading..." : "Upload image"}
+                  </button>
+                  <p className="mt-2 text-xs text-slate-400">
+                    JPEG, PNG, WebP, or GIF. Max 5MB.
+                  </p>
+                </div>
+
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+              </div>
             </FormField>
 
             {/* SUBMIT */}
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || uploadingImage}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading ? (
@@ -561,10 +527,9 @@ export default function ServiceForm({
 
                 {loading
                   ? "Saving..."
-                  : mode ===
-                    "create"
-                  ? "Create Service"
-                  : "Update Service"}
+                  : mode === "create"
+                    ? "Create Service"
+                    : "Update Service"}
               </button>
             </div>
           </form>
@@ -586,9 +551,7 @@ function FormField({
   return (
     <div>
       <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
-        <span className="text-slate-400">
-          {icon}
-        </span>
+        <span className="text-slate-400">{icon}</span>
 
         {label}
       </label>

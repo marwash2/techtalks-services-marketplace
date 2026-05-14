@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { getServiceLocation } from "@/utils/service-location";
 
 interface Service {
   id: string;
@@ -11,6 +12,16 @@ interface Service {
   description: string;
   price: number;
   duration: number;
+  location?: string | null;
+  locationId?:
+    | string
+    | {
+        _id?: string;
+        id?: string;
+        name?: string;
+        region?: string | null;
+      }
+    | null;
   category?: { name: string };
   categoryId?: { name: string };
   provider?: {
@@ -186,6 +197,7 @@ export default function BookingPage() {
     null;
   const providerLocation =
     service.provider?.location ?? service.providerId?.location ?? null;
+  const serviceLocation = getServiceLocation(service, providerLocation || "");
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4">
@@ -316,7 +328,7 @@ export default function BookingPage() {
                 {providerName}
               </span>
             )}
-            {providerLocation && (
+            {serviceLocation && (
               <span className="flex items-center gap-1.5">
                 <svg
                   className="w-4 h-4 text-gray-400"
@@ -337,7 +349,7 @@ export default function BookingPage() {
                     d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                   />
                 </svg>
-                {providerLocation}
+                {serviceLocation}
               </span>
             )}
           </div>

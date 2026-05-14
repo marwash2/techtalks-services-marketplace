@@ -172,8 +172,9 @@ export default function ProviderProfilePage() {
 
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("bucket", "provider-photos");
-      if (providerId) formData.append("providerId", providerId);
+      formData.append("bucket", "avatars");
+      formData.append("target", "provider");
+      if (providerId) formData.append("id", providerId);
 
       const res = await fetch("/api/upload", {
         method: "POST",

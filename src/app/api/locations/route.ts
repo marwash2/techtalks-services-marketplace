@@ -4,6 +4,7 @@ import { MESSAGES } from "@/constants/config";
 import { Location } from "@/models/Location.model";
 import { requireAuth } from "@/lib/auth-utils";
 import { ApiError } from "@/lib/api-error";
+import { connectDB } from "@/lib/db";
 import { z } from "zod";
 
 const createLocationSchema = z.object({
@@ -14,6 +15,8 @@ const createLocationSchema = z.object({
 // GET /api/locations — public, returns all active locations sorted by name
 // Used for provider dropdowns when creating/editing a service
 export const GET = withApiHandler(async () => {
+  await connectDB();
+
   const locations = await Location.find({ isActive: true })
     .sort({ name: 1 })
     .select("_id name region")
@@ -34,6 +37,7 @@ export const GET = withApiHandler(async () => {
 // POST /api/locations — admin only, creates a new location
 export const POST = withApiHandler(async (req) => {
   await requireAuth(req, ["admin"]);
+  await connectDB();
 
   const body      = await req.json();
   const validated = createLocationSchema.parse(body);
