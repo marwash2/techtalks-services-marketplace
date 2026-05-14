@@ -4,6 +4,7 @@ import UserSidebar from "@/components/user/UserSidebar";
 import { authOptions } from "@/lib/auth";
 import UserLayoutClient from "@/app/(user)/user/UserLayoutClient";
 import { Toaster } from "react-hot-toast";
+import UserMobileHeader from "@/components/user/UserMobileHeader";
 export default async function UserLayout({
   children,
 }: {
@@ -28,6 +29,7 @@ export default async function UserLayout({
     <>
       <Toaster position="top-center" reverseOrder={false} />
       <UserSidebar />
+      <UserMobileHeader /> {/* Add the mobile header for users */}
       <UserLayoutClient>{children}</UserLayoutClient>
     </>
   );

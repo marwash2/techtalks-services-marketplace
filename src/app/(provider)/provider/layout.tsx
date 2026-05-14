@@ -5,6 +5,7 @@ import { Provider } from "@/models/Provider.model";
 import ProviderSidebar from "@/components/provider/ProviderSidebar";
 import ProviderContentWrapper from "@/components/provider/ProviderContentWrapper";
 import ProviderOnboardingForm from "@/components/provider/ProviderOnboardingForm";
+import ProviderMobileHeader from "@/components/provider/ProviderMobileHeader";
 
 export default async function ProviderLayout({
   children,
@@ -63,6 +64,7 @@ export default async function ProviderLayout({
     return (
       <>
         <ProviderSidebar />
+        <ProviderMobileHeader /> {/* Add the mobile header for onboarding */}
         <ProviderContentWrapper>
           <div className="mx-auto max-w-7xl py-8">
             <ProviderOnboardingForm
@@ -84,6 +86,7 @@ export default async function ProviderLayout({
   return (
     <>
       <ProviderSidebar />
+      <ProviderMobileHeader /> {/* Add the mobile header for approved providers */}
       <ProviderContentWrapper>
         <div className="mx-auto max-w-7xl ">
           <div className="min-w-0">{children}</div>

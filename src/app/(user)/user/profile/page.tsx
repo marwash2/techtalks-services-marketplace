@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
@@ -307,30 +308,29 @@ export default function UserProfilePage() {
           </div>
         </section>
 
+        {(errorMsg || successMsg) && (
+          <section className="space-y-3">
+            {errorMsg && (
+              <div className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
+            {successMsg && (
+              <div className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-700">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{successMsg}</span>
+              </div>
+            )}
+          </section>
+        )}
+
         {/* STATS */}
         <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
-            {
-              icon: CalendarDays,
-              label: "Bookings",
-              value: "12",
-              color: "text-blue-500",
-              bg: "bg-blue-50",
-            },
-            {
-              icon: Heart,
-              label: "Favorites",
-              value: "8",
-              color: "text-rose-500",
-              bg: "bg-rose-50",
-            },
-            {
-              icon: Clock3,
-              label: "Upcoming",
-              value: "3",
-              color: "text-green-500",
-              bg: "bg-green-50",
-            },
+            { icon: CalendarDays, label: "Bookings", value: "12", color: "text-blue-500", bg: "bg-blue-50" },
+            { icon: Heart, label: "Favorites", value: "8", color: "text-rose-500", bg: "bg-rose-50" },
+            { icon: Clock3, label: "Upcoming", value: "3", color: "text-green-500", bg: "bg-green-50" },
           ].map((item) => (
             <div
               key={item.label}
@@ -555,14 +555,32 @@ export default function UserProfilePage() {
   );
 }
 
-function InfoCard({
+function InfoCard({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+  return (
+    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5">
+      <div className="flex items-center gap-2 mb-3 text-blue-600">
+        <Icon className="w-4 h-4" />
+        <span className="text-xs font-semibold uppercase tracking-widest">{label}</span>
+      </div>
+      <p className="text-sm font-medium text-[#1e3a5f] break-words">{value}</p>
+    </div>
+  );
+}
+
+function EditField({
   icon: Icon,
   label,
   value,
+  onChange,
+  placeholder,
+  type = "text",
 }: {
   icon: any;
   label: string;
   value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  type?: string;
 }) {
   return (
     <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5">

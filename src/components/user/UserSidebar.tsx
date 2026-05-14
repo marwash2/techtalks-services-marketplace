@@ -71,27 +71,14 @@ export default function UserSidebar() {
   const pathname = usePathname();
 
   const router = useRouter();
-  const { data: session } = useSession();
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const { isOpen, toggle, close } = useSidebar();
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsDropdownOpen(false);
-      }
-    };
+  const [unreadCount, setUnreadCount] =
+    useState(0);
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const { isOpen, close, toggle } =
+    useSidebar();
 
   useEffect(() => {
     const userId =
@@ -196,14 +183,22 @@ export default function UserSidebar() {
           className={`fixed top-2 z-60 hidden h-9 w-9 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--surface-1)] text-[var(--foreground)]/80 shadow-sm transition hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] lg:flex ${
             isOpen ? "left-49" : "left-10"
           }`}
-          aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
+          aria-label={
+            isOpen
+              ? "Collapse sidebar"
+              : "Expand sidebar"
+          }
         >
           <ChevronLeft
-            className={`h-5 w-5 transition-transform ${isOpen ? "" : "-rotate-180"}`}
+            className={`h-5 w-5 transition-transform ${
+              isOpen
+                ? ""
+                : "-rotate-180"
+            }`}
           />
         </button>
 
-        <nav className="flex-1 space-y-2 overflow-y-auto px-0 py-2">
+        <nav className="flex-1 space-y-2 overflow-y-auto px-0 py-24 lg:py-2">
           {userLinks.map((link) => {
             const Icon = link.icon;
 
@@ -277,11 +272,24 @@ export default function UserSidebar() {
           })}
         </nav>
 
-        <div className="border-t border-[var(--border-color)] px-2 py-4">
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setIsDropdownOpen((prev) => !prev)}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-3 transition-colors hover:bg-slate-50"
+        <div className="border-t border-slate-200 px-2 py-4">
+          <button
+            type="button"
+            onClick={() =>
+              signOut({
+                callbackUrl: "/",
+              })
+            }
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+          >
+            <LogOut className="h-4 w-4 text-red-600" />
+
+            <span
+              className={`${
+                isOpen
+                  ? "inline"
+                  : "hidden"
+              }`}
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-600">
                 {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
