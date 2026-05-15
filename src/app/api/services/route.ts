@@ -1,5 +1,6 @@
 import { withApiHandler } from "@/lib/api-handler";
 import { successResponse } from "@/lib/api-response";
+import mongoose from "mongoose";
 import {
   MESSAGES,
   PAGINATION,
@@ -52,7 +53,16 @@ export const GET = withApiHandler(
       searchParams.get("category") || undefined;
 
     if (categoryParam) {
-      const categoryDoc = await Category.findOne({ slug: categoryParam })
+      const categoryOr: Record<string, unknown>[] = [
+        { slug: categoryParam.toLowerCase() },
+        { name: { $regex: new RegExp(`^${categoryParam}$`, "i") } },
+      ];
+
+      if (mongoose.Types.ObjectId.isValid(categoryParam)) {
+        categoryOr.push({ _id: new mongoose.Types.ObjectId(categoryParam) });
+      }
+
+      const categoryDoc = await Category.findOne({ $or: categoryOr })
         .select("_id")
         .lean();
 

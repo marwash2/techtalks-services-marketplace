@@ -200,7 +200,10 @@ export default function Filters({ onClose }: FiltersProps = {}) {
                   <option value="">All categories</option>
                   {options.categories.length > 0 ? (
                     options.categories.map((category) => (
-                      <option key={category.id} value={category.name}>
+                      <option
+                        key={category.id}
+                        value={category.slug || category.name}
+                      >
                         {category.name}
                       </option>
                     ))
