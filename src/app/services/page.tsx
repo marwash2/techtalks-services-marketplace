@@ -53,6 +53,8 @@ function ServicesContent() {
       const category = searchParams.get("category");
       const location = searchParams.get("location");
       const maxPrice = searchParams.get("maxPrice");
+      params.set("page", "1");
+      params.set("limit", "10000");
       if (search) params.set("search", search);
       if (category) params.set("category", category);
       if (location) params.set("location", location);
