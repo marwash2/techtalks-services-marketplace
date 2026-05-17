@@ -39,39 +39,101 @@ type Service = {
 
 function ServicesContent() {
   const searchParams = useSearchParams();
+
   const [services, setServices] = useState<Service[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
 
   const fetchServices = async () => {
     setLoading(true);
+
     setError("");
 
     try {
-      const params = new URLSearchParams();
-      const search = searchParams.get("search");
-      const category = searchParams.get("category");
-      const location = searchParams.get("location");
-      const maxPrice = searchParams.get("maxPrice");
-      if (search) params.set("search", search);
-      if (category) params.set("category", category);
-      if (location) params.set("location", location);
-      if (maxPrice) params.set("maxPrice", maxPrice);
-      const query = params.toString();
-      const res = await fetch(`/api/services${query ? `?${query}` : ""}`, {
-        cache: "no-store",
-      });
-      const data = await res.json();
-      if (!res.ok || data?.success === false) {
-        throw new Error(data?.error || data?.message || "Failed to load services");
+      const params =
+        new URLSearchParams();
+
+      const search =
+        searchParams.get("search");
+
+      const category =
+        searchParams.get("category");
+
+      const location =
+        searchParams.get("location");
+
+      const maxPrice =
+        searchParams.get("maxPrice");
+
+      if (search)
+        params.set("search", search);
+
+      if (category)
+        params.set(
+          "category",
+          category
+        );
+
+      if (location)
+        params.set(
+          "location",
+          location
+        );
+
+      if (maxPrice)
+        params.set(
+          "maxPrice",
+          maxPrice
+        );
+
+      const query =
+        params.toString();
+
+      const res = await fetch(
+        `/api/services${
+          query ? `?${query}` : ""
+        }`,
+        {
+          cache: "no-store",
+        }
+      );
+
+      const data =
+        await res.json();
+
+      if (
+        !res.ok ||
+        data?.success === false
+      ) {
+        throw new Error(
+          data?.error ||
+            data?.message ||
+            "Failed to load services"
+        );
       }
 
-      const servicesData = data.data?.services || data.services || [];
-      console.log("SERVICES:", servicesData);
+      const servicesData =
+        data.data?.services ||
+        data.services ||
+        [];
+
       setServices(servicesData);
     } catch (err) {
-      console.error("Error fetching services:", err);
-      setError(err instanceof Error ? err.message : "Failed to load services");
+      console.error(
+        "Error fetching services:",
+        err
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load services"
+      );
+
       setServices([]);
     } finally {
       setLoading(false);
@@ -84,56 +146,91 @@ function ServicesContent() {
 
   if (loading) {
     return (
-      <div className="text-center py-10 text-gray-400">Loading services...</div>
+      <div className="py-10 text-center text-gray-400">
+        Loading services...
+      </div>
     );
   }
 
   if (services.length === 0) {
     if (error) {
       return (
-        <div className="text-center py-10 text-rose-500">{error}</div>
+        <div className="py-10 text-center text-rose-500">
+          {error}
+        </div>
       );
     }
 
     return (
-      <div className="text-center py-10 text-gray-400">No services found</div>
+      <div className="py-10 text-center text-gray-400">
+        No services found
+      </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-3 gap-4  ">
-      {services.map((service, index) => (
-        <ServiceCard
-          key={service._id || service.id || index}
-          service={{
-            _id: service._id || service.id || "",
-            title: service.title,
-            description: service.description,
-            price: service.price,
-            duration: service.duration,
-            image: service.image,
-            location: service.location,
-            locationId: service.locationId,
-            providerId: service.providerId ?? null,
-            categoryId: service.categoryId ?? null,
-          }}
-        />
-      ))}
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      {services.map(
+        (service, index) => (
+          <ServiceCard
+            key={
+              service._id ||
+              service.id ||
+              index
+            }
+            service={{
+              _id:
+                service._id ||
+                service.id ||
+                "",
+              title:
+                service.title,
+              description:
+                service.description,
+              price:
+                service.price,
+              duration:
+                service.duration,
+              image:
+                service.image,
+              location:
+                service.location,
+              locationId:
+                service.locationId,
+              providerId:
+                service.providerId ??
+                null,
+              categoryId:
+                service.categoryId ??
+                null,
+            }}
+          />
+        )
+      )}
     </div>
   );
 }
 
 export default function Page() {
-  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const [
+    isMobileFiltersOpen,
+    setIsMobileFiltersOpen,
+  ] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8 ">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       {/* HEADER */}
-      <div className="mb-6 flex items-center justify-between ml-64 ">
-        <h1 className="text-2xl font-bold text-gray-800">Services</h1>
+      <div className="mb-6 flex items-center justify-between lg:ml-64">
+        <h1 className="text-2xl font-bold text-gray-800">
+          Services
+        </h1>
 
         <button
-          onClick={() => setIsMobileFiltersOpen(true)}
+          onClick={() =>
+            setIsMobileFiltersOpen(
+              true
+            )
+          }
           className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm lg:hidden"
         >
           <SlidersHorizontal className="h-4 w-4" />
@@ -141,10 +238,16 @@ export default function Page() {
         </button>
       </div>
 
-      <Suspense fallback={<div>Loading...</div>}>
-        <div className="flex flex-col lg:flex-row gap-6">
+      <Suspense
+        fallback={
+          <div>
+            Loading...
+          </div>
+        }
+      >
+        <div className="flex flex-col gap-6 lg:flex-row">
           {/* DESKTOP FILTERS */}
-          <div className="hidden fixed left-0 top-0 h-screen pt-20 flex lg:block w-64 shrink-0">
+          <div className="hidden fixed left-0 top-0 h-screen w-64 shrink-0 pt-20 lg:block">
             <Filters />
           </div>
 
@@ -153,27 +256,46 @@ export default function Page() {
             <div className="fixed inset-0 z-[100] flex lg:hidden">
               <div
                 className="fixed inset-0 bg-slate-900/50"
-                onClick={() => setIsMobileFiltersOpen(false)}
+                onClick={() =>
+                  setIsMobileFiltersOpen(
+                    false
+                  )
+                }
               />
 
               <div className="relative mr-auto h-full w-full max-w-sm bg-white p-4 shadow-2xl">
                 <div className="mb-4 flex items-center justify-between">
-                  <h2 className="font-semibold text-slate-950">Filters</h2>
+                  <h2 className="font-semibold text-slate-950">
+                    Filters
+                  </h2>
+
                   <button
-                    onClick={() => setIsMobileFiltersOpen(false)}
+                    onClick={() =>
+                      setIsMobileFiltersOpen(
+                        false
+                      )
+                    }
                     className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-50"
                   >
                     <X className="h-5 w-5" />
                   </button>
                 </div>
-                <Filters onClose={() => setIsMobileFiltersOpen(false)} />
+
+                <Filters
+                  onClose={() =>
+                    setIsMobileFiltersOpen(
+                      false
+                    )
+                  }
+                />
               </div>
             </div>
           )}
 
           {/* MAIN */}
-          <div className="flex-1 flex flex-col ml-64 gap-4 ">
+          <div className="flex flex-1 flex-col gap-4 lg:ml-64">
             <SearchBar />
+
             <ServicesContent />
           </div>
         </div>

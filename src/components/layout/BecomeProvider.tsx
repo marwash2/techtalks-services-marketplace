@@ -9,7 +9,7 @@ export default function BecomeProviderSection() {
       <div className="w-full">
         <div className=" md:hidden w-full h-[220px] mb-6 px-4 ">
           <Image
-            src="/download.jpg"
+            src="/becomeProvider-bg.jpeg"
             alt="Become Provider"
             width={900}
             height={500}
