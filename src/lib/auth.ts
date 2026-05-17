@@ -4,6 +4,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { connectDB } from "@/lib/db";
 import { User } from "@/models/User.model";
 import bcrypt from "bcryptjs";
+import { createNotification } from "@/services/notification.service";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -59,6 +60,7 @@ export const authOptions: NextAuthOptions = {
         let existingUser = await User.findOne({
           email: user.email,
         });
+        let isNewUser = false;
 
         if (!existingUser) {
           existingUser = await User.create({
@@ -68,6 +70,25 @@ export const authOptions: NextAuthOptions = {
             role: "user",
             providerStatus: "inactive",
           });
+          isNewUser = true;
+        }
+
+        if (isNewUser) {
+          try {
+            await createNotification({
+              userId: existingUser._id.toString(),
+              title: "Welcome to Khidmati",
+              message:
+                "Your account is ready. Start exploring services and book trusted providers anytime.",
+              type: "account_welcome",
+              link: "/services",
+            });
+          } catch (notificationError) {
+            console.error(
+              "[auth.signIn] welcome notification error:",
+              notificationError,
+            );
+          }
         }
 
         // VERY IMPORTANT:

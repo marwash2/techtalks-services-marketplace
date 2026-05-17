@@ -97,6 +97,12 @@ type ReviewFilters = {
   providerId?: string;
 };
 
+function truncateComment(text: string, maxLength = 120): string {
+  const normalized = text.trim().replace(/\s+/g, " ");
+  if (normalized.length <= maxLength) return normalized;
+  return `${normalized.slice(0, maxLength - 3)}...`;
+}
+
 // ── Service functions ──────────────────────────────────────────────────────────
 
 export async function getAllReviews(
@@ -208,11 +214,18 @@ export async function createReview(
       );
 
       if (providerUserId) {
+        const hasComment = Boolean(input.comment && input.comment.trim());
+        const serviceTitle =
+          (serviceDoc as { title?: string }).title ?? "your service";
+        const commentPart = hasComment
+          ? ` Comment: "${truncateComment(input.comment!)}".`
+          : "";
+
         await createNotification({
           userId: providerUserId,
           title: "New Review Received",
-          message: `You received a ${input.rating}-star review on "${(serviceDoc as { title?: string }).title ?? "your service"}".`,
-          type: "review_added",
+          message: `You received a ${input.rating}-star review on "${serviceTitle}".${commentPart}`,
+          type: hasComment ? "review_received_with_comment" : "review_received",
           link: "/provider/reviews",
         });
       }
