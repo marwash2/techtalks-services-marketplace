@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
+  BrushCleaning,
   CheckCircle2,
   Eye,
   EyeOff,
@@ -13,6 +14,12 @@ import {
   X,
   XCircle,
 } from "lucide-react";
+import {
+  CATEGORY_ICON_MAP,
+  CATEGORY_ICON_OPTIONS,
+  inferCategoryIconKey,
+  normalizeCategoryIcon,
+} from "@/lib/category-icons";
 
 type CategoryRow = {
   id?: string;
@@ -39,14 +46,9 @@ export default function ManageCategoriesPage() {
     text: string;
   } | null>(null);
 
-  const [imageLoadErrors, setImageLoadErrors] = useState<
-    Record<string, boolean>
-  >({});
-  const [previewImageError, setPreviewImageError] = useState(false);
-
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [icon, setIcon] = useState("");
+  const [icon, setIcon] = useState("cleaning");
   const [slug, setSlug] = useState("");
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -65,7 +67,9 @@ export default function ManageCategoriesPage() {
 
   async function fetchCategories() {
     try {
-      const res = await fetch("/api/categories", { cache: "no-store" });
+      const res = await fetch("/api/categories?page=1&limit=1000", {
+        cache: "no-store",
+      });
       const data = await res.json();
 
       const list = data.data?.categories || [];
@@ -120,7 +124,7 @@ export default function ManageCategoriesPage() {
       return;
     }
     if (!icon.trim()) {
-      showMessage("error", "Image URL is required.");
+      showMessage("error", "Icon is required.");
       return;
     }
 
@@ -186,9 +190,8 @@ export default function ManageCategoriesPage() {
     setFormMessage(null);
     setName(category.name);
     setDescription(category.description || "");
-    setIcon(category.icon || "");
+    setIcon(inferCategoryIconKey(category.name, category.icon));
     setSlug(category.slug || "");
-    setPreviewImageError(false);
     setEditingId(category._id || category.id || null);
     setIsModalOpen(true);
   }
@@ -261,9 +264,8 @@ export default function ManageCategoriesPage() {
   function resetForm() {
     setName("");
     setDescription("");
-    setIcon("");
+    setIcon("cleaning");
     setSlug("");
-    setPreviewImageError(false);
     setEditingId(null);
   }
 
@@ -273,6 +275,8 @@ export default function ManageCategoriesPage() {
     (c) => !(c.isActive ?? true),
   ).length;
   const subCategories = categories.filter((c) => !!c.parentId).length;
+  const PreviewIcon =
+    CATEGORY_ICON_MAP[normalizeCategoryIcon(icon)] || BrushCleaning;
 
   if (loading) {
     return (
@@ -387,7 +391,7 @@ export default function ManageCategoriesPage() {
             <thead>
               <tr className="border-y border-slate-100 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
                 <th className="px-4 py-3 font-medium">#</th>
-                <th className="px-4 py-3 font-medium">Image</th>
+                <th className="px-4 py-3 font-medium">Icon</th>
                 <th className="px-4 py-3 font-medium">Category Name</th>
                 <th className="px-4 py-3 font-medium">Slug</th>
                 <th className="px-4 py-3 font-medium">Status</th>
@@ -399,8 +403,9 @@ export default function ManageCategoriesPage() {
             <tbody>
               {filteredCategories.map((c, index) => {
                 const rowId = c._id || c.id || `row-${index}`;
-                const rowImage = c.icon || "/noimage.jpeg";
-                const hasImageError = imageLoadErrors[rowId];
+                const iconKey = inferCategoryIconKey(c.name, c.icon);
+                const Icon =
+                  CATEGORY_ICON_MAP[iconKey] || CATEGORY_ICON_MAP.default;
                 const isActiveRow = c.isActive ?? true;
                 return (
                   <tr
@@ -409,18 +414,8 @@ export default function ManageCategoriesPage() {
                   >
                     <td className="px-4 py-4">{index + 1}</td>
                     <td className="px-4 py-4">
-                      <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
-                        <img
-                          src={hasImageError ? "/noimage.jpeg" : rowImage}
-                          alt={c.name || "category"}
-                          className="h-full w-full object-cover"
-                          onError={() =>
-                            setImageLoadErrors((prev) => ({
-                              ...prev,
-                              [rowId]: true,
-                            }))
-                          }
-                        />
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-200 bg-slate-100 text-indigo-600">
+                        <Icon className="h-6 w-6" aria-hidden="true" />
                       </div>
                     </td>
                     <td className="px-4 py-4 font-medium text-slate-900">
@@ -552,30 +547,23 @@ export default function ManageCategoriesPage() {
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
               />
-              <input
+              <select
                 className="h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none ring-indigo-200 focus:ring md:col-span-2"
-                placeholder="Image URL (required)"
                 value={icon}
-                onChange={(e) => {
-                  setIcon(e.target.value);
-                  setPreviewImageError(false);
-                }}
-              />
+                onChange={(e) => setIcon(normalizeCategoryIcon(e.target.value))}
+              >
+                {CATEGORY_ICON_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
               <div className="md:col-span-2">
                 <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-500">
-                  Image Preview
+                  Icon Preview
                 </p>
-                <div className="relative h-36 w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
-                  <img
-                    src={
-                      previewImageError
-                        ? "/noimage.jpeg"
-                        : icon.trim() || "/noimage.jpeg"
-                    }
-                    alt="Category preview"
-                    className="h-full w-full object-cover"
-                    onError={() => setPreviewImageError(true)}
-                  />
+                <div className="flex h-36 w-full items-center justify-center rounded-xl border border-slate-200 bg-slate-100 text-indigo-600">
+                  <PreviewIcon className="h-12 w-12" aria-hidden="true" />
                 </div>
               </div>
               <textarea

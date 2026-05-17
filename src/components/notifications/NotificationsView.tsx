@@ -184,6 +184,24 @@ function getNotificationStyle(type?: string) {
         bg: "bg-indigo-50",
         unreadDot: "bg-indigo-500",
       };
+    case "review_received":
+    case "review_received_with_comment":
+    case "review_added":
+    case "review_comment_added":
+      return {
+        icon: BadgeCheck,
+        iconColor: "text-blue-700",
+        bg: "bg-blue-50",
+        unreadDot: "bg-blue-500",
+      };
+    case "account_welcome":
+    case "welcome":
+      return {
+        icon: Sparkles,
+        iconColor: "text-blue-600",
+        bg: "bg-blue-50",
+        unreadDot: "bg-blue-500",
+      };
     case "booking":
       return {
         icon: CalendarCheck2,

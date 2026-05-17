@@ -131,7 +131,7 @@ export default function ServiceForm({ mode, serviceId }: ServiceFormProps) {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch("/api/categories", {
+        const res = await fetch("/api/categories?page=1&limit=1000", {
           credentials: "include",
         });
 

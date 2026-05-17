@@ -6,6 +6,7 @@ import { toUserDTO, toUserListDTO } from "@/lib/dto/user.dto";
 import bcrypt from "bcryptjs";
 import { Provider } from "@/models/Provider.model";
 import { deleteProvider } from "@/services/provider.service";
+import { createNotification } from "@/services/notification.service";
 
 async function fetchUsers(
   page = 1,
@@ -69,6 +70,19 @@ export async function createUser(userData: {
     role: role || "user",
   });
   await user.save();
+
+  try {
+    await createNotification({
+      userId: String(user._id),
+      title: "Welcome to Khidmati",
+      message:
+        "Your account is ready. Start exploring services and book trusted providers anytime.",
+      type: "account_welcome",
+      link: "/services",
+    });
+  } catch (notificationError) {
+    console.error("[createUser] welcome notification error:", notificationError);
+  }
 
   return toUserDTO(user);
 }

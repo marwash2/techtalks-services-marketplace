@@ -109,13 +109,13 @@ async function resolveNotificationRecipientId(rawUserId: string) {
   const candidate = String(rawUserId || "").trim();
   if (!candidate || !Types.ObjectId.isValid(candidate)) return "";
 
+  // Accept valid user ObjectId directly (important for just-created users).
   const user = await User.findById(candidate).select("_id").lean();
-  if (!user || Array.isArray(user)) return "";
-  if (user._id) return String(user._id);
+  if (user && !Array.isArray(user) && user._id) return String(user._id);
 
   const provider = await Provider.findById(candidate).select("userId").lean();
   const providerUserId = (provider as { userId?: unknown } | null)?.userId;
-  if (!providerUserId) return "";
+  if (!providerUserId) return candidate;
 
   const resolved = String(providerUserId);
   return Types.ObjectId.isValid(resolved) ? resolved : "";

@@ -54,66 +54,24 @@ function ServicesContent() {
     setError("");
 
     try {
-      const params =
-        new URLSearchParams();
-
-      const search =
-        searchParams.get("search");
-
-      const category =
-        searchParams.get("category");
-
-      const location =
-        searchParams.get("location");
-
-      const maxPrice =
-        searchParams.get("maxPrice");
-
-      if (search)
-        params.set("search", search);
-
-      if (category)
-        params.set(
-          "category",
-          category
-        );
-
-      if (location)
-        params.set(
-          "location",
-          location
-        );
-
-      if (maxPrice)
-        params.set(
-          "maxPrice",
-          maxPrice
-        );
-
-      const query =
-        params.toString();
-
-      const res = await fetch(
-        `/api/services${
-          query ? `?${query}` : ""
-        }`,
-        {
-          cache: "no-store",
-        }
-      );
-
-      const data =
-        await res.json();
-
-      if (
-        !res.ok ||
-        data?.success === false
-      ) {
-        throw new Error(
-          data?.error ||
-            data?.message ||
-            "Failed to load services"
-        );
+      const params = new URLSearchParams();
+      const search = searchParams.get("search");
+      const category = searchParams.get("category");
+      const location = searchParams.get("location");
+      const maxPrice = searchParams.get("maxPrice");
+      params.set("page", "1");
+      params.set("limit", "10000");
+      if (search) params.set("search", search);
+      if (category) params.set("category", category);
+      if (location) params.set("location", location);
+      if (maxPrice) params.set("maxPrice", maxPrice);
+      const query = params.toString();
+      const res = await fetch(`/api/services${query ? `?${query}` : ""}`, {
+        cache: "no-store",
+      });
+      const data = await res.json();
+      if (!res.ok || data?.success === false) {
+        throw new Error(data?.error || data?.message || "Failed to load services");
       }
 
       const servicesData =
