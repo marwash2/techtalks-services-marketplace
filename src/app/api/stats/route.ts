@@ -3,15 +3,16 @@ import { successResponse } from "@/lib/api-response";
 import { connectDB } from "@/lib/db";
 import { Provider } from "@/models/Provider.model";
 import { Service } from "@/models/Service.model";
+import { Location } from "@/models/Location.model";
 
 export const GET = withApiHandler(async () => {
   await connectDB();
 
-  const [totalServices, totalProviders, locations, ratingResult] =
+  const [totalServices, totalProviders, totalCities, ratingResult] =
     await Promise.all([
       Service.countDocuments({}),
       Provider.countDocuments({}),
-      Provider.distinct("location", { location: { $exists: true, $ne: "" } }),
+      Location.countDocuments({}),
       Provider.aggregate([
         {
           $match: {
@@ -34,7 +35,7 @@ export const GET = withApiHandler(async () => {
     successResponse({
       totalServices,
       totalProviders,
-      totalCities: Array.isArray(locations) ? locations.length : 0,
+      totalCities,
       averageRating,
     }),
   );
